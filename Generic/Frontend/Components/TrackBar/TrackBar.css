@@ -1,0 +1,55 @@
+@layer {
+    :host {
+        --Component_displayInner: grid !important;
+        --GestureArea_gestures: swipe !important;
+
+        block-size: 16px;
+        grid: initial !important;
+        inline-size: 96px;
+        place-content: center normal !important;
+        place-items: center normal !important;
+        position: relative;
+    }
+    :host([vertical]) {
+        writing-mode: vertical-lr;
+    }
+
+
+    ._TrackBar_filler[part] {
+        block-size: initial !important;
+        inline-size: 100%;
+        inset: initial !important;
+        inset-inline-start: calc(var(--_TrackBar_puck_position) - var(--_TrackBar_filler_positionShift) - 100%) !important;
+        place-self: initial !important;
+        position: relative !important;
+        writing-mode: inherit !important;
+    }
+
+    #fillerBefore[part] {
+        place-self: auto end !important;
+    }
+
+    #puck[part] {
+        block-size: 16px;
+        grid-area: 1 / 1 / -1 / -1 !important;
+        inline-size: 16px;
+        inset: initial !important;
+        inset-inline-start: var(--_TrackBar_puck_position) !important;
+        place-self: initial !important;
+        position: relative !important;
+        writing-mode: inherit !important;
+    }
+
+    #track[part] {
+        block-size: 100%;
+        display: grid !important;
+        grid: auto / repeat(2, 100%) !important;
+        grid-area: 1 / 1 / -1 / -1 !important;
+        inline-size: initial !important;
+        overflow: hidden !important;
+        place-content: initial !important;
+        place-items: initial !important;
+        place-self: initial !important;
+        writing-mode: inherit !important;
+    }
+}

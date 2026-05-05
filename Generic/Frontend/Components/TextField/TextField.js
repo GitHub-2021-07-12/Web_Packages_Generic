@@ -1,0 +1,104 @@
+import {TextInput} from '/Packages/Generic/Frontend/Components/TextInput/TextInput.js';
+
+import {RichString} from '/Packages/Generic/Js/RichString/RichString.js';
+
+
+export class TextField extends TextInput {
+    static _cssUrl = true;
+    static _htmlUrl = true;
+    static _url = import.meta.url;
+
+    static _eventHandlerDescriptors = {
+        elements: {
+            buttonClear: {
+                pointerdown: function (event) {
+                    event.preventDefault();
+
+                    this.value = '';
+                    this.dispatchEvent('clear');
+                    this.dispatchEvent('mutation');
+                },
+            },
+
+            buttonMask: {
+                pointerdown: function (event) {
+                    event.preventDefault();
+
+                    this.masked = !this.masked;
+                    this._updateSelection();
+                    this.dispatchEvent('mask');
+                },
+            },
+        },
+    };
+
+    static _fieldDescriptors = {
+        _invalid: false,
+
+
+        buttons: {
+            default: new Set(),
+            enum: ['buttonClear', 'buttonMask'],
+        },
+
+        maskChar: {
+            default: '●',
+
+            process(value) {
+                return value ? new RichString(value).slice(0, 1).value : undefined;
+            },
+
+            updateAfter() {
+                if (!this._component.masked) return;
+
+                this._component._value = this._component.value;
+            },
+        },
+
+        masked: {
+            default: false,
+
+            updateAfter() {
+                this._component._value = this._component.value;
+            },
+        },
+
+        regExp: {
+            default: '',
+            extra: true,
+
+            process(value) {
+                return new RegExp(value);
+            },
+        },
+    };
+
+
+    static {
+        this.init();
+    }
+
+
+    get _value() {
+        return super._value;
+    }
+    set _value(value) {
+        super._value = value;
+        this._inputElement_value = this.masked ? this.maskChar.repeat(this._value.length) : this.value;
+        this._invalid = false;
+    }
+
+
+    _init() {
+        this._inputElement = this._elements.input;
+        super._init();
+    }
+
+
+    validate() {
+        let valid = this.regExp.test(this.value);
+        this._invalid = !valid;
+
+        return valid;
+    }
+}

@@ -1,0 +1,20 @@
+@layer {
+    :host {
+        --Component_display: contents !important;
+
+        position: absolute;
+        user-select: text;
+        z-index: 1;
+    }
+
+
+    #root[part] {
+        all: inherit;
+        display: revert !important;
+
+
+        &[open] {
+            display: var(--Component_displayInner) !important;
+        }
+    }
+}

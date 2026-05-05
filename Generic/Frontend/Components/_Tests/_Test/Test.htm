@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+
+
+<html>
+    <head>
+        <meta charset='utf-8' content='user-scalable=no, width=720' name='viewport'>
+        <title>Test</title>
+
+        <link href='/Packages/Generic/Frontend/Themes/Main/Main.css' rel='stylesheet'>
+
+        <style>
+            body {
+                padding: 10px;
+            }
+
+
+            :not(:defined) {
+                display: none;
+            }
+        </style>
+
+        <script type='module'>
+            import {Component} from '/Packages/Generic/Frontend/Components/Component/Component.js';
+            import {Test} from '/Packages/Generic/Frontend/Components/Test/Test.js';
+
+
+            Component.init({
+                styleSheetsDescriptors: {
+                    main: '/Packages/Generic/Frontend/Themes/Main/Main.css',
+                },
+            });
+
+            await Test._defined;
+        </script>
+    </head>
+
+    <body>
+        <x-test>Test</x-test>
+    </body>
+</html>

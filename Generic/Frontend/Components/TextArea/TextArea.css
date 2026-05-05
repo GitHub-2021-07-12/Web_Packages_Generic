@@ -1,0 +1,46 @@
+@layer {
+    :host {
+        --Component_displayInner: grid !important;
+
+        grid: minmax(0, 1fr) / minmax(0, 1fr) !important;
+        height: 96px;
+        overflow: hidden;
+        width: 256px;
+    }
+
+
+    #input[part] {
+        all: inherit;
+        display: revert;
+        overflow: hidden;
+    }
+
+    #inputWrapper[part] {
+        display: contents !important;
+        grid-area: 1 / 1 / -1 / -1 !important;
+        white-space: preserve wrap !important;
+        word-break: break-all !important;
+    }
+
+    #root[part] {
+        --Component_autoRefresh: inherit !important;
+        --GestureArea_gestures: none !important;
+        --ScrollArea_snag: initial !important;
+
+
+        &::part(display) {
+            display: grid !important;
+        }
+    }
+
+    #textMeter {
+        all: inherit;
+        display: revert;
+        visibility: hidden;
+
+
+        &::after {
+            content: ' ';
+        }
+    }
+}

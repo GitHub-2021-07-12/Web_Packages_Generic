@@ -1,0 +1,97 @@
+@layer {
+    :host {
+        --Component_displayInner: grid !important;
+        --GestureArea_gestures: flick press swipe !important;
+
+        grid: initial !important;
+        height: 256px;
+        overflow: hidden;
+        place-content: initial !important;
+        width: 256px;
+    }
+    :host([vertical]) {
+        writing-mode: vertical-lr;
+    }
+
+
+    slot {
+        writing-mode: initial;
+    }
+
+
+    ._Slider_frame[part] {
+        animation: 0.4s ease-in-out;
+        display: grid !important;
+        grid-area: 1 / 1 / -1 / -1 !important;
+        position: relative !important;
+        writing-mode: inherit !important;
+
+
+        &:not(:has(:has-slotted)) {
+            visibility: hidden !important;
+        }
+    }
+
+
+    #frameCurrent[part] {
+        :host([_flipDirection='-1']) & {
+            animation-name: toEnd;
+        }
+        :host([_flipDirection='1']) & {
+            animation-name: toStart;
+        }
+    }
+
+    #frameNext[part] {
+        :host([_flipDirection='-1']) & {
+            animation-name: fromStart;
+        }
+        :host([_flipDirection='1']) & {
+            animation-name: fromEnd;
+        }
+        :host(:not([_flipDirection])) & {
+            display: none !important;
+        }
+    }
+
+
+    @keyframes fromStart {
+        from {
+            inset-inline-start: -100%;
+        }
+
+        to {
+            inset-inline-start: 0;
+        }
+    }
+
+    @keyframes fromEnd {
+        from {
+            inset-inline-start: 100%;
+        }
+
+        to {
+            inset-inline-start: 0;
+        }
+    }
+
+    @keyframes toStart {
+        from {
+            inset-inline-start: 0;
+        }
+
+        to {
+            inset-inline-start: -100%;
+        }
+    }
+
+    @keyframes toEnd {
+        from {
+            inset-inline-start: 0;
+        }
+
+        to {
+            inset-inline-start: 100%;
+        }
+    }
+}

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+
+
+<html>
+    <head>
+        <meta charset='utf-8' content='user-scalable=no, width=720' name='viewport'>
+        <title>All</title>
+
+        <link href='/Packages/Generic/Frontend/Themes/Main/Main.css' rel='stylesheet'>
+
+        <style>
+            body {
+                padding: 10px;
+                user-select: none;
+            }
+
+            x-draggable {
+                background: var(--backgroundBackBright);
+                left: 0;
+                position: relative;
+                width: fit-content;
+
+
+                &[a] {
+                    transition: left 1s ease-in-out;
+                }
+            }
+
+            x-slider {
+                --Component_autoRefresh: true;
+                --Slider_flipDurationMin: 1s;
+                --Slider_implicitFlipping: true;
+                /* --Slider_looped: true; */
+
+                background: var(--backgroundBackBright);
+                margin: auto;
+                overflow: initial;
+
+
+                &::part(frame) {
+                    animation-duration: 2s;
+                }
+
+                &::part(frameNext) {
+                    animation-delay: 0.1s;
+                }
+
+                div {
+                    border: #000 solid 1px;
+                    display: grid;
+                    font: 150px 'Arial';
+                    place-items: center;
+                }
+            }
+
+
+            :not(:defined) {
+                display: none;
+            }
+        </style>
+
+        <script type='module'>
+            import {Component} from '/Packages/Generic/Frontend/Components/Component/Component.js';
+
+            import * as generic from '/Packages/Generic/Generic.js';
+
+            window.generic = generic;
+
+
+            Component.init({
+                styleSheetDescriptors: {
+                    main: '/Packages/Generic/Frontend/Themes/Main/Main.css',
+                },
+            });
+
+            await generic.frontend.components.Draggable._defined;
+            await generic.frontend.components.Slider._defined;
+
+            let draggable = document.querySelector('x-draggable');
+            let slider = document.querySelector('x-slider');
+
+            slider._animationManager.addElement(
+                draggable,
+                {
+                    // cancel: function () {
+                    //     console.log('cancel')
+
+                    //     this.removeAttribute('a');
+                    //     // this.setLeft(slider.index * 200);
+                    //     this.setLeft(slider._frameCurrentIndex * 200);
+                    // },
+
+                    clearing: function () {
+                        this.removeAttribute('a');
+                        this.setLeft(slider.index * 200);
+
+                        console.clear()
+                        // console.log('clearing', draggable.getAnimations())
+                    },
+
+                    preparing: function () {
+                        // this.setLeft(slider.index * 200);
+                        this.setAttribute('a', '');
+                        let left = slider._flipDirection ? slider._frameCurrentIndex + slider._flipDirection : slider.index;
+                        // let left = slider.index + slider._flipDirection;
+                        // let left = slider._flipDirection ? slider._frameNextIndex : slider.index;
+                        this.setLeft(left * 200);
+
+                        // console.log('preparing', draggable.getAnimations())
+                    },
+
+                    // stop: function () {
+                    //     console.log('stop')
+
+                    //     // this.removeAttribute('a');
+                    //     // this.setLeft(slider.index * 200);
+                    // },
+                },
+            );
+
+        </script>
+    </head>
+
+    <body>
+        <x-draggable>Draggable</x-draggable>
+
+        <x-slider>
+            <div>1</div>
+            <div>2</div>
+            <div>3</div>
+        </x-slider>
+    </body>
+</html>

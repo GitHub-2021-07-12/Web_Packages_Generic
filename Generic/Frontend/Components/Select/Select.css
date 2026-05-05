@@ -1,0 +1,80 @@
+@layer {
+    :host {
+        --Component_displayInner: grid !important;
+        --Component_displayOuter: inline;
+        --Select_icon_size: 24px;
+
+        width: 256px;
+    }
+
+
+    slot {
+        &::slotted([_Repeater_excluded]) {
+            display: none;
+            position: absolute;
+        }
+    }
+
+
+    #buttonClear[part] {
+        align-self: center;
+        display: none !important;
+        height: var(--Select_icon_size) !important;
+        width: var(--Select_icon_size) !important;
+
+
+        :host([buttonClear]:not([disabled])) & {
+            #root:has(#textField[_nonEmpty]) & {
+                display: block !important;
+            }
+        }
+    }
+
+    #icon[part] {
+        align-self: center;
+        height: var(--Select_icon_size) !important;
+        pointer-events: none !important;
+        width: var(--Select_icon_size) !important;
+    }
+
+    #popup[part] {
+        --Component_displayInner: grid !important;
+        --Popup_modal: initial !important;
+        --Popup_open: initial !important;
+        --Popup_transient: initial !important;
+
+        grid: minmax(0, 1fr) / minmax(0, 1fr) !important;
+        position: fixed;
+
+
+        :host([_invalid]) & {
+            visibility: hidden !important;
+        }
+
+
+        &::part(face) {
+            inset-block-start: anchor(end);
+            inset-inline: anchor(start) anchor(end);
+            position-anchor: --root;
+        }
+    }
+
+    #root {
+        anchor-name: --root;
+        display: grid;
+        grid: auto / auto repeat(2, min-content);
+        outline: none;
+    }
+
+    #scrollArea[part] {
+        --Component_autoRefresh: initial !important;
+    }
+
+    #textField[part] {
+        --Component_disabled: inherit !important;
+        --TextField_buttons: initial !important;
+        --TextInput_placeholder: var(--Select_placeholder) !important;
+
+        width: initial !important;
+    }
+}

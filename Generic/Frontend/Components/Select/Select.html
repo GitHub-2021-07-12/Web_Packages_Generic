@@ -1,0 +1,26 @@
+<div id='root'>
+    <x-textField id='textField' exportParts='input: textField_input' part='textField'></x-textField>
+    <div id='buttonClear' part='buttonClear'></div>
+    <div id='icon' part='icon'></div>
+
+    <x-popup id='popup' Component_subtree='popup' exportParts='face: popup_face' part='popup'>
+        <x-scrollArea
+            id='scrollArea'
+
+            part='scrollArea'
+
+            exportParts='
+                display,
+                scrollBar, scrollBar_handle, scrollBar_puck, scrollBar_track,
+                scrollBarX, scrollBarX_handle, scrollBarX_puck, scrollBarX_track,
+                scrollBarY, scrollBarY_handle, scrollBarY_puck, scrollBarY_track,
+            '
+        >
+            <slot></slot>
+        </x-scrollArea>
+
+        <template Repeater_delegate>
+            <div>{{repeater: data.value}}</div>
+        </template>
+    </x-popup>
+</div>

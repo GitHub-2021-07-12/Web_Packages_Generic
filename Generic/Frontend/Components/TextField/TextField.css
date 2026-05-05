@@ -1,0 +1,42 @@
+@layer {
+    :host {
+        --Component_displayInner: grid !important;
+        --Component_displayOuter: inline;
+        --TextField_button_size: 24px;
+
+        grid: auto / auto repeat(2, min-content) !important;
+        overflow: hidden;
+        place-content: initial !important;
+        width: 256px;
+    }
+
+
+    ._TextField_button[part] {
+        align-self: center;
+        display: none !important;
+        height: var(--TextField_button_size) !important;
+        width: var(--TextField_button_size) !important;
+    }
+
+
+    #buttonClear[part] {
+        :host([_nonEmpty][buttons~='buttonClear']:not([disabled])) & {
+            display: block !important;
+        }
+    }
+
+    #buttonMask[part] {
+        :host([buttons~='buttonMask']) & {
+            display: block !important;
+        }
+    }
+
+    #input[part] {
+        background: none;
+        border: none;
+        color: inherit;
+        font: inherit;
+        outline: none;
+        text-align: inherit;
+    }
+}

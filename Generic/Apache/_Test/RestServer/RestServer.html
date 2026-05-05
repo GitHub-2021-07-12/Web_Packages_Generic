@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+
+
+<html>
+    <head>
+        <meta charset='utf-8' content='user-scalable=no, width=device-width' name='viewport'>
+        <title>RestServer</title>
+
+        <script type='module'>
+            import {RestClient} from '/Packages/Generic/Js/RestClient/RestClient.js';
+
+
+            window.restClient = new RestClient({
+                token: localStorage.getItem('RestClient.token'),
+                urlBasic: '/Packages/Generic/Apache/_Test/RestServer/RestServer.php',
+            });
+
+            button_logIn.onclick = async () => {
+                await restClient.logIn(inputName.value, inputPassowrd.value);
+                localStorage.setItem('RestClient.token', restClient.token);
+            };
+            button_logOut.onclick = () => {
+                restClient.logOut(inputAll.checked);
+                localStorage.removeItem('RestClient.token');
+            };
+            button_ping.onclick = async () => {
+                let result = await restClient.ping();
+
+                if (!result) {
+                    localStorage.removeItem('RestClient.token');
+                }
+            };
+            button_register.onclick = async () => {
+                await restClient.register(inputName.value, inputPassowrd.value);
+                localStorage.setItem('RestClient.token', restClient.token);
+            };
+
+            button_db_init.onclick = async () => {
+                await restClient.call('db_init');
+            };
+            button_f.onclick = async () => {
+                await restClient.call('f', 1, [2]);
+            };
+        </script>
+    </head>
+
+    <body>
+        <div>
+            <a href='http://localhost/Packages/Generic/Apache/_Test/RestServer/RestServer.php?method=f&args[]=1&args[]=2'>method=f&args[]=1&args[]=2</a>
+            <a href='http://localhost/Packages/Generic/Apache/_Test/RestServer/RestServer.php?method=f&args=[1, 2]'>method=f&args=[1, 2]</a>
+        </div>
+
+        <hr>
+
+        <div>
+            <button id='button_logIn'>LogIn</button>
+            <button id='button_logOut'>LogOut</button>
+            <input id='inputAll' type='checkBox'>All</input>
+            <button id='button_ping'>Ping</button>
+            <button id='button_register'>Register</button>
+            <input id='inputName'></input>
+            <input id='inputPassowrd'></input>
+        </div>
+
+        <hr>
+
+        <div>
+            <button id='button_db_init'>Db_init</button>
+            <button id='button_f'>F</button>
+        </div>
+    </body>
+</html>

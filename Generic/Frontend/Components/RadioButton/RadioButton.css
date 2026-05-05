@@ -1,0 +1,38 @@
+@layer {
+    :host {
+        --Component_displayInner: flex !important;
+        --Component_displayOuter: inline;
+        --RadioButton_button_size: 16px;
+
+        line-height: 0;
+        place-content: initial !important;
+        place-items: center normal !important;
+    }
+
+
+    #button[part] {
+        display: grid !important;
+        height: var(--RadioButton_button_size) !important;
+        place-content: center normal !important;
+        place-items: initial !important;
+        position: relative !important;
+        width: var(--RadioButton_button_size) !important;
+
+
+        &::before {
+            content: '|' !important;
+            visibility: hidden !important;
+        }
+    }
+
+    #icon[part] {
+        inset: 0;
+        opacity: 0;
+        position: absolute;
+
+
+        :host([checked]) & {
+            opacity: initial;
+        }
+    }
+}

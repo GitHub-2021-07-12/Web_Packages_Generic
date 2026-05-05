@@ -1,0 +1,15 @@
+@layer init {
+    :host {
+        display: block;
+        height: 32px;
+        overflow: hidden;
+        width: 32px;
+    }
+
+
+    svg {
+        display: block;
+        height: 100%;
+        width: 100%;
+    }
+}

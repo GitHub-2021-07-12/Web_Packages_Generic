@@ -1,0 +1,546 @@
+@layer theme {
+    :root {
+        --_gapSmallNegative: calc(-1 * var(--gapSmall));
+        --_strokeWidthNegative: calc(-1 * var(--strokeWidth));
+
+
+        --colorDark: hsl(0 0% 0%);
+        --colorDarkDim: hsl(0 0% 40%);
+        --colorDarkTransparent: hsl(0 0% 0% / 0.2);
+        --colorGray: hsl(0 0% 70%);
+        --colorGrayBright: hsl(0 0% 60%);
+        --colorGrayDim: hsl(0 0% 80%);
+        --colorGreen: hsl(var(--hueGreen) 100% 34%);
+        --colorGreenDim: hsl(var(--hueGreen) 30% 70%);
+        --colorGreenTransparent: hsl(var(--hueGreen) 100% 34% / 0.1);
+        --colorGreenTransparentBright: hsl(var(--hueGreen) 100% 34% / 0.2);
+        --colorLight: hsl(0 0% 100%);
+        --colorLightBright: hsl(0 0% 94%);
+        --colorLightDim: hsl(0 0% 98%);
+        --colorRed: hsl(var(--hueRed) 100% 50%);
+        --colorRedTransparent: hsl(var(--hueRed) 100% 50% / 0.1);
+        --colorRedTransparentBright: hsl(var(--hueRed) 100% 50% / 0.2);
+        --font: 16px / 1.5 'Arial';
+        --gap: 8px;
+        --gapSmall: 4px;
+        --hueGreen: 170;
+        --hueRed: 0;
+        --iconSize: 1.5em;
+        --iconSizeSmall: 1em;
+        --rounding: 4px;
+        --roundingFull: 9e9px;
+        --shadowBlurred: 2px 2px 8px 4px var(--colorDarkTransparent);
+        --shadowClear: 4px 4px 4px var(--colorDarkTransparent);
+        --strokeWidth: 1px;
+        --strokeWidthLarge: 2px;
+        --transition: 0.1s ease-in-out;
+        --transitionSlow: 0.4s ease-in-out;
+    }
+
+
+    body {
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+        background: var(--colorLight);
+        color: var(--colorDark);
+        font: var(--font);
+        height: 100dvh;
+        margin: 0;
+        touch-action: none;
+    }
+
+    x-checkBox {
+        --CheckBox_button_size: var(--iconSizeSmall);
+
+        gap: var(--gap);
+        outline: none;
+        padding: var(--gapSmall);
+
+
+        &[disabled] {
+            color: var(--colorDarkDim);
+        }
+
+
+        &::part(button) {
+            background: var(--colorLight);
+            border: var(--colorGreen) solid var(--strokeWidthLarge);
+            border-radius: var(--rounding);
+            transition: var(--transition);
+            transition-property: background;
+        }
+        &:focus-visible::part(button) {
+            outline: var(--colorGreen) solid var(--strokeWidthLarge);
+            outline-offset: var(--strokeWidthLarge);
+        }
+        &:hover::part(button) {
+            background: var(--colorLightBright);
+        }
+        &[disabled]::part(button) {
+            border-color: var(--colorGreenDim);
+        }
+        &[state]::part(button) {
+            background: var(--colorGreen);
+        }
+        &[disabled][state]::part(button) {
+            background: var(--colorGreenDim);
+        }
+
+        &::part(icon) {
+            background: var(--colorLight);
+            mask: center no-repeat;
+            transition: var(--transition);
+            transition-property: opacity;
+        }
+        &:hover::part(icon) {
+            background: var(--colorLightBright);
+        }
+
+        &::part(iconChecked) {
+            mask-image: url('/Packages/Generic/Frontend/Themes/Main/Main.svg #icon16Stroke2_check');
+        }
+
+        &::part(iconIndeterminate) {
+            mask-image: url('/Packages/Generic/Frontend/Themes/Main/Main.svg #icon16Stroke2_minus');
+        }
+    }
+
+    x-popup {
+        background: var(--colorLight);
+        border: none;
+        border-radius: var(--rounding);
+        box-shadow: var(--shadowBlurred);
+        padding: var(--gap);
+
+
+        &::part(face)::backdrop {
+            backdrop-filter: blur(var(--strokeWidthLarge));
+            background: var(--colorDarkTransparent);
+        }
+    }
+
+    x-radioButton {
+        --RadioButton_button_size: var(--iconSizeSmall);
+
+        gap: var(--gap);
+        outline: none;
+        padding: var(--gapSmall);
+
+
+        &[disabled] {
+            color: var(--colorDarkDim);
+        }
+
+
+        &::part(button) {
+            background: var(--colorLight);
+            border: var(--colorGreen) solid var(--strokeWidthLarge);
+            border-radius: var(--roundingFull);
+        }
+        &:focus-visible::part(button) {
+            outline: var(--colorGreen) solid var(--strokeWidthLarge);
+            outline-offset: var(--strokeWidthLarge);
+        }
+        &:hover::part(button) {
+            background: var(--colorLightBright);
+        }
+        &[disabled]::part(button) {
+            border-color: var(--colorGreenDim);
+        }
+
+        &::part(icon) {
+            background: padding-box var(--colorGreen);
+            border: transparent solid calc(var(--strokeWidthLarge) * 1.5);
+            border-radius: var(--roundingFull);
+            transition: var(--transition);
+            transition-property: opacity;
+        }
+        &[disabled]::part(icon) {
+            background-color: var(--colorGreenDim);
+        }
+    }
+
+    x-resizable {
+        --Component_eventsWithoutPropagation: flickMain swipeMain swipeStartMain swipeStopMain;
+        --Resizable_edge_width: var(--gap);
+
+
+        &::part(cornerLeftBottom) {
+            cursor: nesw-resize;
+        }
+
+        &::part(cornerLeftTop) {
+            cursor: nwse-resize;
+        }
+
+        &::part(cornerRightBottom) {
+            cursor: nwse-resize;
+        }
+
+        &::part(cornerRightTop) {
+            cursor: nesw-resize;
+        }
+
+        &::part(edgeBottom) {
+            cursor: ns-resize;
+        }
+
+        &::part(edgeLeft) {
+            cursor: ew-resize;
+        }
+
+        &::part(edgeRight) {
+            cursor: ew-resize;
+        }
+
+        &::part(edgeTop) {
+            cursor: ns-resize;
+        }
+    }
+
+    x-scrollArea {
+        &::part(scrollBar) {
+            --TrackBar_mode: initial;
+
+            block-size: 8px;
+            padding: var(--gapSmall);
+        }
+
+        &::part(scrollBar_puck) {
+            background: var(--colorGray);
+            block-size: 100%;
+            border: none;
+        }
+        &::part(scrollBar_puck):hover {
+            background: var(--colorGrayBright);
+        }
+        &::part(scrollBar_puck)::after {
+            content: '';
+            inset: 0;
+            margin-block: var(--_gapSmallNegative);
+            position: absolute;
+        }
+        &[disabled]::part(scrollBar_puck) {
+            background: var(--colorGrayDim);
+        }
+
+        &::part(scrollBar_track) {
+            visibility: hidden;
+        }
+    }
+
+    x-select {
+        --Select_icon_size: var(--iconSize);
+
+        background: var(--colorLight);
+        border: var(--colorGray) solid var(--strokeWidth);
+        border-radius: var(--rounding);
+
+
+        &:focus {
+            border-color: var(--colorGreen);
+        }
+        &[_invalid] {
+            background: var(--colorRedTransparent);
+            border-color: var(--colorRed);
+            color: var(--colorRed);
+        }
+        &[disabled] {
+            background: var(--colorLightDim);
+            border-color: var(--colorGrayDim);
+        }
+
+        &::part(buttonClear) {
+            background: var(--colorGray);
+            margin-inline-end: var(--gapSmall);
+            mask: url('/Packages/Generic/Frontend/Themes/Main/Main.svg #icon24Stroke1_cross') center no-repeat;
+        }
+        &::part(buttonClear):hover {
+            background: var(--colorGreen);
+        }
+        &[_invalid]::part(buttonClear):hover {
+            background: var(--colorRed);
+        }
+
+        &::part(display) {
+            padding: var(--gapSmall);
+        }
+
+        &::part(flickable) {
+            --GestureArea_shift: var(--gap);
+        }
+
+        &::part(icon) {
+            background: var(--colorGreen);
+            margin-inline-end: var(--gapSmall);
+            mask: url('/Packages/Generic/Frontend/Themes/Main/Main.svg #icon24Stroke1_angleRight') center no-repeat;
+            transition: var(--transition);
+            transition-property: transform;
+        }
+        &[_invalid]::part(icon) {
+            background: var(--colorRed);
+        }
+        &[_open]::part(icon) {
+            transform: rotate(90deg);
+        }
+        &[disabled]::part(icon) {
+            background: var(--colorGrayDim);
+        }
+
+        &::part(popup) {
+            border: var(--colorGray) solid var(--strokeWidth);
+            border-radius: var(--rounding);
+            box-shadow: var(--shadowClear);
+            margin-block-start: var(--strokeWidthLarge);
+            margin-inline: var(--_strokeWidthNegative);
+            max-height: 256px;
+            padding: 0;
+            user-select: inherit;
+        }
+
+        &::part(scrollBar) {
+            margin-block-start: var(--_gapSmallNegative);
+        }
+
+        &::part(textField) {
+            background: none;
+            border: none;
+        }
+
+        &[_invalid]::part(textField_input)::selection {
+            background: var(--colorRedTransparentBright);
+        }
+
+        &:not([editable])::part(textField_input)::placeholder {
+            color: currentColor;
+        }
+
+
+        [_Repeater_item] {
+            border-radius: var(--rounding);
+            padding-inline: var(--gapSmall);
+
+
+            &[_Select_highlighted] {
+                background: var(--colorGreenTransparent);
+                color: var(--colorGreen);
+            }
+            &:hover {
+                background: var(--colorGreenTransparentBright);
+            }
+        }
+    }
+
+    x-switch {
+        background: var(--colorGray);
+        border-radius: var(--roundingFull);
+        padding: var(--strokeWidthLarge);
+        transition: var(--transition);
+        transition-property: background;
+
+
+        &:focus-visible {
+            outline: var(--colorGreen) solid var(--strokeWidthLarge);
+            outline-offset: var(--strokeWidthLarge);
+        }
+        &[on] {
+            background: var(--colorGreen);
+        }
+        &[disabled] {
+            background: var(--colorGrayDim);
+        }
+        &[disabled][on] {
+            background: var(--colorGreenDim);
+        }
+
+
+        &::part(puck) {
+            background: var(--colorLight);
+            border-radius: var(--roundingFull);
+            transition: var(--transition);
+            transition-property: inset;
+        }
+        &:hover::part(puck) {
+            background: var(--colorLightBright);
+        }
+        &[disabled]::part(puck) {
+            background: var(--colorLightDim);
+        }
+    }
+
+    x-textArea {
+        background: var(--colorLight);
+        border: var(--colorGray) solid var(--strokeWidth);
+        border-radius: var(--rounding);
+
+
+        &:focus {
+            border-color: var(--colorGreen);
+        }
+        &[disabled] {
+            background: var(--colorLightDim);
+            border-color: var(--colorGrayDim);
+            color: var(--colorDarkDim);
+        }
+
+        &::part(input) {
+            padding: var(--gap);
+        }
+    }
+
+    x-textField {
+        --TextField_button_size: var(--iconSize);
+
+        background: var(--colorLight);
+        border: var(--colorGray) solid var(--strokeWidth);
+        border-radius: var(--rounding);
+
+
+        &:focus {
+            border-color: var(--colorGreen);
+        }
+        &[_invalid] {
+            background: var(--colorRedTransparent);
+            border-color: var(--colorRed);
+            color: var(--colorRed);
+        }
+        &[disabled] {
+            background: var(--colorLightDim);
+            border-color: var(--colorGrayDim);
+            color: var(--colorDarkDim);
+        }
+
+
+        &::part(button) {
+            background: var(--colorGray);
+            margin-inline-end: var(--gapSmall);
+            mask: center no-repeat;
+        }
+        &::part(button):hover {
+            background: var(--colorGreen);
+        }
+
+        &::part(buttonClear) {
+            mask-image: url('/Packages/Generic/Frontend/Themes/Main/Main.svg #icon24Stroke1_cross');
+        }
+
+        &::part(buttonMask) {
+            mask-image: url('/Packages/Generic/Frontend/Themes/Main/Main.svg #icon24Stroke1_eye');
+        }
+        &[masked]::part(buttonMask) {
+            mask-image:
+                url('/Packages/Generic/Frontend/Themes/Main/Main.svg #icon24Stroke1_eye'),
+                url('/Packages/Generic/Frontend/Themes/Main/Main.svg #icon24Stroke1_diagonalMinor')
+            ;
+        }
+
+        &::part(input) {
+            padding: var(--gapSmall);
+        }
+    }
+
+    x-trackBar {
+        border-radius: var(--roundingFull);
+
+
+        &:focus-visible {
+            outline: var(--colorGreen) solid var(--strokeWidthLarge);
+            outline-offset: var(--strokeWidthLarge);
+        }
+
+
+        &::part(fillerAfter) {
+            display: none;
+        }
+
+        &::part(fillerBefore) {
+            background: var(--colorGreen);
+        }
+        &[disabled]::part(fillerBefore) {
+            background: var(--colorGreenDim);
+        }
+
+        &::part(puck) {
+            background: var(--colorLight);
+            border: var(--colorGray) solid var(--strokeWidth);
+            border-radius: var(--roundingFull);
+            box-sizing: border-box;
+        }
+        &::part(puck):hover {
+            background: var(--colorLightBright);
+        }
+        &[disabled]::part(puck) {
+            background: var(--colorLightDim);
+            border-color: var(--colorGray);
+        }
+
+        &::part(track) {
+            background: var(--colorGray);
+            block-size: 8px;
+            border-radius: var(--roundingFull);
+        }
+        &[disabled]::part(track) {
+            background: var(--colorGrayDim);
+        }
+    }
+
+
+    .ghost {
+        &:defined {
+            animation: fadeIn var(--transitionSlow);
+        }
+    }
+
+    .popup {
+        background: var(--colorLight);
+        border: none;
+        border-radius: var(--rounding);
+        box-shadow: var(--shadowBlurred);
+        padding: var(--gap);
+        z-index: 1;
+
+
+        &::backdrop {
+            backdrop-filter: blur(var(--strokeWidthLarge));
+            background: var(--colorDarkTransparent);
+        }
+    }
+
+
+    :not(:defined) {
+        display: none;
+    }
+
+
+    ::placeholder {
+        color: var(--colorGray);
+    }
+    [disabled]::placeholder {
+        color: var(--colorGrayDim);
+    }
+
+    ::selection {
+        background: var(--colorGreenTransparentBright);
+    }
+
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    @keyframes fadeOut {
+        from {
+            opacity: 1;
+        }
+
+        to {
+            opacity: 0;
+        }
+    }
+}

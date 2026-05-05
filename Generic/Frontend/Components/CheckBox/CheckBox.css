@@ -1,0 +1,46 @@
+@layer {
+    :host {
+        --CheckBox_button_size: 16px;
+        --Component_displayInner: flex !important;
+        --Component_displayOuter: inline;
+
+        line-height: 0;
+        place-content: initial !important;
+        place-items: center normal !important;
+    }
+
+
+    ._CheckBox_icon[part] {
+        inset: 0;
+        opacity: 0;
+        position: absolute;
+    }
+
+
+    #button[part] {
+        display: grid !important;
+        height: var(--CheckBox_button_size) !important;
+        place-content: center normal !important;
+        place-items: initial !important;
+        position: relative !important;
+        width: var(--CheckBox_button_size) !important;
+
+
+        &::before {
+            content: '|' !important;
+            visibility: hidden !important;
+        }
+    }
+
+    #iconChecked[part] {
+        :host([state='checked']) & {
+            opacity: initial;
+        }
+    }
+
+    #iconIndeterminate[part] {
+        :host([state='indeterminate']) & {
+            opacity: initial;
+        }
+    }
+}

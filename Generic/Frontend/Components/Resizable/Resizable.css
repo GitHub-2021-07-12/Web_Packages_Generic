@@ -1,0 +1,95 @@
+@layer {
+    :host {
+        --Component_displayInner: grid !important;
+        --Resizable_cornerSize: var(--Resizable_edgeWidth);
+        --Resizable_edgeWidth: 8px;
+
+        box-sizing: border-box !important;
+        grid: minmax(0, 1fr) / minmax(0, 1fr) !important;
+        min-height: 64px;
+        min-width: 64px;
+        place-content: initial !important;
+        place-items: initial !important;
+    }
+
+
+    x-gestureArea[part] {
+        --Component_disabled: inherit !important;
+    }
+
+
+    ._Resizable_corner[part] {
+        --GestureArea_gestures: swipe tap !important;
+        --GestureArea_vertical: initial !important;
+
+        box-sizing: border-box !important;
+        grid-area: 1 / 1 / -1 / -1 !important;
+        height: var(--Resizable_cornerSize) !important;
+        position: relative !important;
+        width: var(--Resizable_cornerSize) !important;
+    }
+
+    ._Resizable_edge[part] {
+        --GestureArea_gestures: swipe tap !important;
+        --GestureArea_vertical: initial !important;
+
+        box-sizing: border-box !important;
+        grid-area: 1 / 1 / -1 / -1 !important;
+        height: initial !important;
+        position: relative !important;
+        width: initial !important;
+    }
+
+
+    #cornerLeftBottom[part] {
+        place-self: end start !important;
+    }
+
+    #cornerLeftTop[part] {
+        place-self: start !important;
+    }
+
+    #cornerRightBottom[part] {
+        place-self: end !important;
+    }
+
+    #cornerRightTop[part] {
+        place-self: start end !important;
+    }
+
+    #display[part] {
+        box-sizing: border-box !important;
+        display: block;
+        grid-area: 1 / 1 / -1 / -1 !important;
+        height: initial !important;
+        overflow: hidden;
+        place-content: initial !important;
+        place-items: initial !important;
+        place-self: initial !important;
+        width: initial !important;
+    }
+
+    #edgeBottom[part] {
+        height: var(--Resizable_edgeWidth) !important;
+        margin: 0 var(--Resizable_cornerSize) 0 var(--Resizable_cornerSize);
+        place-self: end stretch !important;
+    }
+
+    #edgeLeft[part] {
+        place-self: stretch start !important;
+        margin: var(--Resizable_cornerSize) 0 var(--Resizable_cornerSize) 0;
+        width: var(--Resizable_edgeWidth) !important;
+    }
+
+    #edgeRight[part] {
+        place-self: stretch end !important;
+        margin: var(--Resizable_cornerSize) 0 var(--Resizable_cornerSize) 0;
+        width: var(--Resizable_edgeWidth) !important;
+    }
+
+    #edgeTop[part] {
+        height: var(--Resizable_edgeWidth) !important;
+        margin: 0 var(--Resizable_cornerSize) 0 var(--Resizable_cornerSize);
+        place-self: start stretch !important;
+    }
+}

@@ -1,0 +1,31 @@
+<div id='root'>
+    <div id='display' part='display' tabIndex='-1'>
+        <slot id='content' part='content'></slot>
+    </div>
+
+    <x-trackBar
+        id='scrollBarY'
+
+        part='scrollBar scrollBarY'
+
+        exportParts='
+            puck: scrollBar_puck,
+            puck: scrollBarY_puck,
+            track: scrollBar_track,
+            track: scrollBarY_track,
+        '
+    ></x-trackBar>
+
+    <x-trackBar
+        id='scrollBarX'
+
+        part='scrollBar scrollBarX'
+
+        exportParts='
+            puck: scrollBar_puck,
+            puck: scrollBarX_puck,
+            track: scrollBar_track,
+            track: scrollBarX_track,
+        '
+    ></x-trackBar>
+</div>

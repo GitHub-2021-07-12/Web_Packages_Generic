@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+
+
+<html>
+    <head>
+        <meta charset='utf-8' content='user-scalable=no, width=720' name='viewport'>
+        <title>Test</title>
+
+        <link href='/Packages/Generic/Frontend/Themes/Main/Main.css' rel='stylesheet'>
+
+        <style>
+            body {
+                padding: 10px;
+            }
+
+            x-popup {
+                --Component_displayInner: grid;
+                /* --Component_eventsWithoutPropagation: pointerdown; */
+                --Popup_modal: true;
+                /* --Popup_open: inherit; */
+                --Popup_transient: true;
+
+                height: 200px;
+                inset: 0;
+                margin: auto;
+                place-content: center;
+                width: 300px;
+            }
+
+
+            #popupInner {
+                left: 300px;
+                top: 300px;
+            }
+
+
+            :not(:defined) {
+                display: none;
+            }
+        </style>
+
+        <script type='module'>
+            import {Component} from '/Packages/Generic/Frontend/Components/Component/Component.js';
+            import {Popup} from '/Packages/Generic/Frontend/Components/Popup/Popup.js';
+
+
+            Component.init({
+                styleSheetsDescriptors: {
+                    main: '/Packages/Generic/Frontend/Themes/Main/Main.css',
+                },
+            });
+
+            await Popup._defined;
+
+            buttonPopup.onclick = () => {
+                popup.open = true;
+                popupInner.open = true;
+
+                console.log(1)
+            };
+        </script>
+    </head>
+
+    <body>
+        <button id='buttonPopup'>Popup</button>
+        <x-popup id='popup'>
+            Popup
+
+            <x-popup id='popupInner'>popupInner</x-popup>
+        </x-popup>
+    </body>
+</html>

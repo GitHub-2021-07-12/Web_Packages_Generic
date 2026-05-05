@@ -1,0 +1,17 @@
+<x-scrollArea
+    id='root'
+
+    part='root'
+
+    exportParts='
+        display,
+        scrollBar, scrollBar_handle, scrollBar_puck, scrollBar_track,
+        scrollBarX, scrollBarX_handle, scrollBarX_puck, scrollBarX_track,
+        scrollBarY, scrollBarY_handle, scrollBarY_puck, scrollBarY_track,
+    '
+>
+    <div id='inputWrapper' part='inputWrapper'>
+        <div id='textMeter'></div>
+        <textArea id='input' cols='1' part='input' rows='1'></textArea>
+    </div>
+</x-scrollArea>

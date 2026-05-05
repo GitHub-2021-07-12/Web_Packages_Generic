@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+
+
+<html>
+    <head>
+        <meta charset='utf-8' content='user-scalable=no, width=720' name='viewport'>
+        <title>All</title>
+
+        <link href='/Packages/Generic/Frontend/Themes/Main/Main.css' rel='styleSheet'>
+
+        <style>
+            * {
+                /* --Component_disabled: true; */
+            }
+
+            body {
+                padding: 10px;
+                user-select: none;
+            }
+
+            x-draggable {
+                --GestureArea_magnetism: 10px;
+                --GestureArea_shift: 10px;
+                /* --GestureArea_swipeFactor: 0.5; */
+
+                anchor-name: --anchor;
+                background: var(--colorLightDim);
+                left: 500px;
+                position: relative;
+                width: fit-content;
+
+
+                &[a] {
+                    transition: left 1s ease-in-out;
+                }
+            }
+
+            x-popup {
+                background: var(--colorGreenDim);
+                color: var(--colorLight);
+                position: fixed;
+                position-area: end;
+                width: 300px;
+
+
+                &::part(face) {
+                    position-anchor: --anchor;
+                }
+            }
+
+            x-repeater {
+                --Component_autoRefresh: true;
+            }
+
+            x-resizable {
+                /* --Resizable_disabled: true; */
+                --Resizable_resettable: true;
+
+                background: var(--colorLightDim);
+                height: 200px;
+                position: relative;
+                width: 300px;
+
+
+                &::part(display) {
+                    overflow: auto;
+                }
+            }
+
+            x-scrollArea {
+                --Component_autoRefresh: true;
+                --GestureArea_gestures: flick swipe;
+
+                background: var(--colorLightDim);
+                height: 100%;
+                width: 100%;
+
+
+                &::part(display) {
+                    padding: var(--gap);
+                }
+            }
+
+            x-select {
+                --Component_autoRefresh: true;
+                --Select_buttonClear: true;
+                --Select_editable: true;
+                --Select_looped: true;
+                --Select_placeholder: url('#{Select}');
+
+                anchor-name: --Select;
+
+
+                &::part(popup) {
+                    max-height: 100px;
+                }
+            }
+
+            x-slider {
+                --Component_autoRefresh: true;
+                --Slider_flipDurationMin: 1s;
+                --Slider_implicitFlipping: true;
+
+                background: var(--colorLightDim);
+                overflow: initial;
+
+
+                &::part(frame) {
+                    animation-duration: 2s;
+                }
+
+                &::part(frameNext) {
+                    animation-delay: 0.1s;
+                }
+
+                div {
+                    border: #000 solid 1px;
+                    display: grid;
+                    font: 150px 'Arial';
+                    place-items: center;
+                }
+            }
+
+            x-svg {
+                stroke: blue;
+            }
+
+            x-textField {
+                --TextField_buttons: buttonClear buttonMask;
+                --TextInput_placeholder: url('#{TextField}');
+
+                position: fixed;
+                position-anchor: --anchor;
+                position-area: end;
+            }
+
+            x-textArea {
+                --TextInput_placeholder: url('#{TextArea}');
+            }
+
+            x-trackBar {
+                margin: 10px;
+            }
+
+
+            [popover] {
+                border: none;
+                padding: 0;
+                width: 300px;
+
+
+                &::backdrop {
+                    background-color: #0f02;
+                    pointer-events: auto !important;
+                }
+            }
+        </style>
+
+        <script type='module'>
+            // import * as generic from '/Packages/Generic/Generic.js';
+            import * as frontend from '/Packages/Generic/Frontend/Frontend.js';
+            import * as js from '/Packages/Generic/Js/Js.js';
+
+            window.frontend = frontend;
+            window.js = js;
+            // window.generic = generic;
+
+
+            // frontend.components.Component.init({
+            //     styleSheetDescriptors: {
+            //         main: '/Packages/Generic/Frontend/Themes/Main/Main.css',
+            //     },
+            //     // useGlobalStyleSheets: false,
+            // });
+
+            // frontend.components.GestureArea.init({
+            //     // styleSheetDescriptors: null,
+            //     useGlobalStyleSheets: false,
+            // });
+
+            await frontend.components.Draggable._defined;
+            await frontend.components.Slider._defined;
+
+            let draggable = document.querySelector('x-draggable');
+            let popup = document.querySelector('#popup');
+            let slider = document.querySelector('x-slider');
+
+            draggable.magnetLinesX = [100, 110, 200];
+            draggable.magnetLinesY = [100, 200];
+            draggable.magnetPoints = [[300, 300], [600, 600]];
+
+            draggable.addEventListener('swipeStartMain', () => {
+                popup.open = true;
+            });
+            draggable.addEventListener('swipeMain', (event) => {
+                // console.clear();
+                // console.log(event.detail.pointer._positionOuter, event.detail.pointer._positionInner)
+            });
+            draggable.addEventListener('press', (event) => {
+                console.log(event.detail.pointer._positionDelta)
+            });
+
+            // slider.bindElements(draggable);
+
+            slider._animationManager.addElement(
+                draggable,
+                {
+                    // cancel: function () {
+                    //     console.log('cancel')
+
+                    //     this.removeAttribute('a');
+                    //     // this.setLeft(slider.index * 200);
+                    //     this.setLeft(slider._frameCurrentIndex * 200);
+                    // },
+
+                    clearing: function () {
+                        // console.log('clearing', slider.index)
+
+                        this.removeAttribute('a');
+                        this.setLeft(slider.index * 500);
+                    },
+
+                    preparing: function () {
+                        // console.log('preparing', slider._frameCurrentIndex, slider.index, slider._flipDirection)
+
+                        // this.setLeft(slider.index * 200);
+                        this.setAttribute('a', slider._flipDirection);
+                        // let left = slider._flipDirection ? slider._frameCurrentIndex + slider._flipDirection : slider.index;
+                        let left = slider.index + slider._flipDirection;
+                        // let left = slider._flipDirection ? slider._frameNextIndex : slider.index;
+                        this.setLeft(left * 500);
+                    },
+
+                    // stop: function () {
+                    //     console.log('stop', slider.index)
+
+                    //     this.removeAttribute('a');
+                    //     this.setLeft(slider.index * 200);
+                    // },
+                },
+            );
+
+            {
+                let protototype = {
+                    a: {
+                        aa: 0,
+                    },
+                    b: {
+                        aa: 0,
+                        bb: {
+                            bbb: 0,
+                        },
+                    },
+                };
+                let object = {
+                    a: {
+                        aa1: 1,
+                    },
+                    b: {
+                        aa: 1,
+                        bb: {
+                            bbb1: 1,
+                        },
+                    },
+                };
+                // generic.js.ObjectManager.extendProps(object, protototype, 'a', 'b');
+                let o = js.ObjectManager.extendObject(object, protototype);
+
+                // console.dir(o, object)
+            }
+
+        </script>
+    </head>
+
+    <body>
+        <x-component>Component</x-component>
+        <x-textInput>TextInput</x-textInput>
+
+        <x-checkBox groupInferior='group' tabIndex='0'>CheckBox</x-checkBox>
+        <x-checkBox groupSuperior='group' tabIndex='0'>CheckBox1</x-checkBox>
+        <x-checkBox groupSuperior='group' tabIndex='0'>CheckBox2</x-checkBox>
+
+        <x-radioButton group='group' tabIndex='0'>RadioButton1</x-radioButton>
+        <x-radioButton group='group' tabIndex='0'>RadioButton2</x-radioButton>
+        <x-radioButton group='group' tabIndex='0'>RadioButton3</x-radioButton>
+
+        <x-draggable class='popup'>Draggable</x-draggable>
+        <x-select index_='1' model='11' tabIndex='-1'></x-select>
+        <x-select editable='false' model='11'></x-select>
+        <x-textField></x-textField>
+        <x-svg url='/Generic/Frontend/Components/_Tests/Svg/Svg.svg #cross'></x-svg>
+        <x-svg url='/Packages/Generic/Frontend/Themes/Main/Main.svg #icon24Stroke1_cross'></x-svg>
+        <x-switch tabIndex='0'>Switch</x-switch>
+        <x-textArea></x-textArea>
+        <x-trackBar mode='precise' tabIndex='0'>TrackBar</x-trackBar>
+        <x-trackBar mode='progressive' swipeFactor='0.5' tabIndex='0'>TrackBar</x-trackBar>
+        <x-trackBar range='0 4' tabIndex='0'></x-trackBar>
+
+        <x-repeater interpolationKey='repeater' model='3'>
+            <template Repeater_delegate>
+                <span><{{repeater: index}} - {{repeater: data.value}}></span>
+            </template>
+        </x-repeater>
+
+        <x-resizable disabled='false'>
+            <x-scrollArea>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer lacinia risus vel mi lacinia ultrices. Curabitur sit amet turpis dapibus, egestas ante et, consectetur odio. Sed vestibulum commodo velit semper varius. Nulla bibendum nec tellus a elementum. Ut pellentesque imperdiet dictum. Sed blandit turpis cursus, luctus augue ac, facilisis felis. Nulla purus urna, sagittis quis mauris et, aliquet porta magna. Donec in orci nulla.
+            </x-scrollArea>
+        </x-resizable>
+
+        <x-slider index='1'>
+            <div>1</div>
+            <div>2</div>
+            <div>3</div>
+        </x-slider>
+
+        <x-popup id='popup' transient>
+            <!-- <x-textArea></x-textArea> -->
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer lacinia risus vel mi lacinia ultrices. Curabitur sit amet turpis dapibus, egestas ante et, consectetur odio. Sed vestibulum commodo velit semper varius. Nulla bibendum nec tellus a elementum. Ut pellentesque imperdiet dictum. Sed blandit turpis cursus, luctus augue ac, facilisis felis. Nulla purus urna, sagittis quis mauris et, aliquet porta magna. Donec in orci nulla.
+            <!-- <x-textArea></x-textArea> -->
+        </x-popup>
+    </body>
+</html>

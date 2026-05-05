@@ -1,0 +1,24 @@
+@layer {
+    :host {
+        block-size: 16px;
+        display: block;
+        inline-size: 32px;
+    }
+
+
+    #puck[part] {
+        block-size: 16px;
+        inline-size: 16px;
+        inset-inline-start: 0;
+        position: relative;
+
+
+        :host([on]) & {
+            inset-inline-start: 50%;
+        }
+    }
+
+    #track[part] {
+        block-size: 100%;
+    }
+}

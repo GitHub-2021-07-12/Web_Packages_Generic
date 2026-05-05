@@ -1,0 +1,92 @@
+@layer {
+    :host {
+        --Component_displayInner: grid !important;
+
+        grid: minmax(0, 1fr) / minmax(0, 1fr) !important;
+        overflow: hidden;
+        place-content: initial !important;
+        place-items: initial !important;
+    }
+    :host([_scrollHeight]:not([scrollBarsAreHidden])) {
+        grid: minmax(0, 1fr) / minmax(0, 1fr) min-content !important;
+    }
+    :host([_scrollWidth]:not([scrollBarsAreHidden])) {
+        grid: minmax(0, 1fr) min-content / minmax(0, 1fr) !important;
+    }
+    :host([_scrollHeight][_scrollWidth]:not([scrollBarsAreHidden])) {
+        grid: minmax(0, 1fr) min-content / minmax(0, 1fr) min-content !important;
+    }
+
+
+    x-trackBar[part] {
+        --Component_autoRefresh: initial !important;
+        --Component_disabled: initial !important;
+        --Component_display: none !important;
+        --Component_displayOuter: revert !important;
+        --Component_eventsWithoutPropagation: capture swipeMain swipeStartMain swipeStopMain !important;
+        --GestureArea_vertical: initial !important;
+        --TrackBar_range: initial !important;
+        --TrackBar_value: initial !important;
+
+        inline-size: initial !important;
+
+
+        :host([_swipe]) & {
+            --Component_disabled: true !important;
+        }
+
+
+        &::part(puck) {
+            --GestureArea_shift: initial;
+
+            min-inline-size: 20%;
+        }
+    }
+
+
+    #display[part] {
+        box-sizing: border-box !important;
+        outline: none;
+        overflow: auto !important;
+        place-self: initial !important;
+        scrollbar-width: none !important;
+        touch-action: none !important;
+
+
+        &::-webkit-scrollbar {
+            display: none !important;
+        }
+        :host([disabled]) & {
+            overflow: hidden !important;
+        }
+    }
+
+    #root {
+        direction: initial;
+    }
+
+    #scrollBarX[part] {
+        :host([_scrollWidth]:not([scrollBarsAreHidden])) & {
+            --Component_display: revert !important;
+        }
+
+
+        &::part(puck) {
+            inline-size: var(--_ScrollArea_puckX_length) !important;
+        }
+    }
+
+    #scrollBarY[part] {
+        --GestureArea_vertical: true !important;
+
+
+        :host([_scrollHeight]:not([scrollBarsAreHidden])) & {
+            --Component_display: revert !important;
+        }
+
+
+        &::part(puck) {
+            inline-size: var(--_ScrollArea_puckY_length) !important;
+        }
+    }
+}

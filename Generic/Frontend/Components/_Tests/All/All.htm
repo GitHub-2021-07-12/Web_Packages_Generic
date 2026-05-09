@@ -157,13 +157,12 @@
         </style>
 
         <script type='module'>
-            // import * as generic from '/Packages/Generic/Generic.js';
-            import * as frontend from '/Packages/Generic/Frontend/Frontend.js';
-            import * as js from '/Packages/Generic/Js/Js.js';
+            import * as generic from '/Packages/Generic/Generic.js';
+            // import * as frontend from '/Packages/Generic/Frontend/Frontend.js';
+            // import * as js from '/Packages/Generic/Js/Js.js';
 
-            window.frontend = frontend;
-            window.js = js;
-            // window.generic = generic;
+            window.frontend = generic.frontend;
+            window.js = generic.js;
 
 
             // frontend.components.Component.init({
@@ -288,8 +287,7 @@
         <x-select index_='1' model='11' tabIndex='-1'></x-select>
         <x-select editable='false' model='11'></x-select>
         <x-textField></x-textField>
-        <x-svg url='/Generic/Frontend/Components/_Tests/Svg/Svg.svg #cross'></x-svg>
-        <x-svg url='/Packages/Generic/Frontend/Themes/Main/Main.svg #icon24Stroke1_cross'></x-svg>
+        <x-svg url='/Packages/Generic/Frontend/Components/_Tests/All/Svg.svg #cross'></x-svg>
         <x-switch tabIndex='0'>Switch</x-switch>
         <x-textArea></x-textArea>
         <x-trackBar mode='precise' tabIndex='0'>TrackBar</x-trackBar>

@@ -82,6 +82,7 @@ export class CheckBox extends Component {
                 switch (event.code) {
                     case 'Enter':
                     case 'Space': {
+                        event.preventDefault();
                         this.toggle();
 
                         break;

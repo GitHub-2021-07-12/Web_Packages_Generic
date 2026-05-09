@@ -8,13 +8,13 @@ import {ObjectManager} from '/Packages/Generic/Js/ObjectManager/ObjectManager.js
 
 
 export class Component extends HTMLElement {
-    static _attributesObserved = [];
     static _components = [];
     static _css = '';
     static _cssUrl = '';
     static _defined = null;
     static _dom = null;
     static _domSubtrees = {};
+    static _fieldNames = {};
     static _html = '';
     static _htmlUrl = '';
     static _httpClient = null;
@@ -620,24 +620,8 @@ export class Component extends HTMLElement {
     };
 
 
-    static get observedAttributes() {
-        return this._attributesObserved;
-    }
+    static observedAttributes = [];
 
-
-    static _attributesObserved_define() {
-        if (!Object.hasOwn(this, '_fieldDescriptors')) return;
-
-        this._attributesObserved = [];
-
-        for (let Field of Object.values(this._fieldDescriptors)) {
-            if (Field._protected) continue;
-
-            let attributeNameLowerCase = Field._attributeName.toLowerCase();
-            this._attributesObserved[attributeNameLowerCase] = Field._name;
-            this._attributesObserved.push(attributeNameLowerCase);
-        }
-    }
 
     static async _components_await() {
         let promises = this._components.map((component) => component._defined);
@@ -783,6 +767,21 @@ export class Component extends HTMLElement {
                 name: fieldName,
             });
             this._fieldDescriptors[fieldName] = Field;
+        }
+    }
+
+    static _observedAttributes_define() {
+        if (!Object.hasOwn(this, '_fieldDescriptors')) return;
+
+        this._fieldNames = {};
+        this.observedAttributes = [];
+
+        for (let Field of Object.values(this._fieldDescriptors)) {
+            if (Field._protected) continue;
+
+            let attributeNameLowerCase = Field._attributeName.toLowerCase();
+            this._fieldNames[attributeNameLowerCase] = Field._name;
+            this.observedAttributes.push(attributeNameLowerCase);
         }
     }
 
@@ -1066,14 +1065,14 @@ export class Component extends HTMLElement {
 
         this._defined = new ExternalPromise();
         this._fieldDescriptors_normalize();
+        this._createFieldAccessors();
         EventManager.normalizeEventHandlerDescriptors(this._eventHandlerDescriptors);
         ObjectManager.extendProps(this, null, ...this._propsExtended);
-        this._attributesObserved_define();
-        this._createFieldAccessors();
 
         await Executor.delay();
 
         this._httpClient = new HttpClient({urlBasic: this._url});
+        this._observedAttributes_define();
         await Promise.all([
             this._components_await(),
             this._styleSheets_create(),
@@ -1378,7 +1377,7 @@ export class Component extends HTMLElement {
 
 
     attributeChangedCallback(attributeName) {
-        this._fields[this.constructor._attributesObserved[attributeName]]?.updateByAttribute();
+        this._fields[this.constructor._fieldNames[attributeName]]?.updateByAttribute();
     }
 
     connectedCallback() {

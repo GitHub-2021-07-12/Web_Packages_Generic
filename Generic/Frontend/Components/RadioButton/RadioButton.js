@@ -64,6 +64,7 @@ export class RadioButton extends Component {
                 switch (event.code) {
                     case 'Enter':
                     case 'Space': {
+                        event.preventDefault();
                         this.checked = true;
 
                         break;

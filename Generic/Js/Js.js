@@ -4,6 +4,6 @@ export {ExternalPromise} from '/Packages/Generic/Js/ExternalPromise/ExternalProm
 export {HttpClient} from '/Packages/Generic/Js/HttpClient/HttpClient.js';
 export {LocalStorage} from '/Packages/Generic/Js/LocalStorage/LocalStorage.js';
 export {ObjectManager} from '/Packages/Generic/Js/ObjectManager/ObjectManager.js';
-export {RestClient} from '/Generic/Js/RestClient/RestClient.js';
+export {RestClient} from '/Packages/Generic/Js/RestClient/RestClient.js';
 export {RichString} from '/Packages/Generic/Js/RichString/RichString.js';
 export {Vector2d} from '/Packages/Generic/Js/Vector2d/Vector2d.js';

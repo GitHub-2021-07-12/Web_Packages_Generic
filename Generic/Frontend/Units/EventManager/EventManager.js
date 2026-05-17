@@ -4,11 +4,12 @@ import {ObjectManager} from '/Packages/Generic/Js/ObjectManager/ObjectManager.js
 export class EventManager {
     static _EventHandler = class {
         static _callback = function (event) {};
+        static _disabled = false;
         static _eventNames = [];
         static _opts = null;
 
 
-        __disabled = false;
+        __disabled = this.constructor._disabled;
         __eventTarget = null;
 
 
@@ -21,7 +22,7 @@ export class EventManager {
         set disabled(disabled) {
             if (disabled == this.disabled) return;
 
-            this.__disabled = disabled;
+            this.__disabled = !!disabled;
 
             if (!this.eventTarget) return;
 
@@ -171,6 +172,7 @@ export class EventManager {
             else if (eventHandlerDescriptor?.callback instanceof Function) {
                 eventHandlerDescriptor = class EventHandler extends this._EventHandler {
                     static _callback = eventHandlerDescriptor.callback;
+                    static _disabled = !!eventHandlerDescriptor.disabled;
                     static _eventNames = eventHandlerDescriptor.eventNames?.length ? eventHandlerDescriptor.eventNames : [k];
                     static _opts = eventHandlerDescriptor.opts;
                 };

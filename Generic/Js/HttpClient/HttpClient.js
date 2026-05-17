@@ -42,13 +42,6 @@ export class HttpClient {
     }
 
 
-    constructor(args = null) {
-        if (!args) return;
-
-        this.init(args);
-    }
-
-
     async fetch(url, opts = null) {
         url = this.constructor.createUrl(url, this.urlBasic) + '';
 
@@ -113,6 +106,18 @@ export class HttpClient {
         requestRetryDelay = undefined,
         urlBasic = undefined,
     } = {}) {
-        ObjectManager.assignProps(this, arguments[0]);
+        ObjectManager.assignProps(
+            this,
+            {
+                fast,
+                parallelRequestsCountMax,
+                requestRetriesCountMax,
+                requestRetryCondition,
+                requestRetryDelay,
+                urlBasic,
+            },
+        );
+
+        return this;
     }
 }

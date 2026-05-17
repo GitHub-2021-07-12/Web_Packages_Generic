@@ -35,14 +35,6 @@ export class Renderer extends EventTarget {
     }
 
 
-    constructor(args = null) {
-        super();
-
-        if (!args) return;
-
-        this.init(args);
-    }
-
     init({
         render = undefined,
         renderCondition_get = undefined,
@@ -54,6 +46,8 @@ export class Renderer extends EventTarget {
                 renderCondition_get,
             },
         );
+
+        return this;
     }
 
     render() {}

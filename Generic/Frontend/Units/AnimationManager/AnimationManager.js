@@ -128,6 +128,8 @@ export class AnimationManager extends Renderer {
                 gain,
             },
         );
+
+        return this;
     }
 
     prepare() {

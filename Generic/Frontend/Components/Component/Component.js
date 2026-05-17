@@ -359,7 +359,7 @@ export class Component extends HTMLElement {
                 value: this._value,
                 valuePrev: this._valuePrev,
             };
-            this._component.dispatchEvent(`field:${this.constructor._name}`, eventDetail);
+            this._component.dispatchEvent(`field.${this.constructor._name}`, eventDetail);
         }
 
         _update(value) {
@@ -1071,7 +1071,7 @@ export class Component extends HTMLElement {
 
         await Executor.delay();
 
-        this._httpClient = new HttpClient({urlBasic: this._url});
+        this._httpClient = new HttpClient().init({urlBasic: this._url});
         this._observedAttributes_define();
         await Promise.all([
             this._components_await(),

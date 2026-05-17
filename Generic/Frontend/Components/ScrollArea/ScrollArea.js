@@ -187,7 +187,7 @@ export class ScrollArea extends GestureArea {
     _stickyY = true;
     _velocity = new Vector2d();
 
-    _renderer = new Renderer({
+    _renderer = new Renderer().init({
         render: this._renderer_render.bind(this),
         renderCondition_get: this._renderer_renderCondition_get.bind(this),
     });

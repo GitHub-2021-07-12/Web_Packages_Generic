@@ -35,6 +35,7 @@ export class Component extends HTMLElement {
 
     static _Field = class {
         static _attributeName = '';
+        static _cssPropDefault = '';
         static _cssPropFactor = 1;
         static _cssPropName = '';
         static _cssPropStringRegExp = /^url\(\s*(?<quote>["'])#{(?<value>.*)}\k<quote>\s*\)$/i;
@@ -93,7 +94,8 @@ export class Component extends HTMLElement {
                 },
 
                 fromCssProp(string) {
-                    return string == 'true' || undefined;
+                    // return string == 'true' || undefined;
+                    return string == 'true';
                 },
 
                 toAttribute(value) {
@@ -232,9 +234,10 @@ export class Component extends HTMLElement {
         }
 
         static _registerCssProp() {
+            this._cssPropDefault = this._toCssProp(this._default);
             let cssPropDescriptor = {
                 inherits: true,
-                initialValue: this._toCssProp(this._default),
+                initialValue: this._cssPropDefault,
                 name: this._cssPropName,
                 syntax: '<url>',
             };
@@ -655,10 +658,7 @@ export class Component extends HTMLElement {
 
     static async _dom_create() {
         let css = '';
-        let cssPropNames = [...Object.values(this._fieldDescriptors)]
-            .filter((Field) => !Field._protected)
-            .map((Field) => Field._cssPropName)
-        ;
+        let fieldDescriptors = [...Object.values(this._fieldDescriptors)].filter((Field) => !Field._protected);
         let html = '';
         let root = null;
         this._dom = new DocumentFragment();
@@ -705,7 +705,7 @@ export class Component extends HTMLElement {
                     --Component_display: initial;
                     --Component_displayInner: flow-root;
                     --Component_displayOuter: block;
-                    ${cssPropNames.map((cssPropName) => `${cssPropName}: initial;`).join(' ')}
+                    ${fieldDescriptors.map((Field) => `${Field._cssPropName}: ${Field._cssPropDefault};`).join(' ')}
 
                     display: var(--Component_display, var(--Component_displayOuter) var(--Component_displayInner)) !important;
                 }
@@ -717,7 +717,7 @@ export class Component extends HTMLElement {
                 [_Component_fieldObserver] {
                     display: contents !important;
                     transition: allow-discrete 1ms !important;
-                    transition-property: ${cssPropNames.join(', ')} !important;
+                    transition-property: ${fieldDescriptors.map((Field) => Field._cssPropName).join(', ')} !important;
                 }
 
 

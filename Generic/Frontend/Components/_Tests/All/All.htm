@@ -11,6 +11,7 @@
         <style>
             * {
                 /* --Component_disabled: true; */
+                /* --Component_disabled: false; */
             }
 
             body {
@@ -54,6 +55,7 @@
 
             x-resizable {
                 /* --Resizable_disabled: true; */
+                /* --Resizable_a: false; */
                 --Resizable_resettable: true;
 
                 background: var(--colorLightDim);
@@ -69,6 +71,7 @@
 
             x-scrollArea {
                 --Component_autoRefresh: true;
+                /* --Component_disabled: true; */
                 --GestureArea_gestures: flick swipe;
 
                 background: var(--colorLightDim);
@@ -300,7 +303,7 @@
             </template>
         </x-repeater>
 
-        <x-resizable disabled='false'>
+        <x-resizable disabled_>
             <x-scrollArea>
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer lacinia risus vel mi lacinia ultrices. Curabitur sit amet turpis dapibus, egestas ante et, consectetur odio. Sed vestibulum commodo velit semper varius. Nulla bibendum nec tellus a elementum. Ut pellentesque imperdiet dictum. Sed blandit turpis cursus, luctus augue ac, facilisis felis. Nulla purus urna, sagittis quis mauris et, aliquet porta magna. Donec in orci nulla.
             </x-scrollArea>

@@ -14,7 +14,7 @@
 
 
     x-gestureArea[part] {
-        --Component_disabled: inherit !important;
+        --Component_disabled: var(--Resizable_fixed) !important;
     }
 
 

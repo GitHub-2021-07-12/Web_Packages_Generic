@@ -139,12 +139,9 @@ export class Resizable extends Component {
     };
 
     static _fieldDescriptors = {
+        fixed: false,
         keepProportions: false,
         resettable: false,
-
-        disabled: class Field extends super._fieldDescriptors.disabled {
-            static _externalFlag = true;
-        },
 
         target: {
             default: '',

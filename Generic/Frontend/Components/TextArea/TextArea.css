@@ -9,13 +9,13 @@
     }
 
 
-    #input[part] {
+    #input {
         all: inherit;
         display: revert;
-        overflow: hidden;
     }
 
     #inputWrapper[part] {
+        cursor: text;
         display: contents !important;
         grid-area: 1 / 1 / -1 / -1 !important;
         white-space: preserve wrap !important;

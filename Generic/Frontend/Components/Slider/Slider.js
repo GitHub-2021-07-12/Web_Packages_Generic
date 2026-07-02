@@ -185,7 +185,7 @@ export class Slider extends GestureArea {
         },
 
         index: class Field extends this._Field {
-            static _default = 0;
+            static _defaultValue = 0;
             static _externalFlag = true;
 
 

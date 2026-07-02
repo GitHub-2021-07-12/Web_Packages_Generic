@@ -34,45 +34,41 @@ export class Component extends HTMLElement {
     static _useGlobalStyleSheets = false;
 
     static _Field = class {
+        static _ItemConstructor = String;
         static _attributeName = '';
-        static _cssPropDefault = '';
+        static _cssPropDefaultValue = '';
         static _cssPropFactor = 1;
         static _cssPropName = '';
         static _cssPropStringRegExp = /^url\(\s*(?<quote>["'])#{(?<value>.*)}\k<quote>\s*\)$/i;
         static _cssPropUnit = '';
-        static _default = undefined;
+        static _defaultValue = undefined;
         static _enum = null;
         static _externalFlag = undefined;
         static _extra = false;
         static _flash = false;
-        static _fromAttribute = null;
-        static _fromCssProp = null;
-        static _itemConstructor = String;
         static _name = '';
         static _protected = undefined;
         static _range = null;
-        static _toAttribute = null;
-        static _toCssProp = null;
 
         static _converters = {
             array: {
-                fromAttribute(itemConstructor, string) {
+                fromAttribute(ItemConstructor, string) {
                     if (string == null) return undefined;
 
                     string = string.trim();
                     let items = string ? string.split(/\s+/) : [];
 
-                    if (items.length && itemConstructor == Number) {
+                    if (items.length && ItemConstructor == Number) {
                         items = items.map((item) => parseFloat(item));
                     }
 
                     return items;
                 },
 
-                fromCssProp(itemConstructor, string) {
+                fromCssProp(ItemConstructor, string) {
                     let items = string != 'none' ? string.split(/\s+/) : [];
 
-                    if (items.length && itemConstructor == Number) {
+                    if (items.length && ItemConstructor == Number) {
                         items = items.map((item) => parseFloat(item));
                     }
 
@@ -143,14 +139,14 @@ export class Component extends HTMLElement {
             },
 
             set: {
-                fromAttribute(itemConstructor, string) {
-                    let items = this._converters.array.fromAttribute(itemConstructor, string);
+                fromAttribute(ItemConstructor, string) {
+                    let items = this._converters.array.fromAttribute(ItemConstructor, string);
 
                     return items ? new Set(items) : undefined;
                 },
 
-                fromCssProp(itemConstructor, string) {
-                    let items = this._converters.array.fromCssProp(itemConstructor, string);
+                fromCssProp(ItemConstructor, string) {
+                    let items = this._converters.array.fromCssProp(ItemConstructor, string);
 
                     return items ? new Set(items) : undefined;
                 },
@@ -184,16 +180,16 @@ export class Component extends HTMLElement {
         };
 
 
-        static _converters_assign() {
+        static _assignConverters() {
             let converters = this._converters.string;
             let convertersBinded = {};
 
-            switch (this._default?.constructor) {
+            switch (this._defaultValue?.constructor) {
                 case Array: {
-                    this._itemConstructor = this._default[0]?.constructor || this._itemConstructor;
+                    this._ItemConstructor = this._defaultValue[0]?.constructor || this._ItemConstructor;
                     converters = this._converters.array;
-                    convertersBinded.fromAttribute = converters.fromAttribute.bind(this, this._itemConstructor);
-                    convertersBinded.fromCssProp = converters.fromCssProp.bind(this, this._itemConstructor);
+                    convertersBinded.fromAttribute = converters.fromAttribute.bind(this, this._ItemConstructor);
+                    convertersBinded.fromCssProp = converters.fromCssProp.bind(this, this._ItemConstructor);
 
                     break;
                 }
@@ -210,10 +206,10 @@ export class Component extends HTMLElement {
                     break;
                 }
                 case Set: {
-                    this._itemConstructor = this._default.values().next().value?.constructor || this._itemConstructor;
+                    this._ItemConstructor = this._defaultValue.values().next().value?.constructor || this._ItemConstructor;
                     converters = this._converters.set;
-                    convertersBinded.fromAttribute = converters.fromAttribute.bind(this, this._itemConstructor);
-                    convertersBinded.fromCssProp = converters.fromCssProp.bind(this, this._itemConstructor);
+                    convertersBinded.fromAttribute = converters.fromAttribute.bind(this, this._ItemConstructor);
+                    convertersBinded.fromCssProp = converters.fromCssProp.bind(this, this._ItemConstructor);
 
                     break;
                 }
@@ -232,16 +228,19 @@ export class Component extends HTMLElement {
             this._toCssProp = convertersBinded.toCssProp || converters.toCssProp.bind(this);
         }
 
+        static _fromAttribute() {}
+
+        static _fromCssProp() {}
+
         static _registerCssProp() {
-            this._cssPropDefault = this._toCssProp(this._default);
             let cssPropDescriptor = {
                 inherits: true,
-                initialValue: this._cssPropDefault,
+                initialValue: this._cssPropDefaultValue,
                 name: this._cssPropName,
                 syntax: '<url>',
             };
 
-            switch (this._default?.constructor) {
+            switch (this._defaultValue?.constructor) {
                 case Array:
                 case Set: {
                     cssPropDescriptor.syntax = 'none | <number>+ | <angle>+ | <length-percentage>+ | <resolution>+ | <time>+ | <custom-ident>+';
@@ -275,35 +274,39 @@ export class Component extends HTMLElement {
             }
         }
 
+        static _toAttribute() {}
+
+        static _toCssProp() {}
+
 
         static init({
+            ItemConstructor = undefined,
             cssPropFactor = undefined,
             cssPropNamePrefix,
             cssPropUnit = undefined,
-            default: default_ = undefined,
+            default: defaultValue = undefined,
             enum: enum_ = undefined,
             externalFlag = undefined,
             extra = undefined,
             flash = undefined,
-            itemConstructor = undefined,
+            getInitialValue = undefined,
             name,
             process = undefined,
             range = undefined,
             updateAfter = undefined,
             updateBefore = undefined,
-            valueInitial_get = undefined,
         }) {
             ObjectManager.assignProps(
                 this,
                 {
+                    _ItemConstructor: ItemConstructor,
                     _cssPropFactor: cssPropFactor,
                     _cssPropUnit: cssPropUnit,
-                    _default: default_,
+                    _defaultValue: defaultValue,
                     _enum: enum_?.[Symbol.iterator] && new Set(enum_),
                     _externalFlag: externalFlag,
                     _extra: extra,
                     _flash: flash,
-                    _itemConstructor: itemConstructor,
                     _name: name,
                     _range: range,
                 },
@@ -311,23 +314,24 @@ export class Component extends HTMLElement {
             ObjectManager.assignProps(
                 this.prototype,
                 {
+                    _getInitialValue: getInitialValue,
                     _value_process: process,
                     _value_updateAfter: updateAfter,
                     _value_updateBefore: updateBefore,
-                    _valueInitial_get: valueInitial_get,
                 },
             );
 
             this._attributeName = this._name;
             this._protected = this._name.startsWith('_');
             this._cssPropName = (this._protected ? `--_${cssPropNamePrefix}` : `--${cssPropNamePrefix}_`) + this._name;
-            this._converters_assign();
+            this._assignConverters();
+            this._cssPropDefaultValue = this._toCssProp(this._defaultValue);
             this._registerCssProp();
         }
 
 
         _attributeIsBlocked = false;
-        _checkItemBinded = this.constructor._default?.constructor == Array ? this._checkItem.bind(this) : null;
+        _checkItemBinded = this.constructor._defaultValue?.constructor == Array ? this._checkItem.bind(this) : null;
         _component = null;
         _cssPropValue = undefined;
         _elements = null;
@@ -339,15 +343,10 @@ export class Component extends HTMLElement {
         _valuePrev = undefined;
 
 
-        get _valueInitial() {
-            return this._valueInitial_get();
-        }
-
-
         _checkItem(item) {
             return (
                 item !== ''
-                && item?.constructor == this.constructor._itemConstructor
+                && item?.constructor == this.constructor._ItemConstructor
                 && (!this.constructor._enum || this.constructor._enum.has(item))
                 && (!this.constructor._range || Common.inRange(item, ...this.constructor._range))
             );
@@ -363,22 +362,26 @@ export class Component extends HTMLElement {
             this._component.dispatchEvent(`field.${this.constructor._name}`, eventDetail);
         }
 
-        _update(value) {
-            let default_ = this.constructor._default;
+        _getInitialValue() {
+            return undefined;
+        }
 
-            if (value?.constructor == Array && default_?.constructor == Set) {
+        _update(value) {
+            let defaultValue = this.constructor._defaultValue;
+
+            if (value?.constructor == Array && defaultValue?.constructor == Set) {
                 value = new Set(value);
             }
 
             this._value_check(value);
 
             if (this._isDefault) {
-                value = structuredClone(default_);
+                value = structuredClone(defaultValue);
             }
 
             value = this._value_process(value);
             this._value_check(value);
-            this._valuePrepared = this._isDefault ? structuredClone(default_) : value;
+            this._valuePrepared = this._isDefault ? structuredClone(defaultValue) : value;
             this._value_updateBefore();
 
             if (this._valuePrepared === undefined) return;
@@ -388,23 +391,23 @@ export class Component extends HTMLElement {
         }
 
         _value_check(value) {
-            let default_ = this.constructor._default;
-            let defaultConstructor = default_?.constructor;
+            let defaultValue = this.constructor._defaultValue;
+            let defaultConstructor = defaultValue?.constructor;
             let valid = undefined;
 
             if (defaultConstructor && value?.constructor == defaultConstructor) {
                 switch (defaultConstructor) {
                     case Array: {
                         valid =
-                            (!default_.length || value.length == default_.length)
+                            (!defaultValue.length || value.length == defaultValue.length)
                             && value.every(this._checkItemBinded)
-                            && !Common.compare(value, default_)
+                            && !Common.compare(value, defaultValue)
                         ;
 
                         break;
                     }
                     case Set: {
-                        let subSet = default_.symmetricDifference(value);
+                        let subSet = defaultValue.symmetricDifference(value);
                         valid = subSet.size;
 
                         if (!valid) break;
@@ -419,7 +422,7 @@ export class Component extends HTMLElement {
                     }
                     default: {
                         valid =
-                            !Common.compare(value, default_)
+                            !Common.compare(value, defaultValue)
                             && (!this.constructor._enum || this.constructor._enum.has(value))
                             && (!this.constructor._range || Common.inRange(value, ...this.constructor._range))
                         ;
@@ -444,7 +447,7 @@ export class Component extends HTMLElement {
         }
 
         _value_init() {
-            let value = this._valueInitial;
+            let value = this._getInitialValue();
 
             if (value === undefined && !this.constructor._protected) {
                 value = this._value_getFromAttribute();
@@ -472,7 +475,7 @@ export class Component extends HTMLElement {
 
             let valueForExternal =
                 this.constructor._externalFlag !== false
-                && this._value?.constructor == this.constructor._default?.constructor
+                && this._value?.constructor == this.constructor._defaultValue?.constructor
                 && (!this._isDefault || this.constructor._externalFlag === true || this._value === true)
                     ? this._value
                     : undefined
@@ -498,10 +501,6 @@ export class Component extends HTMLElement {
         _value_updateAfter() {}
 
         _value_updateBefore() {}
-
-        _valueInitial_get() {
-            return undefined;
-        }
 
 
         constructor(component) {
@@ -572,7 +571,7 @@ export class Component extends HTMLElement {
 
     static _fieldDescriptors = {
         autoRefresh: class Field extends this._Field {
-            static _default = false;
+            static _defaultValue = false;
 
 
             disabled = false;
@@ -703,7 +702,7 @@ export class Component extends HTMLElement {
                     --Component_display: initial;
                     --Component_displayInner: flow-root;
                     --Component_displayOuter: block;
-                    ${fieldDescriptors.map((Field) => `${Field._cssPropName}: ${Field._cssPropDefault};`).join(' ')}
+                    ${fieldDescriptors.map((Field) => `${Field._cssPropName}: ${Field._cssPropDefaultValue};`).join(' ')}
 
                     display: var(--Component_display, var(--Component_displayOuter) var(--Component_displayInner)) !important;
                 }

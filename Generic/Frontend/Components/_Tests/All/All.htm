@@ -19,6 +19,12 @@
                 user-select: none;
             }
 
+            x-checkBox {
+                &[_Repeater_excluded] {
+                    --Component_disabled: true;
+                }
+            }
+
             x-draggable {
                 --GestureArea_magnetism: 10px;
                 --GestureArea_shift: 10px;
@@ -299,7 +305,30 @@
 
         <x-repeater interpolationKey='repeater' model='3'>
             <template Repeater_delegate>
-                <span><{{repeater: index}} - {{repeater: data.value}}></span>
+                <x-checkBox style='color: {{repeater: data.color}}'>[{{repeater: index}}: {{repeater: data.key}} - {{repeater: data.value}}]</x-checkBox>
+            </template>
+
+            <template Repeater_model>
+                <script>
+                    // ['aaa', 'bbb', 'ccc']
+                    [
+                        {
+                            color: 'red',
+                            key: 'a',
+                            value: '1',
+                        },
+                        {
+                            color: 'green',
+                            key: 'b',
+                            value: '2',
+                        },
+                        {
+                            color: 'blue',
+                            key: 'c',
+                            value: '3',
+                        },
+                    ]
+                </script>
             </template>
         </x-repeater>
 

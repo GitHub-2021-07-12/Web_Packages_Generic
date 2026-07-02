@@ -111,6 +111,10 @@ export class Repeater extends Component {
             extra: true,
             range: [0, Infinity],
 
+            getInitialValue() {
+                return this._component.querySelector('[Repeater_model]') || undefined;
+            },
+
             process(value) {
                 switch (value?.constructor) {
                     case Array: {
@@ -158,10 +162,6 @@ export class Repeater extends Component {
             updateAfter() {
                 this._component._refreshAuto();
                 EventManager.applyEventHandlers(this._component._eventHandlers.model, this._component.model);
-            },
-
-            valueInitial_get() {
-                return this._component.querySelector('[Repeater_model]') || undefined;
             },
         },
 
@@ -223,9 +223,8 @@ export class Repeater extends Component {
 
 
         applyData() {}
+
         applyIndex() {}
-        init() {}
-        updateData() {}
 
         constructor(item, model, modelItem) {
             this._item = item;
@@ -242,6 +241,10 @@ export class Repeater extends Component {
             this._model = model;
             this._modelItem = modelItem;
         }
+
+        init() {}
+
+        updateData() {}
     };
 
 

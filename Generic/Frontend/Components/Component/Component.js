@@ -94,7 +94,6 @@ export class Component extends HTMLElement {
                 },
 
                 fromCssProp(string) {
-                    // return string == 'true' || undefined;
                     return string == 'true';
                 },
 
@@ -229,7 +228,7 @@ export class Component extends HTMLElement {
 
             this._fromAttribute = convertersBinded.fromAttribute || converters.fromAttribute.bind(this);
             this._fromCssProp = convertersBinded.fromCssProp || converters.fromCssProp.bind(this);
-            this._toAttribute = convertersBinded.toAttribute || converters.toAttribute.bind(this);
+            this._toAttribute = converters.toAttribute.bind(this);
             this._toCssProp = convertersBinded.toCssProp || converters.toCssProp.bind(this);
         }
 
@@ -245,7 +244,6 @@ export class Component extends HTMLElement {
             switch (this._default?.constructor) {
                 case Array:
                 case Set: {
-                    cssPropDescriptor.initialValue ??= 'none';
                     cssPropDescriptor.syntax = 'none | <number>+ | <angle>+ | <length-percentage>+ | <resolution>+ | <time>+ | <custom-ident>+';
 
                     break;

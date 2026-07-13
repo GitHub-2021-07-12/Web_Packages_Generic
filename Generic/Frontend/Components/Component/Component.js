@@ -315,9 +315,9 @@ export class Component extends HTMLElement {
                 this.prototype,
                 {
                     _getInitialValue: getInitialValue,
+                    _updateAfter: updateAfter,
+                    _updateBefore: updateBefore,
                     _value_process: process,
-                    _value_updateAfter: updateAfter,
-                    _value_updateBefore: updateBefore,
                 },
             );
 
@@ -382,21 +382,53 @@ export class Component extends HTMLElement {
             value = this._value_process(value);
             this._value_check(value);
             this._valuePrepared = this._isDefault ? structuredClone(defaultValue) : value;
-            this._value_updateBefore();
+            this._updateBefore();
 
             if (this._valuePrepared === undefined) return;
 
-            this._value_update();
-            this._value_updateAfter();
+            // this._valuePrev = this._value;
+            this._value = this._valuePrepared;
+            this._valuePrepared = undefined;
+            this._updateAfter();
+            this._updateExternals();
+
+            if (!this.constructor._flash) return;
+
+            Executor.cancelTask(this._resetBinded);
+
+            if (this._isDefault) return;
+
+            Executor.queueTask(this._resetBinded, this._component.flashDuration);
+        }
+
+        _updateAfter() {}
+
+        _updateBefore() {}
+
+        _updateExternals() {
+            let attributeValue =
+                this.constructor._externalFlag !== false
+                && this._value?.constructor == this.constructor._defaultValue?.constructor
+                && (!this._isDefault || this.constructor._externalFlag === true || this._value === true)
+                    ? this._value
+                    : undefined
+            ;
+            this._attributeIsBlocked = true;
+            this._component.setAttribute(this.constructor._attributeName, this.constructor._toAttribute(attributeValue));
+            this._attributeIsBlocked = false;
+
+            let cssPropValue = !this._freeForCss ? attributeValue : undefined;
+            this._component.constructor.setCssProp(this._component, this.constructor._cssPropName, this.constructor._toCssProp(cssPropValue));
+            this._cssPropValue = this._component.constructor.getCssProp(this._component, this.constructor._cssPropName);
         }
 
         _value_check(value) {
             let defaultValue = this.constructor._defaultValue;
-            let defaultConstructor = defaultValue?.constructor;
+            let defaultValueConstructor = defaultValue?.constructor;
             let valid = undefined;
 
-            if (defaultConstructor && value?.constructor == defaultConstructor) {
-                switch (defaultConstructor) {
+            if (defaultValueConstructor && value?.constructor == defaultValueConstructor) {
+                switch (defaultValueConstructor) {
                     case Array: {
                         valid =
                             (!defaultValue.length || value.length == defaultValue.length)
@@ -459,48 +491,14 @@ export class Component extends HTMLElement {
                 value = this._value_getFromCssProp();
             }
 
-            this._valuePrepared = value;
-            this._value_check(value);
-            this._value_update();
+            this._value = value;
+            this._value_check(this._value);
+            // this._updateExternals();
         }
 
         _value_process(value) {
             return value;
         }
-
-        _value_update() {
-            this._valuePrev = this._value;
-            this._value = this._valuePrepared;
-            this._valuePrepared = undefined;
-
-            let valueForExternal =
-                this.constructor._externalFlag !== false
-                && this._value?.constructor == this.constructor._defaultValue?.constructor
-                && (!this._isDefault || this.constructor._externalFlag === true || this._value === true)
-                    ? this._value
-                    : undefined
-            ;
-
-            this._attributeIsBlocked = true;
-            this._component.setAttribute(this.constructor._attributeName, this.constructor._toAttribute(valueForExternal));
-            this._attributeIsBlocked = false;
-
-            let valueForCssProp = !this._freeForCss ? valueForExternal : undefined;
-            this._component.constructor.setCssProp(this._component, this.constructor._cssPropName, this.constructor._toCssProp(valueForCssProp));
-            this._cssPropValue = this._component.constructor.getCssProp(this._component, this.constructor._cssPropName);
-
-            if (!this.constructor._flash) return;
-
-            Executor.cancelTask(this._resetBinded);
-
-            if (this._isDefault) return;
-
-            Executor.queueTask(this._resetBinded, this._component.flashDuration);
-        }
-
-        _value_updateAfter() {}
-
-        _value_updateBefore() {}
 
 
         constructor(component) {
@@ -509,11 +507,13 @@ export class Component extends HTMLElement {
             this._value_init();
         }
 
-        refresh(withEvent = true) {
-            this._freeForCss ? this.reset(withEvent) : this.set(this._value, withEvent);
+        refresh() {
+            this._update(this._value);
         }
 
         reset(withEvent = true) {
+            this._valuePrev = this._value;
+
             if (this.constructor._flash || this.constructor._protected) {
                 this._update(undefined);
             }
@@ -531,6 +531,7 @@ export class Component extends HTMLElement {
             if (this.constructor._flash && !this._component.flashDuration) return;
 
             this._freeForCss = false;
+            this._valuePrev = this._value;
             this._update(value);
 
             if (withEvent) {
@@ -577,7 +578,7 @@ export class Component extends HTMLElement {
             disabled = false;
 
 
-            _value_updateAfter() {
+            _updateAfter() {
                 this._component._refreshAuto();
             }
         },
@@ -594,7 +595,10 @@ export class Component extends HTMLElement {
             default: new Set(),
 
             updateAfter() {
-                EventManager.applyDefaultAction(this._component, true, ...this._valuePrev);
+                if (this._valuePrev) {
+                    EventManager.applyDefaultAction(this._component, true, ...this._valuePrev);
+                }
+
                 EventManager.applyDefaultAction(this._component, false, ...this._value);
             },
         },
@@ -603,7 +607,10 @@ export class Component extends HTMLElement {
             default: new Set(),
 
             updateAfter() {
-                EventManager.applyPropagation(this._component, true, ...this._valuePrev);
+                if (this._valuePrev) {
+                    EventManager.applyPropagation(this._component, true, ...this._valuePrev);
+                }
+
                 EventManager.applyPropagation(this._component, false, ...this._value);
             },
         },

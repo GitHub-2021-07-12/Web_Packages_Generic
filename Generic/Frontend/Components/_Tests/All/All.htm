@@ -43,15 +43,47 @@
             }
 
             x-popup {
+                /* --Popup_open: true; */
+
                 background: var(--colorGreenDim);
                 color: var(--colorLight);
+                /* opacity: 0; */
                 position: fixed;
                 position-area: end;
+                /* transition: opacity 2s; */
+                /* transition: allow-discrete 2s; */
+                /* transition-property: display, opacity; */
                 width: 300px;
+
+
+                &[open] {
+                    /* opacity: 1; */
+                }
+
+                /* [_dragging] + & { */
+                :active + & {
+                    --Popup_open: true;
+                }
 
 
                 &::part(face) {
                     position-anchor: --anchor;
+
+                    opacity: 0;
+                    /* transition: opacity 2s; */
+                    transition: allow-discrete 2s;
+                    transition-property: display, opacity;
+                }
+                &[open]::part(face) {
+                    --Component_displayInner: grid;
+
+                    /* display: grid; */
+                    opacity: 1;
+
+
+                    @starting-style {
+                        opacity: 0;
+                    }
                 }
             }
 
@@ -78,11 +110,17 @@
             x-scrollArea {
                 --Component_autoRefresh: true;
                 /* --Component_disabled: true; */
+                --Component_flashDuration: 1s;
                 --GestureArea_gestures: flick swipe;
 
                 background: var(--colorLightDim);
                 height: 100%;
                 width: 100%;
+
+
+                &[_scrolling] {
+                    background: #afa;
+                }
 
 
                 &::part(display) {
@@ -197,9 +235,9 @@
             draggable.magnetLinesY = [100, 200];
             draggable.magnetPoints = [[300, 300], [600, 600]];
 
-            draggable.addEventListener('swipeStartMain', () => {
-                popup.open = true;
-            });
+            // draggable.addEventListener('swipeStartMain', () => {
+            //     popup.open = true;
+            // });
             draggable.addEventListener('swipeMain', (event) => {
                 // console.clear();
                 // console.log(event.detail.pointer._positionOuter, event.detail.pointer._positionInner)
@@ -210,43 +248,43 @@
 
             // slider.bindElements(draggable);
 
-            slider._animationManager.addElement(
-                draggable,
-                {
-                    // cancel: function () {
-                    //     console.log('cancel')
+            // slider._animationManager.addElement(
+            //     draggable,
+            //     {
+            //         // cancel: function () {
+            //         //     console.log('cancel')
 
-                    //     this.removeAttribute('a');
-                    //     // this.setLeft(slider.index * 200);
-                    //     this.setLeft(slider._frameCurrentIndex * 200);
-                    // },
+            //         //     this.removeAttribute('a');
+            //         //     // this.setLeft(slider.index * 200);
+            //         //     this.setLeft(slider._frameCurrentIndex * 200);
+            //         // },
 
-                    clearing: function () {
-                        // console.log('clearing', slider.index)
+            //         clearing: function () {
+            //             // console.log('clearing', slider.index)
 
-                        this.removeAttribute('a');
-                        this.setLeft(slider.index * 500);
-                    },
+            //             this.removeAttribute('a');
+            //             this.setLeft(slider.index * 500);
+            //         },
 
-                    preparing: function () {
-                        // console.log('preparing', slider._frameCurrentIndex, slider.index, slider._flipDirection)
+            //         preparing: function () {
+            //             // console.log('preparing', slider._frameCurrentIndex, slider.index, slider._flipDirection)
 
-                        // this.setLeft(slider.index * 200);
-                        this.setAttribute('a', slider._flipDirection);
-                        // let left = slider._flipDirection ? slider._frameCurrentIndex + slider._flipDirection : slider.index;
-                        let left = slider.index + slider._flipDirection;
-                        // let left = slider._flipDirection ? slider._frameNextIndex : slider.index;
-                        this.setLeft(left * 500);
-                    },
+            //             // this.setLeft(slider.index * 200);
+            //             this.setAttribute('a', slider._flipDirection);
+            //             // let left = slider._flipDirection ? slider._frameCurrentIndex + slider._flipDirection : slider.index;
+            //             let left = slider.index + slider._flipDirection;
+            //             // let left = slider._flipDirection ? slider._frameNextIndex : slider.index;
+            //             this.setLeft(left * 500);
+            //         },
 
-                    // stop: function () {
-                    //     console.log('stop', slider.index)
+            //         // stop: function () {
+            //         //     console.log('stop', slider.index)
 
-                    //     this.removeAttribute('a');
-                    //     this.setLeft(slider.index * 200);
-                    // },
-                },
-            );
+            //         //     this.removeAttribute('a');
+            //         //     this.setLeft(slider.index * 200);
+            //         // },
+            //     },
+            // );
 
             {
                 let protototype = {
@@ -293,6 +331,12 @@
         <x-radioButton group='group' tabIndex='0'>RadioButton3</x-radioButton>
 
         <x-draggable class='popup'>Draggable</x-draggable>
+        <x-popup id='popup' open transient_>
+            <!-- <x-textArea></x-textArea> -->
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer lacinia risus vel mi lacinia ultrices. Curabitur sit amet turpis dapibus, egestas ante et, consectetur odio. Sed vestibulum commodo velit semper varius. Nulla bibendum nec tellus a elementum. Ut pellentesque imperdiet dictum. Sed blandit turpis cursus, luctus augue ac, facilisis felis. Nulla purus urna, sagittis quis mauris et, aliquet porta magna. Donec in orci nulla.
+            <!-- <x-textArea></x-textArea> -->
+        </x-popup>
+
         <x-select index_='1' model='11' tabIndex='-1'></x-select>
         <x-select editable='false' model='11'></x-select>
         <x-textField></x-textField>
@@ -305,7 +349,7 @@
 
         <x-repeater interpolationKey='repeater' model='3'>
             <template Repeater_delegate>
-                <x-checkBox style='color: {{repeater: data.color}}'>[{{repeater: index}}: {{repeater: data.key}} - {{repeater: data.value}}]</x-checkBox>
+                <x-checkBox style='color: {{repeater: data.color}}' tabIndex='0'>[{{repeater: index}}: {{repeater: data.key}} - {{repeater: data.value}}]</x-checkBox>
             </template>
 
             <template Repeater_model>
@@ -343,11 +387,5 @@
             <div>2</div>
             <div>3</div>
         </x-slider>
-
-        <x-popup id='popup' transient>
-            <!-- <x-textArea></x-textArea> -->
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer lacinia risus vel mi lacinia ultrices. Curabitur sit amet turpis dapibus, egestas ante et, consectetur odio. Sed vestibulum commodo velit semper varius. Nulla bibendum nec tellus a elementum. Ut pellentesque imperdiet dictum. Sed blandit turpis cursus, luctus augue ac, facilisis felis. Nulla purus urna, sagittis quis mauris et, aliquet porta magna. Donec in orci nulla.
-            <!-- <x-textArea></x-textArea> -->
-        </x-popup>
     </body>
 </html>

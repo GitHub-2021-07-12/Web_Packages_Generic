@@ -156,7 +156,7 @@ export class TextInput extends Component {
         dragAndDrop: false,
 
         disabled: class Field extends super._fieldDescriptors.disabled {
-            _value_updateAfter() {
+            _updateAfter() {
                 this._component._inputElement.disabled = this._value;
             }
         },

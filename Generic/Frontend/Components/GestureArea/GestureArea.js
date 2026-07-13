@@ -196,13 +196,14 @@ export class GestureArea extends Component {
                 if (!this.gestures.size) return;
 
                 if (this._pointerMain && !this.multiPoint) {
-                    this._pointer_delete(this._pointerMain);
+                    this._deletePointer(this._pointerMain);
                 }
 
-                this._pointer_add(event);
+                // this._addPointer(event);
 
                 this._eventHandlers.host.pointermove.disabled = false;
-                this._press_init(this._pointerMain, event);
+                this._addPointer(event);
+                this._initPress(this._pointerMain, event);
                 this.dispatchEvent('capture', {originalEvent: event, pointer: this._pointerMain});
             },
 
@@ -213,7 +214,7 @@ export class GestureArea extends Component {
 
                 pointer.update(event);
 
-                this._press_cancel(pointer);
+                this._cancelPress(pointer);
                 this._detectSwipe(pointer, event);
             },
 
@@ -223,14 +224,14 @@ export class GestureArea extends Component {
                 if (!pointer) return;
 
                 pointer.update(event);
-
-                this._press_cancel(pointer);
+                // this._deletePointer(pointer);
+                // this._cancelPress(pointer);
                 this._detectTap(pointer, event);
                 this._detectSwipeStop(pointer, event);
                 this._detectFlick(pointer, event);
-
+                this._deletePointer(pointer);
+                this._cancelPress(pointer);
                 this._dispatchEventDouble('releaseMain', 'release', pointer, event);
-                this._pointer_delete(pointer);
                 this._eventHandlers.host.pointermove.disabled = !this._pointers.size;
             },
         },
@@ -317,6 +318,28 @@ export class GestureArea extends Component {
     magnetPoints = [];
 
 
+    _addPointer(event) {
+        this._pointerMain = new this.constructor._Pointer(this, event);
+        this._pointerTarget = null;
+        this._pointerMain.capture();
+        this._pointers.set(this._pointerMain._id, this._pointerMain);
+    }
+
+    _cancelPress(pointer) {
+        if (!pointer._shifted && this._pointers.has(pointer._id)) return;
+
+        Executor.cancelTask(pointer._GestureArea_press_detect);
+    }
+
+    _deletePointer(pointer) {
+        pointer.release();
+        this._pointers.delete(pointer._id);
+
+        if (pointer == this._pointerMain) {
+            this._pointerMain = null;
+        }
+    }
+
     _detectFlick(pointer, originalEvent) {
         if (!this.gestures.has('flick')) return;
 
@@ -326,6 +349,11 @@ export class GestureArea extends Component {
         ) return;
 
         this._dispatchEventDouble('flickMain', 'flick', pointer, originalEvent);
+    }
+
+    _detectPress(pointer, originalEvent) {
+        this._updateTapsCount(pointer);
+        this.dispatchEvent('press', {originalEvent, pointer, tapsCount: this._tapsCount});
     }
 
     _detectSwipe(pointer, originalEvent) {
@@ -350,7 +378,7 @@ export class GestureArea extends Component {
         if (!this.gestures.has('tap')) return;
         if (pointer._shifted || pointer._timeStamp - pointer._timeStampInitial > this.tapDuration) return;
 
-        this._tapsCount_update(pointer);
+        this._updateTapsCount(pointer);
         this.dispatchEvent('tap', {originalEvent, pointer, tapsCount: this._tapsCount});
     }
 
@@ -373,43 +401,14 @@ export class GestureArea extends Component {
         this._eventHandlers.host.pointermove.disabled = true;
     }
 
-    _pointer_add(event) {
-        this._pointerMain = new this.constructor._Pointer(this, event);
-        this._pointerTarget = null;
-        this._pointerMain.capture();
-        this._pointers.set(this._pointerMain._id, this._pointerMain);
-    }
-
-    _pointer_delete(pointer) {
-        pointer.release();
-        this._pointers.delete(pointer._id);
-
-        if (pointer == this._pointerMain) {
-            this._pointerMain = null;
-        }
-    }
-
-    _press_cancel(pointer) {
-        if (!pointer._shifted && this._pointers.has(pointer._id)) return;
-
-        Executor.cancelTask(pointer._GestureArea_press_detect);
-    }
-
-    _press_detect(pointer, originalEvent) {
-        if (pointer.shifted) return;
-
-        this._tapsCount_update(pointer);
-        this.dispatchEvent('press', {originalEvent, pointer, tapsCount: this._tapsCount});
-    }
-
-    _press_init(pointer, originalEvent) {
+    _initPress(pointer, originalEvent) {
         if (!this.gestures.has('press')) return;
 
-        pointer._GestureArea_press_detect = this._press_detect.bind(this, pointer, originalEvent);
+        pointer._GestureArea_press_detect = this._detectPress.bind(this, pointer, originalEvent);
         Executor.queueTask(pointer._GestureArea_press_detect, this.pressDuration);
     }
 
-    _tapsCount_update(pointer) {
+    _updateTapsCount(pointer) {
         if (
             pointer._timeStampInitial - this._tapPrevTimeStamp <= this.tapDuration
             && this._tapFirstPosition?.clone().sub(pointer._positionOuter).length <= this.shift

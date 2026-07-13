@@ -118,7 +118,7 @@ export class ScrollArea extends GestureArea {
 
         _scrolling: {
             default: false,
-            flashing: true,
+            flash: true,
         },
 
 
@@ -130,7 +130,7 @@ export class ScrollArea extends GestureArea {
         },
 
         autoRefresh: class Field extends super._fieldDescriptors.autoRefresh {
-            _value_updateAfter() {
+            _updateAfter() {
                 let methodName = this._value ? 'resizeObserver_addElements' : 'resizeObserver_deleteElements';
                 this._component[methodName](this._component, this._elements.content);
             }

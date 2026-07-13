@@ -156,7 +156,7 @@ export class Slider extends GestureArea {
         looped: false,
 
         autoRefresh: class Field extends super._fieldDescriptors.autoRefresh {
-            _value_updateAfter() {
+            _updateAfter() {
                 let methodName = this._value ? 'observe' : 'unobserve';
                 this._component._resizeObserver[methodName](this._component);
             }
@@ -193,13 +193,7 @@ export class Slider extends GestureArea {
             _valueRaw = undefined;
 
 
-            _value_process(value) {
-                this._valueRaw = value;
-
-                return this._component._index_proc(value);
-            }
-
-            _value_updateAfter() {
+           _updateAfter() {
                 if (
                     this._component._frameCurrentIndex == undefined
                     || !(this._component._flipDirection || this._component.implicitFlipping)
@@ -208,9 +202,7 @@ export class Slider extends GestureArea {
                 }
                 else if (!this._component._flipDirection) {
                     this._component._flipDirection =
-                        (
-                            (this._component.looped ? this._valueRaw ?? this._value : this._value) - this._component._frameCurrentIndex
-                        )
+                        ((this._component.looped ? this._valueRaw ?? this._value : this._value) - this._component._frameCurrentIndex)
                         % this._component.children.length
                     ;
                     this._component._frameNextIndex = this._value;
@@ -225,7 +217,7 @@ export class Slider extends GestureArea {
                 this._component._animationManager.start(true);
             }
 
-            _value_updateBefore() {
+           _updateBefore() {
                 if (
                     this._component._flipDirection
                     && this._component._frameCurrentIndex != undefined
@@ -239,6 +231,12 @@ export class Slider extends GestureArea {
                 else {
                     this._valueQueued = undefined;
                 }
+            }
+
+            _value_process(value) {
+                this._valueRaw = value;
+
+                return this._component._index_process(value);
             }
         },
     };
@@ -271,7 +269,7 @@ export class Slider extends GestureArea {
         return this.__frameCurrentIndex;
     }
     set _frameCurrentIndex(frameCurrentIndex) {
-        this.__frameCurrentIndex = this._index_proc(frameCurrentIndex);
+        this.__frameCurrentIndex = this._index_process(frameCurrentIndex);
         this._frame_assign(this._elements.slotCurrent, this._frameCurrentIndex);
         this._flipProgressRange_define();
     }
@@ -280,7 +278,7 @@ export class Slider extends GestureArea {
         return this.__frameNextIndex;
     }
     set _frameNextIndex(frameNextIndex) {
-        frameNextIndex = this._index_proc(frameNextIndex);
+        frameNextIndex = this._index_process(frameNextIndex);
         this.__frameNextIndex = frameNextIndex != this._frameCurrentIndex ? frameNextIndex : undefined;
         this._frame_assign(this._elements.slotNext, this._frameNextIndex);
     }
@@ -297,7 +295,7 @@ export class Slider extends GestureArea {
         element ? frame.assign(element) : frame.assign();
     }
 
-    _index_proc(index) {
+    _index_process(index) {
         if (!this.children.length || index?.constructor != Number) return index;
 
         let f = this.looped ? Common.toRing : Common.toRange;

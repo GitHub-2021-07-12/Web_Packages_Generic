@@ -199,8 +199,6 @@ export class GestureArea extends Component {
                     this._deletePointer(this._pointerMain);
                 }
 
-                // this._addPointer(event);
-
                 this._eventHandlers.host.pointermove.disabled = false;
                 this._addPointer(event);
                 this._initPress(this._pointerMain, event);
@@ -224,14 +222,14 @@ export class GestureArea extends Component {
                 if (!pointer) return;
 
                 pointer.update(event);
-                // this._deletePointer(pointer);
-                // this._cancelPress(pointer);
+
                 this._detectTap(pointer, event);
                 this._detectSwipeStop(pointer, event);
                 this._detectFlick(pointer, event);
+                this._dispatchEventDouble('releaseMain', 'release', pointer, event);
+
                 this._deletePointer(pointer);
                 this._cancelPress(pointer);
-                this._dispatchEventDouble('releaseMain', 'release', pointer, event);
                 this._eventHandlers.host.pointermove.disabled = !this._pointers.size;
             },
         },

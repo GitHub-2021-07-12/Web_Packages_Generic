@@ -386,11 +386,10 @@ export class Component extends HTMLElement {
 
             if (this._valuePrepared === undefined) return;
 
-            // this._valuePrev = this._value;
             this._value = this._valuePrepared;
             this._valuePrepared = undefined;
-            this._updateAfter();
             this._updateExternals();
+            this._updateAfter();
 
             if (!this.constructor._flash) return;
 

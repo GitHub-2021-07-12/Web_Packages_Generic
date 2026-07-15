@@ -8,7 +8,7 @@ export class Draggable extends GestureArea {
         host: {
             capture: function (event) {
                 let pointer = event.detail.pointer;
-                pointer._Draggable_blocked ??= !this._handle_check(pointer._target);
+                pointer._Draggable_blocked ??= !this._checkHandle(pointer._target);
 
                 if (pointer._Draggable_blocked) return;
 
@@ -34,7 +34,7 @@ export class Draggable extends GestureArea {
 
                 if (pointer._Draggable_blocked) return;
 
-                let positionDelta = pointer._positionDeltaMagnetized.clone().length_toRange(0, this.radius);
+                let positionDelta = pointer._positionDeltaMagnetized.clone().toRangeLength(0, this.radius);
 
                 if (this.axis != 'x') {
                     let step = this.stepY || this.step;
@@ -178,7 +178,7 @@ export class Draggable extends GestureArea {
     }
 
 
-    _handle_check(target) {
+    _checkHandle(target) {
         try {
             let handle = this.handle instanceof Node ? this.handle : target.closest(this.handle);
 

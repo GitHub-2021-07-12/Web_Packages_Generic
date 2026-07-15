@@ -19,7 +19,7 @@ export class TrackBar extends GestureArea {
                 this._active = true;
 
                 if (this.mode == 'precise') {
-                    this._value_define(pointer);
+                    this._defineValue(pointer);
                 }
                 else {
                     this._valueCaptured = this.value;
@@ -72,7 +72,7 @@ export class TrackBar extends GestureArea {
 
                 if (pointer._TrackBar_blocked) return;
 
-                this._value_define(pointer);
+                this._defineValue(pointer);
             },
         },
     };
@@ -145,7 +145,7 @@ export class TrackBar extends GestureArea {
             },
 
             updateAfter() {
-                this._component._puck_position_define();
+                this._component._puck_definePosition();
             },
         },
     };
@@ -162,26 +162,7 @@ export class TrackBar extends GestureArea {
     _valueStep = 0;
 
 
-    _init() {
-        this.defineMetrics();
-    }
-
-    _puck_position_define() {
-        let rangeLength = this.range[1] - this.range[0];
-        let puck_position =
-            rangeLength
-                ? this._freeSpaceLength / rangeLength * (this.value - this.range[0])
-                : this._freeSpaceLength * this.value
-        ;
-
-        if (this.discrete) {
-            puck_position = Math.round(puck_position);
-        }
-
-        this._puck_position = puck_position;
-    }
-
-    _value_define(pointer) {
+    _defineValue(pointer) {
         let rangeLength = (this.range[1] - this.range[0]) || 1;
         let value = undefined;
 
@@ -198,6 +179,25 @@ export class TrackBar extends GestureArea {
         }
 
         this.value = value;
+    }
+
+    _init() {
+        this.defineMetrics();
+    }
+
+    _puck_definePosition() {
+        let rangeLength = this.range[1] - this.range[0];
+        let puck_position =
+            rangeLength
+                ? this._freeSpaceLength / rangeLength * (this.value - this.range[0])
+                : this._freeSpaceLength * this.value
+        ;
+
+        if (this.discrete) {
+            puck_position = Math.round(puck_position);
+        }
+
+        this._puck_position = puck_position;
     }
 
 

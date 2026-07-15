@@ -89,7 +89,7 @@ export class TextInput extends Component {
             compositionend: function (event) {
                 if (!event.data) return;
 
-                this._inputMutationNew_update(event.data);
+                this._updateInputMutationNew(event.data);
                 this._update();
             },
 
@@ -115,7 +115,7 @@ export class TextInput extends Component {
                 event.stopPropagation();
 
                 if (event.inputType != 'insertCompositionText') {
-                    this._inputMutationNew_update(this._inputMutationNew.type == 'insertLineBreak' ? '\n' : event.data || '');
+                    this._updateInputMutationNew(this._inputMutationNew.type == 'insertLineBreak' ? '\n' : event.data || '');
                     this._update();
                 }
 
@@ -172,8 +172,8 @@ export class TextInput extends Component {
         },
 
         historyTimeInterval: {
-            cssProp_factor: 1e3,
-            cssProp_unit: 'ms',
+            cssPropFactor: 1e3,
+            cssPropUnit: 'ms',
             default: 1e3,
             range: [0, Infinity],
         },
@@ -258,28 +258,6 @@ export class TextInput extends Component {
     }
 
 
-    _inputMutationNew_update(string) {
-        this._inputMutationNew.positionAfter = this._inputMutationNew.rangeBefore[0];
-
-        if (this.constructor._inputTypesAllowed.insert.has(this._inputMutationNew.type)) {
-            let rangeBeforeLength = this._inputMutationNew.rangeBefore[1] - this._inputMutationNew.rangeBefore[0];
-            let subStringLength = this.lengthMax - this._value.length + rangeBeforeLength;
-            this._inputMutationNew.stringAfter.value = new RichString(string).slice(0, subStringLength);
-            this._inputMutationNew.stringBefore.value = this._value.slice(this._inputMutationNew.rangeBefore[0], rangeBeforeLength);
-            this._inputMutationNew.positionAfter += this._inputMutationNew.stringAfter.length;
-        }
-        else if (this._inputMutationNew.rangeBefore[0] == this._inputMutationNew.rangeBefore[1]) {
-            let b = this._inputMutationNew.type == 'deleteContentBackward';
-            this._inputMutationNew.stringBefore.value = this._value.slice(this._inputMutationNew.rangeBefore[0] - b, 1);
-            this._inputMutationNew.positionAfter -= this._inputMutationNew.stringBefore.length * b;
-        }
-        else {
-            this._inputMutationNew.stringBefore.value = this._value.slice(
-                this._inputMutationNew.rangeBefore[0], this._inputMutationNew.rangeBefore[1] - this._inputMutationNew.rangeBefore[0],
-            );
-        }
-    }
-
     _setSelection(rangeStart, rangeEnd = rangeStart) {
         this._inputElement.selectionStart = this._inputElement_value.getIndexByte(rangeStart);
         this._inputElement.selectionEnd =
@@ -319,6 +297,28 @@ export class TextInput extends Component {
 
         if (this.historyIsDisabled) {
             this.commit();
+        }
+    }
+
+    _updateInputMutationNew(string) {
+        this._inputMutationNew.positionAfter = this._inputMutationNew.rangeBefore[0];
+
+        if (this.constructor._inputTypesAllowed.insert.has(this._inputMutationNew.type)) {
+            let rangeBeforeLength = this._inputMutationNew.rangeBefore[1] - this._inputMutationNew.rangeBefore[0];
+            let subStringLength = this.lengthMax - this._value.length + rangeBeforeLength;
+            this._inputMutationNew.stringAfter.value = new RichString(string).slice(0, subStringLength);
+            this._inputMutationNew.stringBefore.value = this._value.slice(this._inputMutationNew.rangeBefore[0], rangeBeforeLength);
+            this._inputMutationNew.positionAfter += this._inputMutationNew.stringAfter.length;
+        }
+        else if (this._inputMutationNew.rangeBefore[0] == this._inputMutationNew.rangeBefore[1]) {
+            let b = this._inputMutationNew.type == 'deleteContentBackward';
+            this._inputMutationNew.stringBefore.value = this._value.slice(this._inputMutationNew.rangeBefore[0] - b, 1);
+            this._inputMutationNew.positionAfter -= this._inputMutationNew.stringBefore.length * b;
+        }
+        else {
+            this._inputMutationNew.stringBefore.value = this._value.slice(
+                this._inputMutationNew.rangeBefore[0], this._inputMutationNew.rangeBefore[1] - this._inputMutationNew.rangeBefore[0],
+            );
         }
     }
 

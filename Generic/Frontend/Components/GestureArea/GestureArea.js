@@ -32,6 +32,16 @@ export class GestureArea extends Component {
         _velocity = new Vector2d();
 
 
+        _defineVelocity() {
+            let pointFirst = this._points[0];
+            let pointLast = this._points.at(-1);
+            let dt = (pointLast?.timeStamp - pointFirst?.timeStamp) / 1e3;
+
+            if (!dt) return;
+
+            this._velocity.setVector(pointLast.position).sub(pointFirst.position).divide(dt);
+        }
+
         _detectShift() {
             if (this._shifted || this._positionDelta.length < this._component.shift) return;
 
@@ -51,7 +61,7 @@ export class GestureArea extends Component {
             this._shifted = true;
         }
 
-        _points_update() {
+        _updatePoints() {
             let point = {
                 position: this._positionOuter.clone(),
                 timeStamp: this._timeStamp,
@@ -63,7 +73,7 @@ export class GestureArea extends Component {
             }
         }
 
-        _positionDeltaMagnetized_update() {
+        _updatePositionDeltaMagnetized() {
             let magnetism = this._component.magnetism;
             this._positionDeltaMagnetized.setVector(this._positionDelta);
 
@@ -139,16 +149,6 @@ export class GestureArea extends Component {
             }
         }
 
-        _velocity_define() {
-            let pointFirst = this._points[0];
-            let pointLast = this._points.at(-1);
-            let dt = (pointLast?.timeStamp - pointFirst?.timeStamp) / 1e3;
-
-            if (!dt) return;
-
-            this._velocity.setVector(pointLast.position).sub(pointFirst.position).divide(dt);
-        }
-
 
         capture() {
             let idsCaptured = this.constructor._idsCaptured;
@@ -183,10 +183,10 @@ export class GestureArea extends Component {
 
             if (!this._shifted) return;
 
-            this._points_update();
-            this._velocity_define();
+            this._updatePoints();
+            this._defineVelocity();
             this._positionDelta.prod(this._component.swipeFactor);
-            this._positionDeltaMagnetized_update();
+            this._updatePositionDeltaMagnetized();
         }
     };
 
@@ -326,7 +326,7 @@ export class GestureArea extends Component {
     _cancelPress(pointer) {
         if (!pointer._shifted && this._pointers.has(pointer._id)) return;
 
-        Executor.cancelTask(pointer._GestureArea_press_detect);
+        Executor.cancelTask(pointer._GestureArea_detectPress);
     }
 
     _deletePointer(pointer) {
@@ -402,8 +402,8 @@ export class GestureArea extends Component {
     _initPress(pointer, originalEvent) {
         if (!this.gestures.has('press')) return;
 
-        pointer._GestureArea_press_detect = this._detectPress.bind(this, pointer, originalEvent);
-        Executor.queueTask(pointer._GestureArea_press_detect, this.pressDuration);
+        pointer._GestureArea_detectPress = this._detectPress.bind(this, pointer, originalEvent);
+        Executor.queueTask(pointer._GestureArea_detectPress, this.pressDuration);
     }
 
     _updateTapsCount(pointer) {

@@ -315,9 +315,9 @@ export class Component extends HTMLElement {
                 this.prototype,
                 {
                     _getInitialValue: getInitialValue,
+                    _process: process,
                     _updateAfter: updateAfter,
                     _updateBefore: updateBefore,
-                    _value_process: process,
                 },
             );
 
@@ -331,7 +331,7 @@ export class Component extends HTMLElement {
 
 
         _attributeIsBlocked = false;
-        _checkItemBinded = this.constructor._defaultValue?.constructor == Array ? this._checkItem.bind(this) : null;
+        _checkItemBinded = this._checkItem.bind(this);
         _component = null;
         _cssPropValue = undefined;
         _elements = null;
@@ -342,6 +342,44 @@ export class Component extends HTMLElement {
         _valuePrepared = undefined;
         _valuePrev = undefined;
 
+
+        _check(value) {
+            let defaultValue = this.constructor._defaultValue;
+            let defaultValueConstructor = defaultValue?.constructor;
+            let valid = undefined;
+
+            if (defaultValueConstructor && value?.constructor == defaultValueConstructor) {
+                switch (defaultValueConstructor) {
+                    case Array: {
+                        valid =
+                            (!defaultValue.length || value.length == defaultValue.length)
+                            && value.every(this._checkItemBinded)
+                            && !Common.compare(value, defaultValue)
+                        ;
+
+                        break;
+                    }
+                    case Set: {
+                        let subSet = defaultValue.symmetricDifference(value);
+                        valid = subSet.size && subSet.values().every(this._checkItemBinded);
+
+                        break;
+                    }
+                    default: {
+                        valid =
+                            !Common.compare(value, defaultValue)
+                            && (!this.constructor._enum || this.constructor._enum.has(value))
+                            && (!this.constructor._range || Common.inRange(value, ...this.constructor._range))
+                        ;
+                    }
+                }
+            }
+            else {
+                valid = this.constructor._extra && value !== undefined;
+            }
+
+            this._isDefault = !valid;
+        }
 
         _checkItem(item) {
             return (
@@ -362,8 +400,39 @@ export class Component extends HTMLElement {
             this._component.dispatchEvent(`field.${this.constructor._name}`, eventDetail);
         }
 
+        _fromAttribute() {
+            return this.constructor._fromAttribute(this._component.getAttribute(this.constructor._attributeName));
+        }
+
+        _fromCssProp() {
+            this._component.constructor.setCssProp(this._component, this.constructor._cssPropName, null);
+
+            return this.constructor._fromCssProp(this._component.constructor.getCssProp(this._component, this.constructor._cssPropName));
+        }
+
         _getInitialValue() {
             return undefined;
+        }
+
+        _initValue() {
+            let value = this._getInitialValue();
+
+            if (value === undefined && !this.constructor._protected) {
+                value = this._fromAttribute();
+            }
+
+            this._freeForCss = !this.constructor._flash && !this.constructor._protected && value === undefined;
+
+            if (this._freeForCss) {
+                value = this._fromCssProp();
+            }
+
+            this._value = value;
+            this._check(this._value);
+        }
+
+        _process(value) {
+            return value;
         }
 
         _update(value) {
@@ -373,14 +442,14 @@ export class Component extends HTMLElement {
                 value = new Set(value);
             }
 
-            this._value_check(value);
+            this._check(value);
 
             if (this._isDefault) {
                 value = structuredClone(defaultValue);
             }
 
-            value = this._value_process(value);
-            this._value_check(value);
+            value = this._process(value);
+            this._check(value);
             this._valuePrepared = this._isDefault ? structuredClone(defaultValue) : value;
             this._updateBefore();
 
@@ -421,89 +490,11 @@ export class Component extends HTMLElement {
             this._cssPropValue = this._component.constructor.getCssProp(this._component, this.constructor._cssPropName);
         }
 
-        _value_check(value) {
-            let defaultValue = this.constructor._defaultValue;
-            let defaultValueConstructor = defaultValue?.constructor;
-            let valid = undefined;
-
-            if (defaultValueConstructor && value?.constructor == defaultValueConstructor) {
-                switch (defaultValueConstructor) {
-                    case Array: {
-                        valid =
-                            (!defaultValue.length || value.length == defaultValue.length)
-                            && value.every(this._checkItemBinded)
-                            && !Common.compare(value, defaultValue)
-                        ;
-
-                        break;
-                    }
-                    case Set: {
-                        let subSet = defaultValue.symmetricDifference(value);
-                        valid = subSet.size;
-
-                        if (!valid) break;
-
-                        for (let item of subSet) {
-                            valid = this._checkItem(item);
-
-                            if (!valid) break;
-                        }
-
-                        break;
-                    }
-                    default: {
-                        valid =
-                            !Common.compare(value, defaultValue)
-                            && (!this.constructor._enum || this.constructor._enum.has(value))
-                            && (!this.constructor._range || Common.inRange(value, ...this.constructor._range))
-                        ;
-                    }
-                }
-            }
-            else {
-                valid = this.constructor._extra && value !== undefined;
-            }
-
-            this._isDefault = !valid;
-        }
-
-        _value_getFromAttribute() {
-            return this.constructor._fromAttribute(this._component.getAttribute(this.constructor._attributeName));
-        }
-
-        _value_getFromCssProp() {
-            this._component.constructor.setCssProp(this._component, this.constructor._cssPropName, null);
-
-            return this.constructor._fromCssProp(this._component.constructor.getCssProp(this._component, this.constructor._cssPropName));
-        }
-
-        _value_init() {
-            let value = this._getInitialValue();
-
-            if (value === undefined && !this.constructor._protected) {
-                value = this._value_getFromAttribute();
-            }
-
-            this._freeForCss = !this.constructor._flash && !this.constructor._protected && value === undefined;
-
-            if (this._freeForCss) {
-                value = this._value_getFromCssProp();
-            }
-
-            this._value = value;
-            this._value_check(this._value);
-            // this._updateExternals();
-        }
-
-        _value_process(value) {
-            return value;
-        }
-
 
         constructor(component) {
             this._component = component;
             this._elements = this._component._elements;
-            this._value_init();
+            this._initValue();
         }
 
         refresh() {
@@ -518,7 +509,7 @@ export class Component extends HTMLElement {
             }
             else {
                 this._freeForCss = true;
-                this._update(this._value_getFromCssProp());
+                this._update(this._fromCssProp());
             }
 
             if (withEvent) {
@@ -541,7 +532,7 @@ export class Component extends HTMLElement {
         updateByAttribute() {
             if (this._attributeIsBlocked || this.constructor._protected) return;
 
-            this.set(this._value_getFromAttribute());
+            this.set(this._fromAttribute());
         }
 
         updateByCssProp() {
@@ -558,7 +549,6 @@ export class Component extends HTMLElement {
 
     static _eventHandlerDescriptors = {
         elements: {},
-        elementsSlotted: {},
         host: {},
         shadow: {},
 
@@ -629,37 +619,13 @@ export class Component extends HTMLElement {
     static observedAttributes = [];
 
 
-    static async _components_await() {
+    static async _awaitComponents() {
         let promises = this._components.map((component) => component._defined);
         promises.push(Object.getPrototypeOf(this)._defined);
         await Promise.all(promises);
     }
 
-    static _createFieldAccessors() {
-        for (let Field of Object.values(this._fieldDescriptors)) {
-            let {propDescriptor = {}} = ObjectManager.getPropDescriptor(this.prototype, Field._name);
-
-            if (propDescriptor.get && propDescriptor.set) continue;
-
-            propDescriptor = {
-                get: propDescriptor.get,
-                set: propDescriptor.set,
-            };
-            propDescriptor.get ||= Executor.executeExpression(`
-                function () {
-                    return this._fields.${Field._name}._value;
-                }
-            `);
-            propDescriptor.set ||= Executor.executeExpression(`
-                function (value) {
-                    this.setField('${Field._name}', value);
-                }
-            `);
-            Object.defineProperty(this.prototype, Field._name, propDescriptor);
-        }
-    }
-
-    static async _dom_create() {
+    static async _createDom() {
         let css = '';
         let fieldDescriptors = [...Object.values(this._fieldDescriptors)].filter((Field) => !Field._protected);
         let html = '';
@@ -701,7 +667,7 @@ export class Component extends HTMLElement {
         }
 
         this._dom.append(root);
-        this._domSubtrees_extract();
+        this._extractDomSubtrees();
         this._styleSheet.insertRule(`
             @layer {
                 :host {
@@ -731,7 +697,65 @@ export class Component extends HTMLElement {
         `);
     }
 
-    static _domSubtrees_extract() {
+    static _createFieldAccessors() {
+        for (let Field of Object.values(this._fieldDescriptors)) {
+            let {propDescriptor = {}} = ObjectManager.getPropDescriptor(this.prototype, Field._name);
+
+            if (propDescriptor.get && propDescriptor.set) continue;
+
+            propDescriptor = {
+                get: propDescriptor.get,
+                set: propDescriptor.set,
+            };
+            propDescriptor.get ||= Executor.executeExpression(`
+                function () {
+                    return this._fields.${Field._name}._value;
+                }
+            `);
+            propDescriptor.set ||= Executor.executeExpression(`
+                function (value) {
+                    this.setField('${Field._name}', value);
+                }
+            `);
+            Object.defineProperty(this.prototype, Field._name, propDescriptor);
+        }
+    }
+
+    static async _createStyleSheets() {
+        if (!Object.hasOwn(this, '_styleSheetDescriptors')) return;
+
+        this._styleSheets = await this.createStyleSheets(this._styleSheetDescriptors);
+    }
+
+    static async _createStyleSheetsGlobal() {
+        if (!ObjectManager.checkOwnProp(this, '_useGlobalStyleSheets')) return;
+
+        let links = document.querySelectorAll('link[rel="styleSheet"]');
+        let styleSheetDescriptors = {};
+
+        for (let link of links) {
+            styleSheetDescriptors[link.href] = link.href;
+        }
+
+        this._styleSheetsGlobal = await this.createStyleSheets(styleSheetDescriptors);
+    }
+
+    static _defineObservedAttributes() {
+        if (!Object.hasOwn(this, '_fieldDescriptors')) return;
+
+        this._fieldNames = {};
+        this.observedAttributes = [];
+
+        for (let Field of Object.values(this._fieldDescriptors)) {
+            if (Field._protected) continue;
+
+            let attributeNameLowerCase = Field._attributeName.toLowerCase();
+            this._fieldNames[attributeNameLowerCase] = Field._name;
+            this.observedAttributes.push(attributeNameLowerCase);
+        }
+    }
+
+    static _extractDomSubtrees() {
         this._domSubtrees = {};
         let domSubtrees = this._dom.querySelectorAll('[Component_subtree]');
 
@@ -745,7 +769,7 @@ export class Component extends HTMLElement {
         }
     }
 
-    static _fieldDescriptors_normalize() {
+    static _normalizeFieldDescriptors() {
         if (!Object.hasOwn(this, '_fieldDescriptors')) return;
 
         for (let [fieldName, fieldDescriptor] of Object.entries(this._fieldDescriptors)) {
@@ -773,40 +797,18 @@ export class Component extends HTMLElement {
         }
     }
 
-    static _observedAttributes_define() {
-        if (!Object.hasOwn(this, '_fieldDescriptors')) return;
 
-        this._fieldNames = {};
-        this.observedAttributes = [];
+    static applyStyleSheets(enabled, ...styleSheetKeys) {
+        if (!Object.hasOwn(this, '_styleSheets')) return;
 
-        for (let Field of Object.values(this._fieldDescriptors)) {
-            if (Field._protected) continue;
+        styleSheetKeys = styleSheetKeys.length ? styleSheetKeys : Object.keys(this._styleSheets);
 
-            let attributeNameLowerCase = Field._attributeName.toLowerCase();
-            this._fieldNames[attributeNameLowerCase] = Field._name;
-            this.observedAttributes.push(attributeNameLowerCase);
+        for (let styleSheetKey of styleSheetKeys) {
+            if (!this._styleSheets[styleSheetKey]) continue;
+
+            this._styleSheets[styleSheetKey].disabled = !enabled;
         }
     }
-
-    static async _styleSheets_create() {
-        if (!Object.hasOwn(this, '_styleSheetDescriptors')) return;
-
-        this._styleSheets = await this.createStyleSheets(this._styleSheetDescriptors);
-    }
-
-    static async _styleSheetsGlobal_create() {
-        if (!ObjectManager.checkOwnProp(this, '_useGlobalStyleSheets')) return;
-
-        let links = document.querySelectorAll('link[rel="styleSheet"]');
-        let styleSheetDescriptors = {};
-
-        for (let link of links) {
-            styleSheetDescriptors[link.href] = link.href;
-        }
-
-        this._styleSheetsGlobal = await this.createStyleSheets(styleSheetDescriptors);
-    }
-
 
     static async awaitResources(elements, urlPropName = '') {
         let locationUrl = location.href.replace(/#.*$/, '');
@@ -988,11 +990,11 @@ export class Component extends HTMLElement {
         }
 
         if (outer ? boxSizing != 'border-box' : boxSizing == 'border-box') {
-            let size_extra =
+            let sizeExtra =
                 this.getCssPropNumber(element, `border-${sizeType}-end-width`) + this.getCssPropNumber(element, `border-${sizeType}-start-width`)
                 + this.getCssPropNumber(element, `padding-${sizeType}-end`) + this.getCssPropNumber(element, `padding-${sizeType}-start`)
             ;
-            size += size_extra * (outer ? 1 : -1);
+            size += sizeExtra * (outer ? 1 : -1);
         }
 
         return size;
@@ -1067,7 +1069,7 @@ export class Component extends HTMLElement {
         if (ObjectManager.checkOwnProp(this, '_defined')) return;
 
         this._defined = new ExternalPromise();
-        this._fieldDescriptors_normalize();
+        this._normalizeFieldDescriptors();
         this._createFieldAccessors();
         EventManager.normalizeEventHandlerDescriptors(this._eventHandlerDescriptors);
         ObjectManager.extendProps(this, null, ...this._propsExtended);
@@ -1075,12 +1077,12 @@ export class Component extends HTMLElement {
         await Executor.delay();
 
         this._httpClient = new HttpClient().init({urlBasic: this._url});
-        this._observedAttributes_define();
+        this._defineObservedAttributes();
         await Promise.all([
-            this._components_await(),
-            this._styleSheets_create(),
-            this._styleSheetsGlobal_create(),
-            !abstract && this._dom_create(),
+            this._awaitComponents(),
+            this._createStyleSheets(),
+            this._createStyleSheetsGlobal(),
+            !abstract && this._createDom(),
         ]);
 
         if (!abstract) {
@@ -1179,11 +1181,11 @@ export class Component extends HTMLElement {
         }
 
         if (outer ? boxSizing != `border-box` : boxSizing == `border-box`) {
-            let size_extra =
+            let sizeExtra =
                 this.getCssPropNumber(element, `border-${sizeType}-end-width`) + this.getCssPropNumber(element, `border-${sizeType}-start-width`)
                 + this.getCssPropNumber(element, `padding-${sizeType}-end`) + this.getCssPropNumber(element, `padding-${sizeType}-start`)
             ;
-            size += size_extra * (outer ? -1 : 1);
+            size += sizeExtra * (outer ? -1 : 1);
         }
 
         size = Math.max(size, 0);
@@ -1233,18 +1235,6 @@ export class Component extends HTMLElement {
         this.setCssProp(element, 'width', `${width}px`, important);
     }
 
-    static styleSheets_apply(enabled, ...styleSheetKeys) {
-        if (!Object.hasOwn(this, '_styleSheets')) return;
-
-        styleSheetKeys = styleSheetKeys.length ? styleSheetKeys : Object.keys(this._styleSheets);
-
-        for (let styleSheetKey of styleSheetKeys) {
-            if (!this._styleSheets[styleSheetKey]) continue;
-
-            this._styleSheets[styleSheetKey].disabled = !enabled;
-        }
-    }
-
     static wrap(nodes, wrapper) {
         if (!nodes[Symbol.iterator]) {
             nodes = [nodes];
@@ -1269,7 +1259,6 @@ export class Component extends HTMLElement {
 
     _domSubtreesReleased = new Set();
     _elements = {};
-    _elementsSlotted = {};
     _eventHandlers = null;
     _face = this;
     _fieldObserver = null;
@@ -1277,28 +1266,38 @@ export class Component extends HTMLElement {
     _shadow = this.attachShadow(this.constructor._shadowOpts);
 
 
+    _applyStyleSheets() {
+        this._shadow.adoptedStyleSheets.push(this.constructor._styleSheet);
+
+        for (let styleSheetGlobal of Object.values(this.constructor._styleSheetsGlobal)) {
+            this._shadow.adoptedStyleSheets.push(styleSheetGlobal);
+        }
+
+        for (let styleSheet of Object.values(this.constructor._styleSheets)) {
+            this._shadow.adoptedStyleSheets.push(styleSheet);
+        }
+    }
+
     _build() {
         if (ObjectManager.isInited(this)) return;
 
-        this._fieldObserver_create();
-        this._styleSheets_apply();
+        this._applyStyleSheets();
+        this._createFieldObserver();
         this._shadow.append(this._fieldObserver, this.constructor._dom.cloneNode(true));
         this._elements = this.constructor.getElements(this._shadow);
-        this._elementsSlotted_define();
         this._eventHandlers = EventManager.createEventHandlers({
             context: this,
             eventHandlerDescriptors: this.constructor._eventHandlerDescriptors,
             eventTarget: {
                 elements: this._elements,
-                elementsSlotted: this._elementsSlotted,
                 fieldObserver: this._fieldObserver,
                 host: this,
                 shadow: this._shadow,
             },
             normalize: false,
         });
-        this._face_define();
-        this._fields_create();
+        this._defineFace();
+        this._createFields();
 
         this._fields.autoRefresh.disabled = true;
         this._init();
@@ -1307,18 +1306,21 @@ export class Component extends HTMLElement {
         this._refreshAuto();
     }
 
-    _elementsSlotted_define() {
-        this._elementsSlotted = {};
-        let slots = this._shadow.querySelectorAll('slot[name]');
+    _createFieldObserver() {
+        this._fieldObserver = document.createElement('meta');
+        this._fieldObserver.setAttribute('_Component_fieldObserver', '');
+        EventManager.applyPropagation(this._fieldObserver, false, 'transitioncancel', 'transitionend', 'transitionrun', 'transitionstart');
+    }
 
-        for (let slot of slots) {
-            let elements = slot.assignedElements();
-            elements = elements.length ? elements : slot.children;
-            this._elementsSlotted[slot.name] = elements.length > 1 ? elements : elements[0];
+    _createFields() {
+        this._fields = {};
+
+        for (let Field of Object.values(this.constructor._fieldDescriptors)) {
+            this._fields[Field._name] = new Field(this);
         }
     }
 
-    _face_define() {
+    _defineFace() {
         let component = this;
         let face = this._shadow.querySelector('[Component_face]') || component;
 
@@ -1328,20 +1330,6 @@ export class Component extends HTMLElement {
         }
 
         this._face = face;
-    }
-
-    _fields_create() {
-        this._fields = {};
-
-        for (let Field of Object.values(this.constructor._fieldDescriptors)) {
-            this._fields[Field._name] = new Field(this);
-        }
-    }
-
-    _fieldObserver_create() {
-        this._fieldObserver = document.createElement('meta');
-        this._fieldObserver.setAttribute('_Component_fieldObserver', '');
-        EventManager.applyPropagation(this._fieldObserver, false, 'transitioncancel', 'transitionend', 'transitionrun', 'transitionstart');
     }
 
     _init() {}
@@ -1364,18 +1352,6 @@ export class Component extends HTMLElement {
         this._domSubtreesReleased.add(domSubtreeKey);
         this._shadow.querySelector(`[_Component_plug='${domSubtreeKey}']`).replaceWith(domSubtree);
         this.dispatchEvent('domSubtree', {key: domSubtreeKey});
-    }
-
-    _styleSheets_apply() {
-        this._shadow.adoptedStyleSheets.push(this.constructor._styleSheet);
-
-        for (let styleSheetGlobal of Object.values(this.constructor._styleSheetsGlobal)) {
-            this._shadow.adoptedStyleSheets.push(styleSheetGlobal);
-        }
-
-        for (let styleSheet of Object.values(this.constructor._styleSheets)) {
-            this._shadow.adoptedStyleSheets.push(styleSheet);
-        }
     }
 
 

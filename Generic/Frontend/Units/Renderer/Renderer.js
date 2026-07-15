@@ -13,10 +13,11 @@ export class Renderer extends EventTarget {
     _timeStampStart = 0;
 
 
-    get _renderCondition() {
-        return this.renderCondition_get();
+    _getRenderCondition() {
+        return true;
     }
 
+    _render() {}
 
     _renderLooped() {
         let timeStamp = performance.now();
@@ -24,42 +25,36 @@ export class Renderer extends EventTarget {
         this._timeStamp = timeStamp;
         this._elapsedTime = this._timeStamp - this._timeStampStart;
 
-        if (!this._active || !this._renderCondition) {
+        if (!this._active || !this._getRenderCondition()) {
             this.stop();
 
             return;
         }
 
-        this.render();
+        this._render();
         Executor.queueRendering(this._renderLoopedBinded);
     }
 
 
     init({
+        getRenderCondition = undefined,
         render = undefined,
-        renderCondition_get = undefined,
     } = {}) {
         ObjectManager.assignProps(
             this,
             {
-                render,
-                renderCondition_get,
+                _getRenderCondition: getRenderCondition,
+                _render: render,
             },
         );
 
         return this;
     }
 
-    render() {}
-
-    renderCondition_get() {
-        return true;
-    }
-
     start(resume = false) {
         if (this._active) return;
 
-        if (!this._renderCondition) {
+        if (!this._getRenderCondition()) {
             this.stop();
 
             return;
@@ -82,7 +77,7 @@ export class Renderer extends EventTarget {
         this._active = false;
         Executor.cancelRendering(this._renderLoopedBinded);
 
-        if (pause && this._renderCondition) return;
+        if (pause && this._getRenderCondition()) return;
 
         EventManager.dispatchEvent(this, 'stop');
     }

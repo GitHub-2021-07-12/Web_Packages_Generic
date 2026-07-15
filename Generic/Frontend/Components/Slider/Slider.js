@@ -193,7 +193,13 @@ export class Slider extends GestureArea {
             _valueRaw = undefined;
 
 
-           _updateAfter() {
+            _process(value) {
+                this._valueRaw = value;
+
+                return this._component._processIndex(value);
+            }
+
+            _updateAfter() {
                 if (
                     this._component._frameCurrentIndex == undefined
                     || !(this._component._flipDirection || this._component.implicitFlipping)
@@ -217,7 +223,7 @@ export class Slider extends GestureArea {
                 this._component._animationManager.start(true);
             }
 
-           _updateBefore() {
+            _updateBefore() {
                 if (
                     this._component._flipDirection
                     && this._component._frameCurrentIndex != undefined
@@ -231,12 +237,6 @@ export class Slider extends GestureArea {
                 else {
                     this._valueQueued = undefined;
                 }
-            }
-
-            _value_process(value) {
-                this._valueRaw = value;
-
-                return this._component._index_process(value);
             }
         },
     };
@@ -269,38 +269,30 @@ export class Slider extends GestureArea {
         return this.__frameCurrentIndex;
     }
     set _frameCurrentIndex(frameCurrentIndex) {
-        this.__frameCurrentIndex = this._index_process(frameCurrentIndex);
-        this._frame_assign(this._elements.slotCurrent, this._frameCurrentIndex);
-        this._flipProgressRange_define();
+        this.__frameCurrentIndex = this._processIndex(frameCurrentIndex);
+        this._assignFrame(this._elements.slotCurrent, this._frameCurrentIndex);
+        this._defineFlipProgressRange();
     }
 
     get _frameNextIndex() {
         return this.__frameNextIndex;
     }
     set _frameNextIndex(frameNextIndex) {
-        frameNextIndex = this._index_process(frameNextIndex);
+        frameNextIndex = this._processIndex(frameNextIndex);
         this.__frameNextIndex = frameNextIndex != this._frameCurrentIndex ? frameNextIndex : undefined;
-        this._frame_assign(this._elements.slotNext, this._frameNextIndex);
+        this._assignFrame(this._elements.slotNext, this._frameNextIndex);
     }
 
 
-    _flipProgressRange_define() {
-        let elasticThreshold = Math.min(this.elasticThreshold, 1 - 1e-9);
-        this._flipProgressRange[0] = -this._frameCurrentIndex - elasticThreshold;
-        this._flipProgressRange[1] = (this.children.length - 1) - this._frameCurrentIndex + elasticThreshold;
-    }
-
-    _frame_assign(frame, frameIndex) {
+    _assignFrame(frame, frameIndex) {
         let element = this.children[frameIndex];
         element ? frame.assign(element) : frame.assign();
     }
 
-    _index_process(index) {
-        if (!this.children.length || index?.constructor != Number) return index;
-
-        let f = this.looped ? Common.toRing : Common.toRange;
-
-        return f(index, 0, this.children.length - 1);
+    _defineFlipProgressRange() {
+        let elasticThreshold = Math.min(this.elasticThreshold, 1 - 1e-9);
+        this._flipProgressRange[0] = -this._frameCurrentIndex - elasticThreshold;
+        this._flipProgressRange[1] = (this.children.length - 1) - this._frameCurrentIndex + elasticThreshold;
     }
 
     _init() {
@@ -315,6 +307,14 @@ export class Slider extends GestureArea {
         this._animationManager.stop();
         this._frameCurrentIndex = undefined;
         this.refreshField('index');
+    }
+
+    _processIndex(index) {
+        if (!this.children.length || index?.constructor != Number) return index;
+
+        let f = this.looped ? Common.toRing : Common.toRange;
+
+        return f(index, 0, this.children.length - 1);
     }
 
     _resizeObserver_callback() {

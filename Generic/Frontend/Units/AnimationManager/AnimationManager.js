@@ -23,11 +23,6 @@ export class AnimationManager extends Renderer {
     gain = 1;
 
 
-    get _renderCondition() {
-        return this._animations.size && (this.direction > 0 ? this.progress < 1 : this.progress > 0);
-    }
-
-
     get direction() {
         return this.__direction;
     }
@@ -59,6 +54,10 @@ export class AnimationManager extends Renderer {
     }
 
 
+    _getRenderCondition() {
+        return this._animations.size && (this.direction > 0 ? this.progress < 1 : this.progress > 0);
+    }
+
     _processTiming() {
         if (!this._animations.size) return;
 
@@ -81,6 +80,10 @@ export class AnimationManager extends Renderer {
                 fill: 'both',
             });
         }
+    }
+
+    _render() {
+        this.progress += this._dt * 1e3 / this.duration * this.direction * this.gain;
     }
 
     _updateProgress() {
@@ -160,10 +163,6 @@ export class AnimationManager extends Renderer {
         this.duration ||= this._durationDefault;
         this._processTiming();
         this._updateProgress();
-    }
-
-    render() {
-        this.progress += this._dt * 1e3 / this.duration * this.direction * this.gain;
     }
 
     start(resume = false) {

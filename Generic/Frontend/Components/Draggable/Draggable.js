@@ -17,11 +17,11 @@ export class Draggable extends GestureArea {
 
                 if (this.bound) {
                     let domRect = this.constructor.getDomRect(this.target, true);
-                    let domRectParent = this.constructor.getDomRect(this.bound);
-                    this._positionMax.x = this._positionInitial.x + domRectParent.right - domRect.right;
-                    this._positionMax.y = this._positionInitial.y + domRectParent.bottom - domRect.bottom;
-                    this._positionMin.x = this._positionInitial.x + domRectParent.left - domRect.left;
-                    this._positionMin.y = this._positionInitial.y + domRectParent.top - domRect.top;
+                    let domRectBound = this.constructor.getDomRect(this.bound);
+                    this._positionMax.x = this._positionInitial.x + domRectBound.right - domRect.right;
+                    this._positionMax.y = this._positionInitial.y + domRectBound.bottom - domRect.bottom;
+                    this._positionMin.x = this._positionInitial.x + domRectBound.left - domRect.left;
+                    this._positionMin.y = this._positionInitial.y + domRectBound.top - domRect.top;
                 }
                 else {
                     this._positionMax.set(Infinity);
@@ -51,21 +51,32 @@ export class Draggable extends GestureArea {
                 if (this._position.isEqual(this._positionCurrent)) return;
 
                 this._position = this._positionCurrent;
-                this.dispatchEvent('drag', {originalEvent: event.detail.originalEvent});
+                this._detectDropTarget();
+                this.dispatchEvent('drag', event.detail);
+
+                if (this._dropTarget == this._dropTargetPrev) return;
+
+                this.dispatchEvent('dropTarget', event.detail);
             },
 
             swipeStartMain: function (event) {
                 if (event.detail.pointer._Draggable_blocked) return;
 
                 this._dragging = true;
-                this.dispatchEvent('dragStart', {originalEvent: event.detail.originalEvent});
+                this._defineDropAreaDomRects();
+                this.dispatchEvent('dragStart', event.detail);
             },
 
             swipeStopMain: function (event) {
                 if (event.detail.pointer._Draggable_blocked) return;
 
                 this._dragging = false;
-                this.dispatchEvent('dragStop', {originalEvent: event.detail.originalEvent});
+                this.dispatchEvent('dragStop', event.detail);
+
+                if (this.dropAreas) {
+                    this.dispatchEvent('drop', event.detail);
+                    this._dropTarget = null;
+                }
 
                 if (!this.springy) return;
 
@@ -79,6 +90,7 @@ export class Draggable extends GestureArea {
 
 
         springy: false,
+        wideDrop: false,
 
         axis: {
             default: 'none',
@@ -99,6 +111,32 @@ export class Draggable extends GestureArea {
                     catch {
                         value = null;
                     }
+                }
+
+                return value;
+            },
+        },
+
+        dropAreas: {
+            default: '',
+            extra: true,
+
+            process(value) {
+                // console.log(value, this._value, this._fromAttribute(), this._fromCssProp())
+
+                if (value?.constructor == String) {
+                    try {
+                        value = new Set(document.querySelectorAll(value));
+                    }
+                    catch {
+                        value = null;
+                    }
+                }
+                else if (value?.[Symbol.iterator]) {
+                    value = new Set(value);
+                }
+                else {
+                    value = null;
                 }
 
                 return value;
@@ -154,19 +192,43 @@ export class Draggable extends GestureArea {
     };
 
 
+    static getIntersectionSquare(domRect1, domRect2) {
+        let height = Math.min(domRect1.bottom, domRect2.bottom) - Math.max(domRect1.top, domRect2.top);
+        let width = Math.min(domRect1.right, domRect2.right) - Math.max(domRect1.left, domRect2.left);
+
+        return height > 0 && width > 0 ? height * width : 0;
+    }
+
+
     static {
         this.init();
     }
 
 
+    __dropTarget = null;
     __position = new Vector2d();
 
 
+    _dropAreaDomRects = new Map();
+    _dropTargetPrev = null;
     _positionCurrent = new Vector2d();
     _positionInitial = new Vector2d();
     _positionMax = new Vector2d();
     _positionMin = new Vector2d();
 
+
+    get _dropTarget() {
+        return this.__dropTarget;
+    }
+    set _dropTarget(dropTarget) {
+        this._dropTargetPrev = this._dropTarget;
+        this.__dropTarget = dropTarget;
+
+        if (this._dropTarget == this._dropTargetPrev) return;
+
+        this._dropTargetPrev?.removeAttribute('_Draggable_dropTarget');
+        this._dropTarget?.setAttribute('_Draggable_dropTarget', '');
+    }
 
     get _position() {
         return this.__position;
@@ -179,14 +241,51 @@ export class Draggable extends GestureArea {
 
 
     _checkHandle(target) {
+        let handle = null;
+
         try {
-            let handle = this.handle instanceof Node ? this.handle : target.closest(this.handle);
-
-            return this.target.contains(handle) && handle.contains(target);
+            handle = this.handle instanceof Node ? this.handle : target.closest(this.handle);
         }
-        catch {}
+        catch {
+            return true;
+        }
 
-        return true;
+        return this.target.contains(handle) && handle.contains(target);
+    }
+
+    _defineDropAreaDomRects() {
+        if (!this.dropAreas || !this.wideDrop) return;
+
+        this._dropAreaDomRects.clear();
+
+        for (let dropArea of this.dropAreas) {
+            this._dropAreaDomRects.set(dropArea, this.constructor.getDomRect(dropArea, true));
+        }
+    }
+
+    _detectDropTarget() {
+        if (!this.dropAreas) return;
+
+        if (this.wideDrop) {
+            let domRect = this.constructor.getDomRect(this, true);
+            let dropTarget = null;
+            let intersectionSquareMax = 0;
+
+            for (let dropArea of this.dropAreas) {
+                let intersectionSquare = this.constructor.getIntersectionSquare(domRect, this._dropAreaDomRects.get(dropArea));
+
+                if (intersectionSquare <= intersectionSquareMax) continue;
+
+                dropTarget = dropArea;
+                intersectionSquareMax = intersectionSquare;
+            }
+
+            this._dropTarget = dropTarget;
+        }
+        else {
+            let nodes = document.elementsFromPoint(this._pointerMain._positionOuter.x, this._pointerMain._positionOuter.y);
+            this._dropTarget = nodes[0] == this && this.dropAreas.has(nodes[1]) ? nodes[1] : null;
+        }
     }
 
 

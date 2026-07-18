@@ -211,14 +211,16 @@ export class ScrollArea extends GestureArea {
 
 
     _checkSnag(target) {
+        let snag = null;
+
         try {
-            let snag = this.snag instanceof Node ? this.snag : target.closest(this.snag);
-
-            return this.contains(snag) && snag.contains(target);
+            snag = this.snag instanceof Node ? this.snag : target.closest(this.snag);
         }
-        catch {}
+        catch {
+            return false;
+        }
 
-        return false;
+        return this.contains(snag) && snag.contains(target);
     }
 
     _defineScrollEdges() {

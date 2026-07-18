@@ -232,11 +232,12 @@ export class Repeater extends Component {
             this._eventHandlers = EventManager.createEventHandlers({
                 context: this,
                 eventHandlerDescriptors: this.constructor._eventHandlerDescriptors,
+                normalize: false,
+
                 eventTarget: {
                     elements: this._elements,
                     item: this._item,
                 },
-                normalize: false,
             });
             this._model = model;
             this._modelItem = modelItem;

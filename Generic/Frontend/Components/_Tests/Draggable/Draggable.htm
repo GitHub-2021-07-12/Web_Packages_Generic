@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+
+
+<html>
+    <head>
+        <meta charset='utf-8' content='user-scalable=no, width=720' name='viewport'>
+        <title>Test</title>
+
+        <link href='/Packages/Generic/Frontend/Themes/Main/Main.css' rel='stylesheet'>
+
+        <style>
+            body {
+                box-sizing: border-box;
+                display: grid;
+                gap: 10px;
+                padding: 10px;
+                user-select: none;
+            }
+
+            x-draggable {
+                --Component_displayInner: grid;
+
+                background: #0f04;
+                border: #000 solid 1px;
+                border-radius: 100%;
+                height: 100px;
+                place-items: center;
+                position: relative;
+                width: 100px;
+            }
+
+
+            .dropArea {
+                background: #ff04;
+                border: #000 solid 1px;
+                border-radius: 100%;
+                height: 200px;
+                margin: 10px;
+                padding: 10px;
+                /* pointer-events: none; */
+                width: 200px;
+            }
+
+            .handle {
+                background: #00f4;
+            }
+
+            .root {
+                border: #000 solid 1px;
+                display: grid;
+                gap: 10px;
+                grid-auto-flow: column;
+                padding: 10px;
+                place-content: start;
+            }
+
+
+            [_Draggable_dropTarget] {
+                border-color: #f00;
+                /* background: #f004; */
+                /* outline: #f00 solid 2px; */
+                /* outline-offset: 2px; */
+            }
+
+
+            :not(:defined) {
+                display: none;
+            }
+        </style>
+
+        <script type='module'>
+            import * as generic from '/Packages/Generic/Generic.js';
+
+
+            await generic.frontend.components.Draggable._defined;
+            let Component = generic.frontend.components.Component;
+
+
+            {
+                let root = document.querySelector('#root');
+
+                generic.frontend.units.EventManager.createEventHandlers({
+                    eventTarget: document.body,
+
+                    eventHandlerDescriptors: {
+                        // drag: function (event) {
+                        //     let draggable = event.target;
+
+                        //     console.log(event)
+                        // },
+
+                        // dragStop: function (event) {
+                        //     let draggable = event.target;
+
+                        //     console.log(event)
+                        // },
+
+                        drop: function (event) {
+                            let draggable = event.target;
+
+                            if (!draggable._dropTarget || draggable._dropTarget == draggable.parentElement) return;
+
+                            draggable.reset();
+                            (draggable._dropTarget || root).append(draggable);
+                        },
+
+                        dropTarget: function (event) {
+                            let draggable = event.target;
+
+                            // console.log(draggable._dropTarget, draggable._dropTargetPrev)
+                            console.log(event)
+                        },
+                    },
+                });
+
+                function checkIntersection(rectangleMain, rectangle) {
+                    return !(
+                        rectangleMain.bottom <= rectangle.top
+                        || rectangleMain.left >= rectangle.right
+                        || rectangleMain.right <= rectangle.left
+                        || rectangleMain.top >= rectangle.bottom
+                    );
+                }
+
+                function getIntersectionSquare(rectangle1, rectangle2) {
+                    let height = Math.min(rectangle1.bottom, rectangle2.bottom) - Math.max(rectangle1.top, rectangle2.top);
+                    let width = Math.min(rectangle1.right, rectangle2.right) - Math.max(rectangle1.left, rectangle2.left);
+
+                    return height > 0 && width > 0 ? height * width : 0;
+                }
+            }
+        </script>
+    </head>
+
+    <body>
+        <div class='root'>
+            <div class='dropArea'></div>
+            <div class='dropArea'></div>
+            <div class='dropArea'></div>
+        </div>
+
+        <div id='root' class='root'>
+            <x-draggable dropAreas='.dropArea, .root' wideDrop>1</x-draggable>
+            <x-draggable dropAreas='.dropArea' wideDrop>2</x-draggable>
+            <x-draggable dropAreas='.dropArea, .root'>3</x-draggable>
+
+            <x-draggable bound='#root' dropAreas='.dropArea' handle='.handle'>
+                <div class='handle'>Handle</div>
+            </x-draggable>
+        </div>
+    </body>
+</html>

@@ -72,14 +72,15 @@ export class ObjectManager {
     static getPrototypeDepth(object, prototype) {
         let prototypeDepth = 0;
 
-        while (object?.constructor) {
+        while (object != prototype) {
             object = Object.getPrototypeOf(object);
-            prototypeDepth++;
 
-            if (object == prototype) return prototypeDepth;
+            if (object == null) return -1;
+
+            prototypeDepth++;
         }
 
-        return 0;
+        return prototypeDepth;
     }
 
     static init(object) {

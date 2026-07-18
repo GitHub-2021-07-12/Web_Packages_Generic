@@ -385,6 +385,7 @@ export class Component extends HTMLElement {
             return (
                 item !== ''
                 && item?.constructor == this.constructor._ItemConstructor
+                // && ObjectManager.getPrototypeDepth(item?.constructor, this.constructor._ItemConstructor) >= 0
                 && (!this.constructor._enum || this.constructor._enum.has(item))
                 && (!this.constructor._range || Common.inRange(item, ...this.constructor._range))
             );
@@ -438,7 +439,7 @@ export class Component extends HTMLElement {
         _update(value) {
             let defaultValue = this.constructor._defaultValue;
 
-            if (value?.constructor == Array && defaultValue?.constructor == Set) {
+            if (defaultValue?.constructor == Set && value?.constructor == Array) {
                 value = new Set(value);
             }
 
@@ -775,7 +776,7 @@ export class Component extends HTMLElement {
         for (let [fieldName, fieldDescriptor] of Object.entries(this._fieldDescriptors)) {
             let Field = null;
 
-            if (ObjectManager.getPrototypeDepth(fieldDescriptor, this._Field)) {
+            if (ObjectManager.getPrototypeDepth(fieldDescriptor, this._Field) > 0) {
                 Field = fieldDescriptor;
 
                 if (Field._name == fieldName) continue;
@@ -819,12 +820,13 @@ export class Component extends HTMLElement {
 
             if (resourceUrl == locationUrl || urlPropName && !resourceUrl) continue;
 
-            let eventHandlers = EventManager.createEventHandlers({
+            EventManager.createEventHandlers({
+                eventTarget: element,
+
                 eventHandlerDescriptors: {
                     error: () => promise.reject(),
                     load: () => promise.fulfill(),
                 },
-                eventTarget: element,
             });
             let promise = new ExternalPromise();
             promises.push(promise);
@@ -1288,13 +1290,14 @@ export class Component extends HTMLElement {
         this._eventHandlers = EventManager.createEventHandlers({
             context: this,
             eventHandlerDescriptors: this.constructor._eventHandlerDescriptors,
+            normalize: false,
+
             eventTarget: {
                 elements: this._elements,
                 fieldObserver: this._fieldObserver,
                 host: this,
                 shadow: this._shadow,
             },
-            normalize: false,
         });
         this._defineFace();
         this._createFields();

@@ -343,39 +343,39 @@ export class Component extends HTMLElement {
         _valuePrev = undefined;
 
 
-        _check(value) {
+        _check() {
             let defaultValue = this.constructor._defaultValue;
             let defaultValueConstructor = defaultValue?.constructor;
             let valid = undefined;
 
-            if (defaultValueConstructor && value?.constructor == defaultValueConstructor) {
+            if (defaultValueConstructor && this._valuePrepared?.constructor == defaultValueConstructor) {
                 switch (defaultValueConstructor) {
                     case Array: {
                         valid =
-                            (!defaultValue.length || value.length == defaultValue.length)
-                            && value.every(this._checkItemBinded)
-                            && !Common.compare(value, defaultValue)
+                            (!defaultValue.length || this._valuePrepared.length == defaultValue.length)
+                            && this._valuePrepared.every(this._checkItemBinded)
+                            && !Common.compare(this._valuePrepared, defaultValue)
                         ;
 
                         break;
                     }
                     case Set: {
-                        let subSet = defaultValue.symmetricDifference(value);
+                        let subSet = defaultValue.symmetricDifference(this._valuePrepared);
                         valid = subSet.size && subSet.values().every(this._checkItemBinded);
 
                         break;
                     }
                     default: {
                         valid =
-                            !Common.compare(value, defaultValue)
-                            && (!this.constructor._enum || this.constructor._enum.has(value))
-                            && (!this.constructor._range || Common.inRange(value, ...this.constructor._range))
+                            !Common.compare(this._valuePrepared, defaultValue)
+                            && (!this.constructor._enum || this.constructor._enum.has(this._valuePrepared))
+                            && (!this.constructor._range || Common.inRange(this._valuePrepared, ...this.constructor._range))
                         ;
                     }
                 }
             }
             else {
-                valid = this.constructor._extra && value !== undefined;
+                valid = this.constructor._extra && this._valuePrepared !== undefined;
             }
 
             this._isDefault = !valid;
@@ -385,7 +385,6 @@ export class Component extends HTMLElement {
             return (
                 item !== ''
                 && item?.constructor == this.constructor._ItemConstructor
-                // && ObjectManager.getPrototypeDepth(item?.constructor, this.constructor._ItemConstructor) >= 0
                 && (!this.constructor._enum || this.constructor._enum.has(item))
                 && (!this.constructor._range || Common.inRange(item, ...this.constructor._range))
             );
@@ -429,29 +428,26 @@ export class Component extends HTMLElement {
             }
 
             this._value = value;
-            this._check(this._value);
         }
 
-        _process(value) {
-            return value;
-        }
+        _process() {}
 
         _update(value) {
             let defaultValue = this.constructor._defaultValue;
-
-            if (defaultValue?.constructor == Set && value?.constructor == Array) {
-                value = new Set(value);
-            }
-
-            this._check(value);
+            this._valuePrepared = defaultValue?.constructor == Set && value?.constructor == Array ? new Set(value) : value;
+            this._check();
 
             if (this._isDefault) {
-                value = structuredClone(defaultValue);
+                this._valuePrepared = structuredClone(defaultValue);
             }
 
-            value = this._process(value);
-            this._check(value);
-            this._valuePrepared = this._isDefault ? structuredClone(defaultValue) : value;
+            this._process();
+            this._check();
+
+            if (this._isDefault) {
+                this._valuePrepared = structuredClone(defaultValue);
+            }
+
             this._updateBefore();
 
             if (this._valuePrepared === undefined) return;

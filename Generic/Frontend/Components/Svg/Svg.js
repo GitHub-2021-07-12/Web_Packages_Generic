@@ -12,8 +12,8 @@ export class Svg extends Component {
         url: {
             default: '',
 
-            process(value) {
-                return value.trim();
+            process() {
+                this._valuePrepared = this._valuePrepared.trim();
             },
 
             updateAfter() {

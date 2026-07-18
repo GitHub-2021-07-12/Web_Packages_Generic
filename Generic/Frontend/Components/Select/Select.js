@@ -112,8 +112,8 @@ export class Select extends Repeater {
         _open: {
             default: false,
 
-            process(value) {
-                return value && !!this._component.model._items.length;
+            process() {
+                this._valuePrepared &&= !!this._component.model._items.length;
             },
 
             updateAfter() {
@@ -151,8 +151,8 @@ export class Select extends Repeater {
             default: -1,
             range: [-1, Infinity],
 
-            process(value) {
-                return Math.min(value, this._component.model._items.length - 1);
+            process() {
+                this._valuePrepared = Math.min(this._valuePrepared, this._component.model._items.length - 1);
             },
 
             updateAfter() {

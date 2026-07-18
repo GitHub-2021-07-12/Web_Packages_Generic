@@ -147,21 +147,19 @@ export class Resizable extends Component {
             default: '',
             extra: true,
 
-            process(value) {
-                if (!(value instanceof Node)) {
-                    let selector = value + '';
+            process() {
+                if (!(this._valuePrepared instanceof Node)) {
+                    let selector = this._valuePrepared + '';
 
                     try {
-                        value = this._component.closest(selector) || this._component.querySelector(selector);
+                        this._valuePrepared = this._component.closest(selector) || this._component.querySelector(selector);
                     }
                     catch {
-                        value = null;
+                        this._valuePrepared = null;
                     }
 
-                    value ||= this._component;
+                    this._valuePrepared ||= this._component;
                 }
-
-                return value;
             },
         },
     };

@@ -101,19 +101,17 @@ export class Draggable extends GestureArea {
             default: '',
             extra: true,
 
-            process(value) {
-                if (!(value instanceof Node)) {
-                    let selector = value + '';
+            process() {
+                if (!(this._valuePrepared instanceof Node)) {
+                    let selector = this._valuePrepared + '';
 
                     try {
-                        value = this._component.closest(selector);
+                        this._valuePrepared = this._component.closest(selector);
                     }
                     catch {
-                        value = null;
+                        this._valuePrepared = null;
                     }
                 }
-
-                return value;
             },
         },
 
@@ -121,25 +119,23 @@ export class Draggable extends GestureArea {
             default: '',
             extra: true,
 
-            process(value) {
+            process() {
                 // console.log(value, this._value, this._fromAttribute(), this._fromCssProp())
 
-                if (value?.constructor == String) {
+                if (this._valuePrepared?.constructor == String) {
                     try {
-                        value = new Set(document.querySelectorAll(value));
+                        this._valuePrepared = new Set(document.querySelectorAll(this._valuePrepared));
                     }
                     catch {
-                        value = null;
+                        this._valuePrepared = null;
                     }
                 }
-                else if (value?.[Symbol.iterator]) {
-                    value = new Set(value);
+                else if (this._valuePrepared?.[Symbol.iterator]) {
+                    this._valuePrepared = new Set(this._valuePrepared);
                 }
                 else {
-                    value = null;
+                    this._valuePrepared = null;
                 }
-
-                return value;
             },
         },
 
@@ -172,21 +168,19 @@ export class Draggable extends GestureArea {
             default: '',
             extra: true,
 
-            process(value) {
-                if (!(value instanceof Node)) {
-                    let selector = value + '';
+            process() {
+                if (!(this._valuePrepared instanceof Node)) {
+                    let selector = this._valuePrepared + '';
 
                     try {
-                        value = this._component.closest(selector) || this._component.querySelector(selector);
+                        this._valuePrepared = this._component.closest(selector) || this._component.querySelector(selector);
                     }
                     catch {
-                        value = null;
+                        this._valuePrepared = null;
                     }
 
-                    value ||= this._component;
+                    this._valuePrepared ||= this._component;
                 }
-
-                return value;
             },
         },
     };

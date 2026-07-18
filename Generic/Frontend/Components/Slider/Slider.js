@@ -141,8 +141,8 @@ export class Slider extends GestureArea {
         _flipDirection: {
             default: 0,
 
-            process(value) {
-                return Math.sign(value);
+            process() {
+                this._valuePrepared = Math.sign(this._valuePrepared);
             },
 
             updateAfter() {
@@ -193,10 +193,9 @@ export class Slider extends GestureArea {
             _valueRaw = undefined;
 
 
-            _process(value) {
-                this._valueRaw = value;
-
-                return this._component._processIndex(value);
+            _process() {
+                this._valueRaw = this._valuePrepared;
+                this._valuePrepared = this._component._processIndex(this._valuePrepared);
             }
 
             _updateAfter() {

@@ -44,8 +44,8 @@ export class TextField extends TextInput {
         maskChar: {
             default: '●',
 
-            process(value) {
-                return value ? new RichString(value).slice(0, 1).value : undefined;
+            process() {
+                this._valuePrepared = this._valuePrepared ? new RichString(this._valuePrepared).slice(0, 1).value : undefined;
             },
 
             updateAfter() {
@@ -67,8 +67,8 @@ export class TextField extends TextInput {
             default: '',
             extra: true,
 
-            process(value) {
-                return new RegExp(value);
+            process() {
+                this._valuePrepared = new RegExp(this._valuePrepared);
             },
         },
     };

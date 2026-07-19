@@ -141,13 +141,13 @@ export class Slider extends GestureArea {
         _flipDirection: {
             default: 0,
 
-            process() {
-                this._valuePrepared = Math.sign(this._valuePrepared);
-            },
-
             updateAfter() {
                 this._elements.root.inert = !!this._value;
                 this._component._animationManager.prepare();
+            },
+
+            updateBefore() {
+                this._valuePrepared = Math.sign(this._valuePrepared);
             },
         },
 
@@ -193,11 +193,6 @@ export class Slider extends GestureArea {
             _valueRaw = undefined;
 
 
-            _process() {
-                this._valueRaw = this._valuePrepared;
-                this._valuePrepared = this._component._processIndex(this._valuePrepared);
-            }
-
             _updateAfter() {
                 if (
                     this._component._frameCurrentIndex == undefined
@@ -223,6 +218,9 @@ export class Slider extends GestureArea {
             }
 
             _updateBefore() {
+                this._valueRaw = this._valuePrepared;
+                this._valuePrepared = this._component._processIndex(this._valuePrepared);
+
                 if (
                     this._component._flipDirection
                     && this._component._frameCurrentIndex != undefined

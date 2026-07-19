@@ -291,7 +291,6 @@ export class Component extends HTMLElement {
             flash = undefined,
             getInitialValue = undefined,
             name,
-            process = undefined,
             range = undefined,
             updateAfter = undefined,
             updateBefore = undefined,
@@ -315,7 +314,6 @@ export class Component extends HTMLElement {
                 this.prototype,
                 {
                     _getInitialValue: getInitialValue,
-                    _process: process,
                     _updateAfter: updateAfter,
                     _updateBefore: updateBefore,
                 },
@@ -325,7 +323,7 @@ export class Component extends HTMLElement {
             this._protected = this._name.startsWith('_');
             this._cssPropName = (this._protected ? `--_${cssPropNamePrefix}` : `--${cssPropNamePrefix}_`) + this._name;
             this._assignConverters();
-            this._cssPropDefaultValue = this._toCssProp(this._defaultValue);
+            this._cssPropDefaultValue = this._toCssProp(this._defaultValue ?? '');
             this._registerCssProp();
         }
 
@@ -379,6 +377,10 @@ export class Component extends HTMLElement {
             }
 
             this._isDefault = !valid;
+
+            if (this._isDefault) {
+                this._valuePrepared = structuredClone(defaultValue);
+            }
         }
 
         _checkItem(item) {
@@ -430,27 +432,18 @@ export class Component extends HTMLElement {
             this._value = value;
         }
 
-        _process() {}
-
         _update(value) {
             let defaultValue = this.constructor._defaultValue;
             this._valuePrepared = defaultValue?.constructor == Set && value?.constructor == Array ? new Set(value) : value;
             this._check();
-
-            if (this._isDefault) {
-                this._valuePrepared = structuredClone(defaultValue);
-            }
-
-            this._process();
-            this._check();
-
-            if (this._isDefault) {
-                this._valuePrepared = structuredClone(defaultValue);
-            }
-
+            let valuePrepared = this._valuePrepared;
             this._updateBefore();
 
             if (this._valuePrepared === undefined) return;
+
+            if (this._valuePrepared !== valuePrepared) {
+                this._check();
+            }
 
             this._value = this._valuePrepared;
             this._valuePrepared = undefined;

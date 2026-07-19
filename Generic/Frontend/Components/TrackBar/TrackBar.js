@@ -109,7 +109,11 @@ export class TrackBar extends GestureArea {
         range: {
             default: [0, 0],
 
-            process() {
+            updateAfter() {
+                this._component.refreshField('value');
+            },
+
+            updateBefore() {
                 this._valuePrepared[0] = Math.round(this._valuePrepared[0]);
                 this._valuePrepared[1] = Math.round(this._valuePrepared[1]);
 
@@ -117,17 +121,17 @@ export class TrackBar extends GestureArea {
                     this._valuePrepared = undefined;
                 }
             },
-
-            updateAfter() {
-                this._component.refreshField('value');
-            },
         },
 
         value: {
             default: 0,
             externalFlag: true,
 
-            process() {
+            updateAfter() {
+                this._component._puck_definePosition();
+            },
+
+            updateBefore() {
                 if (this._component.range[0] < this._component.range[1]) {
                     this._valuePrepared = Common.toRange(Math.round(this._valuePrepared), ...this._component.range);
                 }
@@ -138,10 +142,6 @@ export class TrackBar extends GestureArea {
 
                     this._valuePrepared = Common.toRange(this._valuePrepared, 0, 1);
                 }
-            },
-
-            updateAfter() {
-                this._component._puck_definePosition();
             },
         },
     };

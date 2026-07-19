@@ -147,7 +147,7 @@ export class Resizable extends Component {
             default: '',
             extra: true,
 
-            process() {
+            updateBefore() {
                 if (!(this._valuePrepared instanceof Node)) {
                     let selector = this._valuePrepared + '';
 

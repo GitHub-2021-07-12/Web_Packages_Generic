@@ -112,10 +112,6 @@ export class Select extends Repeater {
         _open: {
             default: false,
 
-            process() {
-                this._valuePrepared &&= !!this._component.model._items.length;
-            },
-
             updateAfter() {
                 if (this._value) {
                     if (this._valuePrev) return;
@@ -127,6 +123,10 @@ export class Select extends Repeater {
                 else if (this._valuePrev) {
                     this._elements.popup.open = false;
                 }
+            },
+
+            updateBefore() {
+                this._valuePrepared &&= !!this._component.model._items.length;
             },
         },
 
@@ -151,12 +151,12 @@ export class Select extends Repeater {
             default: -1,
             range: [-1, Infinity],
 
-            process() {
-                this._valuePrepared = Math.min(this._valuePrepared, this._component.model._items.length - 1);
-            },
-
             updateAfter() {
                 this._elements.textField.value = this._component.model._items[this._value]?.data[this._component.valueProp] ?? '';
+            },
+
+            updateBefore() {
+                this._valuePrepared = Math.min(this._valuePrepared, this._component.model._items.length - 1);
             },
         },
     };

@@ -101,7 +101,7 @@ export class Draggable extends GestureArea {
             default: '',
             extra: true,
 
-            process() {
+            updateBefore() {
                 if (!(this._valuePrepared instanceof Node)) {
                     let selector = this._valuePrepared + '';
 
@@ -119,9 +119,7 @@ export class Draggable extends GestureArea {
             default: '',
             extra: true,
 
-            process() {
-                // console.log(value, this._value, this._fromAttribute(), this._fromCssProp())
-
+            updateBefore() {
                 if (this._valuePrepared?.constructor == String) {
                     try {
                         this._valuePrepared = new Set(document.querySelectorAll(this._valuePrepared));
@@ -168,7 +166,7 @@ export class Draggable extends GestureArea {
             default: '',
             extra: true,
 
-            process() {
+            updateBefore() {
                 if (!(this._valuePrepared instanceof Node)) {
                     let selector = this._valuePrepared + '';
 

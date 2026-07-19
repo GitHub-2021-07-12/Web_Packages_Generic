@@ -131,8 +131,14 @@ export class ScrollArea extends GestureArea {
 
         autoRefresh: class Field extends super._fieldDescriptors.autoRefresh {
             _updateAfter() {
-                let methodName = this._value ? 'resizeObserver_addElements' : 'resizeObserver_deleteElements';
-                this._component[methodName](this._component, this._elements.content);
+                if (this._value) {
+                    this._component._mutationObserver.observe(this._component, {childList: true, subtree: true});
+                    this._component._resizeObserver.observe(this._component);
+                }
+                else {
+                    this._component._mutationObserver.disconnect();
+                    this._component._resizeObserver.unobserve(this._component);
+                }
             }
         },
 
@@ -178,7 +184,9 @@ export class ScrollArea extends GestureArea {
 
     _acceleration = new Vector2d();
     _jerk = new Vector2d();
-    _resizeObserver = new ResizeObserver(this._resizeObserver_callback.bind(this));
+    _observers_callbackBinded = this._observers_callback.bind(this);
+    _mutationObserver = new MutationObserver(this._observers_callbackBinded);
+    _resizeObserver = new ResizeObserver(this._observers_callbackBinded);
     _scrollBars_defineValuesBinded = this._scrollBars_defineValues.bind(this);
     _scrollFractional = new Vector2d();
     _scrollInitial = new Vector2d();
@@ -235,6 +243,10 @@ export class ScrollArea extends GestureArea {
         this.scrollY = 0;
     }
 
+    _observers_callback() {
+        this._refreshAuto();
+    }
+
     _renderer_getRenderCondition() {
         return (
             this._velocity.length >= this.velocityMin
@@ -250,11 +262,6 @@ export class ScrollArea extends GestureArea {
         this.scrollY = this._scrollFractional.y;
         this._acceleration.sum(this._jerk);
         this._velocity.sub(this._acceleration);
-    }
-
-    _resizeObserver_callback(entries) {
-        this._refreshAuto();
-        this.dispatchEvent('resize', {entries});
     }
 
     _scrollBars_defineValues() {
@@ -321,18 +328,6 @@ export class ScrollArea extends GestureArea {
     restoreScroll() {
         this.scrollX = this._scrollSaved.x;
         this.scrollY = this._scrollSaved.y;
-    }
-
-    resizeObserver_addElements(...elements) {
-        for (let element of elements) {
-            this._resizeObserver.observe(element);
-        }
-    }
-
-    resizeObserver_deleteElements(...elements) {
-        for (let element of elements) {
-            this._resizeObserver.unobserve(element);
-        }
     }
 
     saveScroll() {

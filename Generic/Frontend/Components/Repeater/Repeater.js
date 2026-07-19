@@ -115,7 +115,12 @@ export class Repeater extends Component {
                 return this._component.querySelector('[Repeater_model]') || undefined;
             },
 
-            process() {
+            updateAfter() {
+                this._component._refreshAuto();
+                EventManager.applyEventHandlers(this._component._eventHandlers.model, this._component.model);
+            },
+
+            updateBefore() {
                 switch (this._valuePrepared?.constructor) {
                     case Array: {
                         let modelItems = this._valuePrepared;
@@ -156,18 +161,21 @@ export class Repeater extends Component {
                     }
                 }
             },
-
-            updateAfter() {
-                this._component._refreshAuto();
-                EventManager.applyEventHandlers(this._component._eventHandlers.model, this._component.model);
-            },
         },
 
         target: {
             default: '',
             extra: true,
 
-            process() {
+            updateAfter() {
+                if (this._valuePrev instanceof Node) {
+                    this._valuePrev.textContent = '';
+                }
+
+                this._component._refreshAuto();
+            },
+
+            updateBefore() {
                 if (!(this._valuePrepared instanceof Node)) {
                     let selector = this._valuePrepared + '';
 
@@ -180,14 +188,6 @@ export class Repeater extends Component {
 
                     this._valuePrepared ||= this._component;
                 }
-            },
-
-            updateAfter() {
-                if (this._valuePrev instanceof Node) {
-                    this._valuePrev.textContent = '';
-                }
-
-                this._component._refreshAuto();
             },
         },
     };

@@ -12,12 +12,12 @@ export class Svg extends Component {
         url: {
             default: '',
 
-            process() {
-                this._valuePrepared = this._valuePrepared.trim();
-            },
-
             updateAfter() {
                 this._component._defineDom();
+            },
+
+            updateBefore() {
+                this._valuePrepared = this._valuePrepared.trim();
             },
         },
     };

@@ -54,18 +54,16 @@ export class ScrollArea extends GestureArea {
         },
 
         host: {
-            capture: function (event) {
-                let pointer = event.detail.pointer;
-                pointer._ScrollArea_blocked ??= pointer._target.constructor == TrackBar || this._checkSnag(pointer._target);
+            capture: function () {
+                let pointerMainTarget = this._pointerMain?._target;
+                this._pointerMainIsBlocked = !pointerMainTarget || pointerMainTarget.constructor == TrackBar || this._checkSnag(pointerMainTarget);
                 this._renderer.stop();
             },
 
-            flickMain: function (event) {
-                let pointer = event.detail.pointer;
+            flickMain: function () {
+                if (this._pointerMainIsBlocked || this._pointerMain._velocity.length < this.velocityMin) return;
 
-                if (pointer._ScrollArea_blocked || pointer._velocity.length < this.velocityMin) return;
-
-                this._velocity.setVector(pointer._velocity).invert().toRangeLength(-this.velocityMax, this.velocityMax);
+                this._velocity.setVector(this._pointerMain._velocity).invert().toRangeLength(-this.velocityMax, this.velocityMax);
                 this._acceleration.setVector(this._velocity).setLength(this.acceleration);
                 this._jerk.setVector(this._velocity).setLength(this.jerk);
 
@@ -73,24 +71,22 @@ export class ScrollArea extends GestureArea {
                 this._renderer.start();
             },
 
-            swipeMain: function (event) {
-                let pointer = event.detail.pointer;
+            swipeMain: function () {
+                if (this._pointerMainIsBlocked) return;
 
-                if (pointer._ScrollArea_blocked) return;
-
-                this.scrollX = this._scrollInitial.x - pointer._positionDelta.x;
-                this.scrollY = this._scrollInitial.y - pointer._positionDelta.y;
+                this.scrollX = this._scrollInitial.x - this._pointerMain._positionDelta.x;
+                this.scrollY = this._scrollInitial.y - this._pointerMain._positionDelta.y;
             },
 
-            swipeStartMain: function (event) {
-                if (event.detail.pointer._ScrollArea_blocked) return;
+            swipeStartMain: function () {
+                if (this._pointerMainIsBlocked) return;
 
                 this._swiping = true;
                 this._scrollInitial.set(this.scrollX, this.scrollY);
             },
 
-            swipeStopMain: function (event) {
-                if (event.detail.pointer._ScrollArea_blocked) return;
+            swipeStopMain: function () {
+                if (this._pointerMainIsBlocked) return;
 
                 this._swiping = false;
             },
@@ -186,6 +182,7 @@ export class ScrollArea extends GestureArea {
     _jerk = new Vector2d();
     _observers_callbackBinded = this._observers_callback.bind(this);
     _mutationObserver = new MutationObserver(this._observers_callbackBinded);
+    _pointerMainIsBlocked = false;
     _resizeObserver = new ResizeObserver(this._observers_callbackBinded);
     _scrollBars_defineValuesBinded = this._scrollBars_defineValues.bind(this);
     _scrollFractional = new Vector2d();

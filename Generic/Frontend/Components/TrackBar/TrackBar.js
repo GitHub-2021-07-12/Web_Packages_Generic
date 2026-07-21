@@ -11,15 +11,14 @@ export class TrackBar extends GestureArea {
     static _eventHandlerDescriptors = {
         host: {
             capture: function (event) {
-                let pointer = event.detail.pointer;
-                pointer._TrackBar_blocked ??= this.mode == 'normal' && pointer._target != this._elements.puck;
+                this._pointerMainIsBlocked = this.mode == 'normal' && this._pointerMain?._target != this._elements.puck;
 
-                if (pointer._TrackBar_blocked) return;
+                if (this._pointerMainIsBlocked) return;
 
                 this._active = true;
 
                 if (this.mode == 'precise') {
-                    this._defineValue(pointer);
+                    this._defineValue();
                 }
                 else {
                     this._valueCaptured = this.value;
@@ -64,15 +63,15 @@ export class TrackBar extends GestureArea {
             },
 
             releaseMain: function () {
+                if (this._pointerMainIsBlocked) return;
+
                 this._active = false;
             },
 
-            swipeMain: function (event) {
-                let pointer = event.detail.pointer;
+            swipeMain: function () {
+                if (this._pointerMainIsBlocked) return;
 
-                if (pointer._TrackBar_blocked) return;
-
-                this._defineValue(pointer);
+                this._defineValue();
             },
         },
     };
@@ -153,21 +152,22 @@ export class TrackBar extends GestureArea {
 
 
     _freeSpaceLength = 0;
+    _pointerMainIsBlocked = false;
     _puck_positionShift = 0;
     _valueCaptured = 0;
     _valueStep = 0;
 
 
-    _defineValue(pointer) {
+    _defineValue() {
         let rangeLength = (this.range[1] - this.range[0]) || 1;
         let value = undefined;
 
         if (this.mode == 'precise') {
-            let pointerPosition = pointer._positionInnerInitial.x + pointer._positionDelta.x + this._puck_positionShift;
+            let pointerPosition = this._pointerMain._positionInnerInitial.x + this._pointerMain._positionDelta.x + this._puck_positionShift;
             value = this.range[0] + rangeLength * pointerPosition / this._freeSpaceLength;
         }
         else {
-            value = this._valueCaptured + rangeLength * pointer._positionDelta.x / this._freeSpaceLength;
+            value = this._valueCaptured + rangeLength * this._pointerMain._positionDelta.x / this._freeSpaceLength;
         }
 
         if (this.discrete) {

@@ -6,12 +6,16 @@ import {Vector2d} from '/Packages/Generic/Js/Vector2d/Vector2d.js';
 export class Draggable extends GestureArea {
     static _eventHandlerDescriptors = {
         host: {
-            capture: function (event) {
-                let pointer = event.detail.pointer;
-                pointer._Draggable_blocked ??= !this._checkHandle(pointer._target);
+            capture: function () {
+                this._pointerMainIsBlocked = !this._checkHandle(this._pointerMain?._target);
 
-                if (pointer._Draggable_blocked) return;
+                if (this._pointerMainIsBlocked) return;
 
+                // if (!this._pointerMain || !this._checkHandle(this._pointerMain._target)) return;
+
+                // console.log('capture', this, this._pointerMain)
+
+                this._domRect = this.constructor.getDomRect(this, true);
                 this._positionCurrent.set(this.constructor.getLeft(this.target), this.constructor.getTop(this.target));
                 this._positionInitial.setVector(this._positionCurrent);
 
@@ -27,14 +31,21 @@ export class Draggable extends GestureArea {
                     this._positionMax.set(Infinity);
                     this._positionMin.set(-Infinity);
                 }
+
+                if (!this.dynamicEnvironment) return;
+
+                this._defineDropAreaDomRects();
+                this._defineMagnetAreaRects();
             },
 
             swipeMain: function (event) {
-                let pointer = event.detail.pointer;
+                if (this._pointerMainIsBlocked) return;
 
-                if (pointer._Draggable_blocked) return;
+                // console.log('swipeMain', this, this._pointerMain)
 
-                let positionDelta = pointer._positionDeltaMagnetized.clone().toRangeLength(0, this.radius);
+                // this._definePointerRect();
+                // this._detectMagnetAreaTarget();
+                let positionDelta = this._pointerMain._positionDeltaMagnetized.clone().toRangeLength(0, this.radius);
 
                 if (this.axis != 'x') {
                     let step = this.stepY || this.step;
@@ -50,6 +61,8 @@ export class Draggable extends GestureArea {
 
                 if (this._position.isEqual(this._positionCurrent)) return;
 
+                this._definePointerRect();
+                this._detectMagnetAreaTarget();
                 this._position = this._positionCurrent;
                 this._detectDropTarget();
                 this.dispatchEvent('drag', event.detail);
@@ -60,15 +73,24 @@ export class Draggable extends GestureArea {
             },
 
             swipeStartMain: function (event) {
-                if (event.detail.pointer._Draggable_blocked) return;
+                // console.log('swipeStartMain', this, this._pointerMain)
 
+                if (this._pointerMainIsBlocked) return;
+
+                // console.log('swipeStartMain', this, this._pointerMain)
+
+                // this._domRect = this.constructor.getDomRect(this, true);
                 this._dragging = true;
-                this._defineDropAreaDomRects();
+                // this._definePointerShifts();
                 this.dispatchEvent('dragStart', event.detail);
             },
 
             swipeStopMain: function (event) {
-                if (event.detail.pointer._Draggable_blocked) return;
+                // console.log('swipeStopMain', this, this._pointerMain)
+
+                if (this._pointerMainIsBlocked) return;
+
+                // console.log('swipeStopMain', this, this._pointerMain)
 
                 this._dragging = false;
                 this.dispatchEvent('dragStop', event.detail);
@@ -89,6 +111,7 @@ export class Draggable extends GestureArea {
         _dragging: false,
 
 
+        dynamicEnvironment: false,
         springy: false,
         wideDrop: false,
 
@@ -119,6 +142,12 @@ export class Draggable extends GestureArea {
             default: '',
             extra: true,
 
+            updateAfter() {
+                if (this._component.dynamicEnvironment) return;
+
+                this._component._defineDropAreaDomRects();
+            },
+
             updateBefore() {
                 if (this._valuePrepared?.constructor == String) {
                     try {
@@ -140,6 +169,35 @@ export class Draggable extends GestureArea {
         handle: {
             default: '',
             extra: true,
+        },
+
+        magnetAreas: {
+            default: '',
+            extra: true,
+
+            updateAfter() {
+                if (this._component.dynamicEnvironment) return;
+
+                this._component._defineMagnetAreaRects();
+            },
+
+            updateBefore() {
+                if (this._valuePrepared?.constructor == String) {
+                    try {
+                        this._valuePrepared = new Set(document.querySelectorAll(this._valuePrepared));
+                        this._valuePrepared.delete(this._component);
+                    }
+                    catch {
+                        this._valuePrepared = null;
+                    }
+                }
+                else if (this._valuePrepared?.[Symbol.iterator]) {
+                    this._valuePrepared = new Set(this._valuePrepared);
+                }
+                else {
+                    this._valuePrepared = null;
+                }
+            },
         },
 
         radius: {
@@ -184,9 +242,13 @@ export class Draggable extends GestureArea {
     };
 
 
-    static getIntersectionSquare(domRect1, domRect2) {
-        let height = Math.min(domRect1.bottom, domRect2.bottom) - Math.max(domRect1.top, domRect2.top);
-        let width = Math.min(domRect1.right, domRect2.right) - Math.max(domRect1.left, domRect2.left);
+    static checkIntersection(rect1, rect2) {
+        return !(rect1.bottom <= rect2.top || rect1.left >= rect2.right || rect1.right <= rect2.left || rect1.top >= rect2.bottom);
+    }
+
+    static getIntersectionSquare(rect1, rect2) {
+        let height = Math.min(rect1.bottom, rect2.bottom) - Math.max(rect1.top, rect2.top);
+        let width = Math.min(rect1.right, rect2.right) - Math.max(rect1.left, rect2.left);
 
         return height > 0 && width > 0 ? height * width : 0;
     }
@@ -201,8 +263,13 @@ export class Draggable extends GestureArea {
     __position = new Vector2d();
 
 
+    _domRect = null;
     _dropAreaDomRects = new Map();
     _dropTargetPrev = null;
+    _magnetAreaRects = new Map();
+    _magnetAreaTarget = null;
+    _pointerMainIsBlocked = false;
+    _pointerRect = null;
     _positionCurrent = new Vector2d();
     _positionInitial = new Vector2d();
     _positionMax = new Vector2d();
@@ -255,16 +322,64 @@ export class Draggable extends GestureArea {
         }
     }
 
+    _defineMagnetAreaRects() {
+        if (!this.magnetAreas) return;
+
+        this._dropAreaDomRects.clear();
+
+        for (let magnetArea of this.magnetAreas) {
+            let domRect = this.constructor.getDomRect(magnetArea, true);
+            let rects = {
+                bottom: {
+                    bottom: domRect.bottom + this.magnetism,
+                    left: domRect.left - this.magnetism,
+                    right: domRect.right + this.magnetism,
+                    top: domRect.bottom - this.magnetism,
+                },
+                left: {
+                    bottom: domRect.bottom + this.magnetism,
+                    left: domRect.left - this.magnetism,
+                    right: domRect.left + this.magnetism,
+                    top: domRect.top - this.magnetism,
+                },
+                right: {
+                    bottom: domRect.bottom + this.magnetism,
+                    left: domRect.right - this.magnetism,
+                    right: domRect.right + this.magnetism,
+                    top: domRect.top - this.magnetism,
+                },
+                top: {
+                    bottom: domRect.top + this.magnetism,
+                    left: domRect.left - this.magnetism,
+                    right: domRect.right + this.magnetism,
+                    top: domRect.top - this.magnetism,
+                },
+            };
+            this._magnetAreaRects.set(magnetArea, rects);
+        }
+    }
+
+    _definePointerRect() {
+        if (!this.dropAreas && !this.magnetAreas) return;
+
+        let pointerPositionDelta = this._pointerMain._positionDelta;
+        this._pointerRect = {
+            bottom: this._domRect.bottom + pointerPositionDelta.y,
+            left: this._domRect.left + pointerPositionDelta.x,
+            right: this._domRect.right + pointerPositionDelta.x,
+            top: this._domRect.top + pointerPositionDelta.y,
+        };
+    }
+
     _detectDropTarget() {
         if (!this.dropAreas) return;
 
         if (this.wideDrop) {
-            let domRect = this.constructor.getDomRect(this, true);
             let dropTarget = null;
             let intersectionSquareMax = 0;
 
             for (let dropArea of this.dropAreas) {
-                let intersectionSquare = this.constructor.getIntersectionSquare(domRect, this._dropAreaDomRects.get(dropArea));
+                let intersectionSquare = this.constructor.getIntersectionSquare(this._pointerRect, this._dropAreaDomRects.get(dropArea));
 
                 if (intersectionSquare <= intersectionSquareMax) continue;
 
@@ -277,6 +392,89 @@ export class Draggable extends GestureArea {
         else {
             let nodes = document.elementsFromPoint(this._pointerMain._positionOuter.x, this._pointerMain._positionOuter.y);
             this._dropTarget = nodes[0] == this && this.dropAreas.has(nodes[1]) ? nodes[1] : null;
+        }
+    }
+
+    _detectMagnetAreaTarget() {
+        if (!this.magnetAreas) return;
+
+        let rects = {
+            bottom: {
+                bottom: this._pointerRect.bottom,
+                left: this._pointerRect.left,
+                right: this._pointerRect.right,
+                top: this._pointerRect.bottom,
+            },
+            left: {
+                bottom: this._pointerRect.bottom,
+                left: this._pointerRect.left,
+                right: this._pointerRect.left,
+                top: this._pointerRect.top,
+            },
+            right: {
+                bottom: this._pointerRect.bottom,
+                left: this._pointerRect.right,
+                right: this._pointerRect.right,
+                top: this._pointerRect.top,
+            },
+            top: {
+                bottom: this._pointerRect.top,
+                left: this._pointerRect.left,
+                right: this._pointerRect.right,
+                top: this._pointerRect.top,
+            },
+        };
+
+        // this._magnetAreaTarget?.removeAttribute('_Draggable_magnetTarget');
+
+        for (let magnetArea of this.magnetAreas) {
+            let magnetAreaRects = this._magnetAreaRects.get(magnetArea);
+
+            if (this.constructor.checkIntersection(rects.top, magnetAreaRects.bottom)) {
+                this._positionCurrent.y += (magnetAreaRects.bottom.bottom + magnetAreaRects.bottom.top) / 2 - this._pointerRect.top;
+
+                // break;
+            }
+            else if (this.constructor.checkIntersection(rects.bottom, magnetAreaRects.bottom)) {
+                this._positionCurrent.y += (magnetAreaRects.bottom.bottom + magnetAreaRects.bottom.top) / 2 - this._pointerRect.bottom;
+
+                // break;
+            }
+            else if (this.constructor.checkIntersection(rects.top, magnetAreaRects.top)) {
+                this._positionCurrent.y += (magnetAreaRects.top.bottom + magnetAreaRects.top.top) / 2 - this._pointerRect.top;
+
+                // break;
+            }
+            else if (this.constructor.checkIntersection(rects.bottom, magnetAreaRects.top)) {
+                this._positionCurrent.y += (magnetAreaRects.top.bottom + magnetAreaRects.top.top) / 2 - this._pointerRect.bottom;
+
+                // break;
+            }
+
+            if (this.constructor.checkIntersection(rects.left, magnetAreaRects.right)) {
+                this._positionCurrent.x += (magnetAreaRects.right.right + magnetAreaRects.right.left) / 2 - this._pointerRect.left;
+
+                break;
+            }
+            else if (this.constructor.checkIntersection(rects.right, magnetAreaRects.right)) {
+                this._positionCurrent.x += (magnetAreaRects.right.right + magnetAreaRects.right.left) / 2 - this._pointerRect.right;
+
+                break;
+            }
+            else if (this.constructor.checkIntersection(rects.left, magnetAreaRects.left)) {
+                this._positionCurrent.x += (magnetAreaRects.left.right + magnetAreaRects.left.left) / 2 - this._pointerRect.left;
+
+                break;
+            }
+            else if (this.constructor.checkIntersection(rects.right, magnetAreaRects.left)) {
+                this._positionCurrent.x += (magnetAreaRects.left.right + magnetAreaRects.left.left) / 2 - this._pointerRect.right;
+
+                break;
+            }
+
+            // this._magnetAreaTarget?.removeAttribute('_Draggable_magnetTarget');
+            // this._magnetAreaTarget = magnetArea;
+            // this._magnetAreaTarget?.setAttribute('_Draggable_magnetTarget', '');
         }
     }
 

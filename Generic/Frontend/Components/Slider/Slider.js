@@ -37,38 +37,33 @@ export class Slider extends GestureArea {
         host: {
             ...super._eventHandlerDescriptors.host,
 
-            capture: function (event) {
-                let pointer = event.detail.pointer;
-                pointer._Slider_blocked ??= this.children.length < 2;
+            capture: function () {
+                this._pointerMainIsBlocked = this.children.length < 2;
                 this._animationManager.stop(true);
 
-                if (pointer._Slider_blocked) return;
+                if (this._pointerMainIsBlocked) return;
 
                 this._flipProgressExcess = this._animationManager.progress * -this._flipDirection;
             },
 
-            flickMain: function (event) {
-                let pointer = event.detail.pointer;
+            flickMain: function () {
+                if (this._pointerMainIsBlocked) return;
 
-                if (pointer._Slider_blocked) return;
-
-                pointer._Slider_flicked = true;
-                let velocityAbs = Math.abs(pointer._velocity.x);
+                this._pointerMain._Slider_flicked = true;
+                let velocityAbs = Math.abs(this._pointerMain._velocity.x);
 
                 if (!this._flickDirection && velocityAbs < this.flipVelocityThreshold) return;
 
-                let flickDirection = Math.sign(pointer._velocity.x);
+                let flickDirection = Math.sign(this._pointerMain._velocity.x);
                 this._flickVelocity = velocityAbs + (flickDirection == this._flickDirection ? this._flickVelocity : 0);
                 this._flickDirection = flickDirection;
             },
 
-            releaseMain: function (event) {
-                let pointer = event.detail.pointer;
-
-                if (pointer._Slider_blocked) return;
+            releaseMain: function () {
+                if (this._pointerMainIsBlocked) return;
 
                 if (this._frameNextIndex != undefined) {
-                    if (this._flickDirection && pointer._Slider_flicked) {
+                    if (this._flickDirection && this._pointerMain._Slider_flicked) {
                         this.index =
                             this._flickDirection == this._flipDirection
                                 ? this._frameCurrentIndex - (this._animationManager.direction < 0 ? this._flipDirection : 0)
@@ -76,13 +71,9 @@ export class Slider extends GestureArea {
                         ;
                     }
                     else {
-                        let swipeDirection = Math.sign(pointer._positionDelta.x);
+                        let swipeDirection = Math.sign(this._pointerMain._positionDelta.x);
                         this.index =
-                            (
-                                this._flickDirection
-                                    ? this._flipDirection == swipeDirection
-                                    : this._animationManager.progress < this.flipProgressThreshold
-                            )
+                            (this._flickDirection ? this._flipDirection == swipeDirection : this._animationManager.progress < this.flipProgressThreshold)
                                 ? this._frameCurrentIndex
                                 : this._frameNextIndex
                         ;
@@ -100,12 +91,10 @@ export class Slider extends GestureArea {
                 this._animationManager.start(true);
             },
 
-            swipeMain: function (event) {
-                let pointer = event.detail.pointer;
+            swipeMain: function () {
+                if (this._pointerMainIsBlocked) return;
 
-                if (pointer._Slider_blocked) return;
-
-                let flipProgress = -pointer._positionDelta.x / this._sizeInline - this._flipProgressExcess;
+                let flipProgress = -this._pointerMain._positionDelta.x / this._sizeInline - this._flipProgressExcess;
                 let frameNextUpdate = false;
 
                 if (!this.looped) {
@@ -258,6 +247,7 @@ export class Slider extends GestureArea {
     _flipProgressExcess = 0;
     _flipProgressRange = [];
     _mutationObserver = new MutationObserver(this._mutationObserver_callback.bind(this));
+    _pointerMainIsBlocked = false;
     _resizeObserver = new ResizeObserver(this._resizeObserver_callback.bind(this));
     _sizeInline = 0;
 

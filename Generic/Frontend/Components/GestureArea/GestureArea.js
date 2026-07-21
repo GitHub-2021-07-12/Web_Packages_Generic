@@ -193,6 +193,7 @@ export class GestureArea extends Component {
     static _eventHandlerDescriptors = {
         host: {
             pointerdown: function (event) {
+                // if (!this.gestures.size || this.constructor._Pointer._idsCaptured.has(event.pointerId)) return;
                 if (!this.gestures.size) return;
 
                 if (this._pointerMain && !this.multiPoint) {
@@ -203,6 +204,7 @@ export class GestureArea extends Component {
                 this._addPointer(event);
                 this._initPress(this._pointerMain, event);
                 this.dispatchEvent('capture', {originalEvent: event, pointer: this._pointerMain});
+                // this._eventHandlers.host.pointermove.disabled = !this.dispatchEvent('capture', {originalEvent: event, pointer: this._pointerMain});
             },
 
             pointermove: function (event) {
@@ -218,6 +220,7 @@ export class GestureArea extends Component {
 
             pointerup: function (event) {
                 let pointer = this._pointers.get(event.pointerId);
+                this._pointerTarget = null;
 
                 if (!pointer) return;
 
@@ -318,7 +321,6 @@ export class GestureArea extends Component {
 
     _addPointer(event) {
         this._pointerMain = new this.constructor._Pointer(this, event);
-        this._pointerTarget = null;
         this._pointerMain.capture();
         this._pointers.set(this._pointerMain._id, this._pointerMain);
     }

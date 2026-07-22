@@ -164,6 +164,9 @@ export class TrackBar extends GestureArea {
 
         if (this.mode == 'precise') {
             let pointerPosition = this._pointerMain._positionInnerInitial.x + this._pointerMain._positionDelta.x + this._puck_positionShift;
+
+            // let rect = this.getBoundingClientRect();
+            // let pointerPosition = (this._pointerMain._positionOuterInitial.x - rect.left) + this._pointerMain._positionDelta.x + this._puck_positionShift;
             value = this.range[0] + rangeLength * pointerPosition / this._freeSpaceLength;
         }
         else {

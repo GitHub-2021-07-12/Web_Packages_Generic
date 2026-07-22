@@ -146,9 +146,9 @@
             <x-draggable dropAreas='.dropArea, .root' wideDrop>1</x-draggable>
             <x-draggable dropAreas='.dropArea' wideDrop>2</x-draggable>
             <x-draggable dropAreas='x-draggable, .dropArea, .root'>3</x-draggable>
-            <x-draggable magnetAreas='x-draggable, .dropArea, .root' magnetism='10'>4</x-draggable>
+            <x-draggable magnetAreas='x-draggable, .dropArea' magnetism='10'>4</x-draggable>
 
-            <x-draggable bound='#root' dropAreas='.dropArea' handle='.handle'>
+            <x-draggable bound='#root' dropAreas='.dropArea' jumping_ handle='.handle' shift='10'>
                 <div class='handle'>Handle</div>
             </x-draggable>
         </div>

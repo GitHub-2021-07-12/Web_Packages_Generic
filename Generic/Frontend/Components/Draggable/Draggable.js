@@ -7,13 +7,15 @@ export class Draggable extends GestureArea {
     static _eventHandlerDescriptors = {
         host: {
             capture: function () {
-                this._pointerMainIsBlocked = !this._checkHandle(this._pointerMain?._target);
+                this._pointerMainIsBlocked = !this._pointerMain || !this._checkHandle(this._pointerMain._target);
 
                 if (this._pointerMainIsBlocked) return;
 
                 // if (!this._pointerMain || !this._checkHandle(this._pointerMain._target)) return;
 
                 // console.log('capture', this, this._pointerMain)
+
+                this._pointerMain.magnetRect = this.constructor.getDomRect(this, true);
 
                 this._domRect = this.constructor.getDomRect(this, true);
                 this._positionCurrent.set(this.constructor.getLeft(this.target), this.constructor.getTop(this.target));
@@ -41,11 +43,14 @@ export class Draggable extends GestureArea {
             swipeMain: function (event) {
                 if (this._pointerMainIsBlocked) return;
 
+                // this._pointerMain._checkMagnetism();
+
                 // console.log('swipeMain', this, this._pointerMain)
 
                 // this._definePointerRect();
                 // this._detectMagnetAreaTarget();
-                let positionDelta = this._pointerMain._positionDeltaMagnetized.clone().toRangeLength(0, this.radius);
+                // let positionDelta = this._pointerMain._positionDeltaMagnetized.clone().toRangeLength(0, this.radius);
+                let positionDelta = this._pointerMain._positionDelta.clone().toRangeLength(0, this.radius);
 
                 if (this.axis != 'x') {
                     let step = this.stepY || this.step;
@@ -61,8 +66,11 @@ export class Draggable extends GestureArea {
 
                 if (this._position.isEqual(this._positionCurrent)) return;
 
+                // this._pointerMain.magnetRect = this.constructor.getDomRect(this, true);
+                // this._pointerMain._checkMagnetism();
+
                 this._definePointerRect();
-                this._detectMagnetAreaTarget();
+                // this._detectMagnetAreaTarget();
                 this._position = this._positionCurrent;
                 this._detectDropTarget();
                 this.dispatchEvent('drag', event.detail);
@@ -171,34 +179,34 @@ export class Draggable extends GestureArea {
             extra: true,
         },
 
-        magnetAreas: {
-            default: '',
-            extra: true,
+        // magnetAreas: {
+        //     default: '',
+        //     extra: true,
 
-            updateAfter() {
-                if (this._component.dynamicEnvironment) return;
+        //     updateAfter() {
+        //         if (this._component.dynamicEnvironment) return;
 
-                this._component._defineMagnetAreaRects();
-            },
+        //         this._component._defineMagnetAreaRects();
+        //     },
 
-            updateBefore() {
-                if (this._valuePrepared?.constructor == String) {
-                    try {
-                        this._valuePrepared = new Set(document.querySelectorAll(this._valuePrepared));
-                        this._valuePrepared.delete(this._component);
-                    }
-                    catch {
-                        this._valuePrepared = null;
-                    }
-                }
-                else if (this._valuePrepared?.[Symbol.iterator]) {
-                    this._valuePrepared = new Set(this._valuePrepared);
-                }
-                else {
-                    this._valuePrepared = null;
-                }
-            },
-        },
+        //     updateBefore() {
+        //         if (this._valuePrepared?.constructor == String) {
+        //             try {
+        //                 this._valuePrepared = new Set(document.querySelectorAll(this._valuePrepared));
+        //                 this._valuePrepared.delete(this._component);
+        //             }
+        //             catch {
+        //                 this._valuePrepared = null;
+        //             }
+        //         }
+        //         else if (this._valuePrepared?.[Symbol.iterator]) {
+        //             this._valuePrepared = new Set(this._valuePrepared);
+        //         }
+        //         else {
+        //             this._valuePrepared = null;
+        //         }
+        //     },
+        // },
 
         radius: {
             default: Infinity,
@@ -240,18 +248,6 @@ export class Draggable extends GestureArea {
             },
         },
     };
-
-
-    static checkIntersection(rect1, rect2) {
-        return !(rect1.bottom <= rect2.top || rect1.left >= rect2.right || rect1.right <= rect2.left || rect1.top >= rect2.bottom);
-    }
-
-    static getIntersectionSquare(rect1, rect2) {
-        let height = Math.min(rect1.bottom, rect2.bottom) - Math.max(rect1.top, rect2.top);
-        let width = Math.min(rect1.right, rect2.right) - Math.max(rect1.left, rect2.left);
-
-        return height > 0 && width > 0 ? height * width : 0;
-    }
 
 
     static {
@@ -322,42 +318,42 @@ export class Draggable extends GestureArea {
         }
     }
 
-    _defineMagnetAreaRects() {
-        if (!this.magnetAreas) return;
+    // _defineMagnetAreaRects() {
+    //     if (!this.magnetAreas) return;
 
-        this._dropAreaDomRects.clear();
+    //     this._magnetAreaRects.clear();
 
-        for (let magnetArea of this.magnetAreas) {
-            let domRect = this.constructor.getDomRect(magnetArea, true);
-            let rects = {
-                bottom: {
-                    bottom: domRect.bottom + this.magnetism,
-                    left: domRect.left - this.magnetism,
-                    right: domRect.right + this.magnetism,
-                    top: domRect.bottom - this.magnetism,
-                },
-                left: {
-                    bottom: domRect.bottom + this.magnetism,
-                    left: domRect.left - this.magnetism,
-                    right: domRect.left + this.magnetism,
-                    top: domRect.top - this.magnetism,
-                },
-                right: {
-                    bottom: domRect.bottom + this.magnetism,
-                    left: domRect.right - this.magnetism,
-                    right: domRect.right + this.magnetism,
-                    top: domRect.top - this.magnetism,
-                },
-                top: {
-                    bottom: domRect.top + this.magnetism,
-                    left: domRect.left - this.magnetism,
-                    right: domRect.right + this.magnetism,
-                    top: domRect.top - this.magnetism,
-                },
-            };
-            this._magnetAreaRects.set(magnetArea, rects);
-        }
-    }
+    //     for (let magnetArea of this.magnetAreas) {
+    //         let domRect = this.constructor.getDomRect(magnetArea, true);
+    //         let rects = {
+    //             bottom: {
+    //                 bottom: domRect.bottom + this.magnetism,
+    //                 left: domRect.left - this.magnetism,
+    //                 right: domRect.right + this.magnetism,
+    //                 top: domRect.bottom - this.magnetism,
+    //             },
+    //             left: {
+    //                 bottom: domRect.bottom + this.magnetism,
+    //                 left: domRect.left - this.magnetism,
+    //                 right: domRect.left + this.magnetism,
+    //                 top: domRect.top - this.magnetism,
+    //             },
+    //             right: {
+    //                 bottom: domRect.bottom + this.magnetism,
+    //                 left: domRect.right - this.magnetism,
+    //                 right: domRect.right + this.magnetism,
+    //                 top: domRect.top - this.magnetism,
+    //             },
+    //             top: {
+    //                 bottom: domRect.top + this.magnetism,
+    //                 left: domRect.left - this.magnetism,
+    //                 right: domRect.right + this.magnetism,
+    //                 top: domRect.top - this.magnetism,
+    //             },
+    //         };
+    //         this._magnetAreaRects.set(magnetArea, rects);
+    //     }
+    // }
 
     _definePointerRect() {
         if (!this.dropAreas && !this.magnetAreas) return;

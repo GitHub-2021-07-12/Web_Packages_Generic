@@ -48,6 +48,10 @@ export class Vector2d {
         return this.x == vector.x && this.y == vector.y;
     }
 
+    isFinite() {
+        return Number.isFinite(this.x) && Number.isFinite(this.y);
+    }
+
     isZero() {
         return !this.x && !this.y;
     }

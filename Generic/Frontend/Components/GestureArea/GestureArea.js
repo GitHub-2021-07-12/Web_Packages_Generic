@@ -15,16 +15,11 @@ export class GestureArea extends Component {
 
         _component = null;
         _id = 0;
-        // _magnetLinesX = [];
-        // _magnetLinesY = [];
-        // _magnetPoints = [];
-        _magnetRect = null;
+        _magnetVector = new Vector2d();
         _points = [];
         _positionDelta = new Vector2d();
-        // _positionDeltaMagnetized = new Vector2d();
         _positionInner = new Vector2d();
         _positionInnerInitial = new Vector2d();
-        _positionMagnetized = new Vector2d();
         _positionOuter = new Vector2d();
         _positionOuterInitial = new Vector2d();
         _shifted = false;
@@ -60,6 +55,81 @@ export class GestureArea extends Component {
             this._positionDelta.set(0);
         }
 
+        _updateMagnetVector() {
+            let magnetAreas = this._component.magnetAreas;
+            let magnetism = this._component.magnetism;
+            // this._magnetVector.set(0);
+            this._magnetVector.set(undefined);
+
+            if (!this.magnetRect || !magnetAreas?.size || !magnetism) return;
+
+            let magnetRect = {
+                bottom: this.magnetRect.bottom + this._positionDelta.y,
+                left: this.magnetRect.left + this._positionDelta.x,
+                right: this.magnetRect.right + this._positionDelta.x,
+                top: this.magnetRect.top + this._positionDelta.y,
+            };
+            // this._magnetVector.set(NaN);
+
+            for (let magnetArea of magnetAreas) {
+                let magnetAreaRect = this._component._magnetAreaRects.get(magnetArea);
+
+                if (
+                    magnetAreaRect.left - magnetRect.right > magnetism
+                    || magnetAreaRect.top - magnetRect.bottom > magnetism
+                    || magnetRect.left - magnetAreaRect.right > magnetism
+                    || magnetRect.top - magnetAreaRect.bottom > magnetism
+                ) continue;
+
+                if (!Number.isFinite(this._magnetVector.x)) {
+                    let deltaLeftLeft = magnetAreaRect.left - magnetRect.left;
+                    let deltaLeftRight = magnetAreaRect.left - magnetRect.right;
+                    let deltaRightLeft = magnetAreaRect.right - magnetRect.left;
+                    let deltaRightRight = magnetAreaRect.right - magnetRect.right;
+
+                    if (Math.abs(deltaLeftLeft) <= magnetism) {
+                        this._magnetVector.x = deltaLeftLeft;
+                    }
+                    else if (Math.abs(deltaLeftRight) <= magnetism) {
+                        this._magnetVector.x = deltaLeftRight;
+                    }
+                    else if (Math.abs(deltaRightLeft) <= magnetism) {
+                        this._magnetVector.x = deltaRightLeft;
+                    }
+                    else if (Math.abs(deltaRightRight) <= magnetism) {
+                        this._magnetVector.x = deltaRightRight;
+                    }
+                }
+
+                if (!Number.isFinite(this._magnetVector.y)) {
+                    let deltaBottomBottom = magnetAreaRect.bottom - magnetRect.bottom;
+                    let deltaBottomTop = magnetAreaRect.bottom - magnetRect.top;
+                    let deltaTopBottom = magnetAreaRect.top - magnetRect.bottom;
+                    let deltaTopTop = magnetAreaRect.top - magnetRect.top;
+
+                    if (Math.abs(deltaBottomBottom) <= magnetism) {
+                        this._magnetVector.y = deltaBottomBottom;
+                    }
+                    else if (Math.abs(deltaBottomTop) <= magnetism) {
+                        this._magnetVector.y = deltaBottomTop;
+                    }
+                    else if (Math.abs(deltaTopBottom) <= magnetism) {
+                        this._magnetVector.y = deltaTopBottom;
+                    }
+                    else if (Math.abs(deltaTopTop) <= magnetism) {
+                        this._magnetVector.y = deltaTopTop;
+                    }
+                }
+
+                if (this._magnetVector.isFinite()) break;
+            }
+
+            // this._magnetVector.x ||= 0;
+            // this._magnetVector.y ||= 0;
+
+            console.log(this._magnetVector)
+        }
+
         _updatePoints() {
             let point = {
                 position: this._positionOuter.clone(),
@@ -72,49 +142,9 @@ export class GestureArea extends Component {
             }
         }
 
-        _updatePositionMagnetized() {
-            let magnetAreas = this._component.magnetAreas;
-            let magnetism = this._component.magnetism;
-            this._positionMagnetized.setVector(this._positionOuter);
-
-            if (!this.magnetRect || !magnetAreas || !magnetism) return;
-
-            let magnetRect = {
-                bottom: this.magnetRect.bottom + this._positionDelta.y,
-                left: this.magnetRect.left + this._positionDelta.x,
-                right: this.magnetRect.right + this._positionDelta.x,
-                top: this.magnetRect.top + this._positionDelta.y,
-            };
-
-            for (let magnetArea of magnetAreas) {
-                let magnetAreaRect = this._component._magnetAreaRects.get(magnetArea);
-
-                if (
-                    magnetAreaRect.left - magnetRect.right > magnetism
-                    || magnetAreaRect.top - magnetRect.bottom > magnetism
-                    || magnetRect.left - magnetAreaRect.right > magnetism
-                    || magnetRect.top - magnetAreaRect.bottom > magnetism
-                ) continue;
-
-                if (Math.abs(magnetRect.left - magnetAreaRect.left) <= magnetism) {
-                    // this._positionDelta.x = magnetAreaRect.left;
-                    this._positionDelta.x -= magnetRect.left - magnetAreaRect.left;
-                }
-                else if (Math.abs(magnetRect.left - magnetAreaRect.right) <= magnetism) {
-                    this._positionDelta.x -= magnetRect.left - magnetAreaRect.right;
-                }
-
-
-
-
-            }
-        }
-
         _updatePositions(event) {
             if (this._component.vertical) {
                 if (this._component.invertedX) {
-                    // this._positionInner.x = this._component.clientWidth - event.offsetY - 1;
-                    // this._positionOuter.x = document.scrollingElement.scrollWidth - event.pageY - 1;
                     this._positionInner.x = this._component.clientHeight - event.offsetY - 1;
                     this._positionOuter.x = document.scrollingElement.scrollHeight - event.pageY - 1;
                 }
@@ -125,7 +155,6 @@ export class GestureArea extends Component {
 
                 if (this._component.invertedY) {
                     this._positionInner.y = this._component.clientWidth - event.offsetX - 1;
-                    // this._positionOuter.y = document.scrollingElement.scrollHeight - event.pageX - 1;
                     this._positionOuter.y = document.scrollingElement.scrollWidth - event.pageX - 1;
                 }
                 else {
@@ -144,7 +173,6 @@ export class GestureArea extends Component {
                 }
 
                 if (this._component.invertedY) {
-                    // this._positionInner.y = this._component.clientWidth - event.offsetY - 1;
                     this._positionInner.y = this._component.clientHeight - event.offsetY - 1;
                     this._positionOuter.y = document.scrollingElement.scrollHeight - event.pageY - 1;
                 }
@@ -153,8 +181,6 @@ export class GestureArea extends Component {
                     this._positionOuter.y = event.pageY;
                 }
             }
-
-            console.log(this._positionInner, this._positionOuter)
         }
 
 
@@ -167,10 +193,9 @@ export class GestureArea extends Component {
             idsCaptured.add(this._id);
         }
 
-        constructor(component, event, magnetRect = null) {
+        constructor(component, event) {
             this._component = component;
             this._id = event.pointerId;
-            this._magnetRect = magnetRect;
             this._target = this._component._pointerTarget || event.target;
             this._updatePositions(event);
             this._positionInnerInitial.setVector(this._positionInner);
@@ -195,6 +220,7 @@ export class GestureArea extends Component {
             this._updatePoints();
             this._defineVelocity();
             this._positionDelta.prod(this._component.swipeFactor);
+            this._updateMagnetVector();
         }
     };
 
@@ -345,13 +371,6 @@ export class GestureArea extends Component {
 
     static checkIntersection(rect1, rect2) {
         return !(rect1.bottom <= rect2.top || rect1.left >= rect2.right || rect1.right <= rect2.left || rect1.top >= rect2.bottom);
-    }
-
-    static getIntersectionSquare(rect1, rect2) {
-        let height = Math.min(rect1.bottom, rect2.bottom) - Math.max(rect1.top, rect2.top);
-        let width = Math.min(rect1.right, rect2.right) - Math.max(rect1.left, rect2.left);
-
-        return height > 0 && width > 0 ? height * width : 0;
     }
 
 

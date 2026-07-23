@@ -105,6 +105,10 @@
                 &::part(display) {
                     overflow: auto;
                 }
+
+                &::part(edge) {
+                    position: static !important;
+                }
             }
 
             x-scrollArea {
@@ -188,7 +192,7 @@
             x-trackBar {
                 --GestureArea_invertedX: true;
                 /* --GestureArea_invertedY: true; */
-                --GestureArea_vertical: true;
+                /* --GestureArea_vertical: true; */
 
                 direction: rtl;
                 margin: 10px;

@@ -15,28 +15,26 @@
 
     x-gestureArea[part] {
         --Component_disabled: var(--Resizable_fixed) !important;
+        --GestureArea_gestures: swipe tap !important;
+        --GestureArea_vertical: initial !important;
+
+        --GestureArea_dynamicEnvironment: true;
+        --GestureArea_magnetAreas: url('#{x-draggable}');
+        --GestureArea_magnetism: 10;
+
+        box-sizing: border-box !important;
+        grid-area: 1 / 1 / -1 / -1 !important;
+        position: relative !important;
     }
 
 
     ._Resizable_corner[part] {
-        --GestureArea_gestures: swipe tap !important;
-        --GestureArea_vertical: initial !important;
-
-        box-sizing: border-box !important;
-        grid-area: 1 / 1 / -1 / -1 !important;
         height: var(--Resizable_cornerSize) !important;
-        position: relative !important;
         width: var(--Resizable_cornerSize) !important;
     }
 
     ._Resizable_edge[part] {
-        --GestureArea_gestures: swipe tap !important;
-        --GestureArea_vertical: initial !important;
-
-        box-sizing: border-box !important;
-        grid-area: 1 / 1 / -1 / -1 !important;
         height: initial !important;
-        position: relative !important;
         width: initial !important;
     }
 

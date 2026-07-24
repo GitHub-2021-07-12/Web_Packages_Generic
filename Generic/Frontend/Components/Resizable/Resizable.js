@@ -11,76 +11,21 @@ export class Resizable extends Component {
     static _eventHandlerDescriptors = {
         shadow: {
             capture: function (event) {
-                let domRect = this.constructor.getDomRect(this.target, true);
-                let magnetRect = {
-                    bottom: Infinity,
-                    left: -Infinity,
-                    right: Infinity,
-                    top: -Infinity,
-                };
-
-                switch (event.target) {
-                    case this._elements.cornerLeftBottom: {
-                        magnetRect.bottom = domRect.bottom;
-                        magnetRect.left = domRect.left;
-
-                        break;
-                    }
-                    case this._elements.cornerLeftTop: {
-                        magnetRect.left = domRect.left;
-                        magnetRect.top = domRect.top;
-
-                        break;
-                    }
-                    case this._elements.cornerRightBottom: {
-                        magnetRect.bottom = domRect.bottom;
-                        magnetRect.right = domRect.right;
-
-                        break;
-                    }
-                    case this._elements.cornerRightTop: {
-                        magnetRect.right = domRect.right;
-                        magnetRect.top = domRect.top;
-
-                        break;
-                    }
-                    case this._elements.edgeBottom: {
-                        magnetRect.bottom = domRect.bottom;
-
-                        break;
-                    }
-                    case this._elements.edgeLeft: {
-                        magnetRect.left = domRect.left;
-
-                        break;
-                    }
-                    case this._elements.edgeRight: {
-                        magnetRect.right = domRect.right;
-
-                        break;
-                    }
-                    case this._elements.edgeTop: {
-                        magnetRect.top = domRect.top;
-
-                        break;
-                    }
-                }
-
-                event.detail.pointer.magnetRect = magnetRect;
+                event.detail.pointer.magnetRect = this.constructor.getDomRect(this.target, true);
             },
 
             swipeMain: function (event) {
                 let keepProportions = this.keepProportions ^ event.detail.originalEvent.shiftKey;
-                let positionDelta = event.detail.pointer._positionDelta.clone();
+                let pointer = event.detail.pointer;
+                let magnetVector = pointer._magnetVector;
+                let positionDelta = pointer._positionDelta.clone();
                 let targets = null;
-
-                let magnetVector = event.detail.pointer._magnetVector;
-                positionDelta.x += magnetVector.x || 0;
-                positionDelta.y += magnetVector.y || 0;
 
                 switch (event.target) {
                     case this._elements.cornerLeftBottom: {
                         targets = new Set(['cornerLeftBottom', 'edgeBottom', 'edgeLeft']);
+                        pointer.updateMagnetVector({left: positionDelta.x, bottom: positionDelta.y});
+                        positionDelta.sum(magnetVector);
                         this._increaseSize(-positionDelta.x, positionDelta.y, true, false, keepProportions);
 
                         break;
@@ -93,6 +38,8 @@ export class Resizable extends Component {
                     }
                     case this._elements.cornerRightBottom: {
                         targets = new Set(['cornerRightBottom', 'edgeBottom', 'edgeRight']);
+                        pointer.updateMagnetVector({right: positionDelta.x, bottom: positionDelta.y});
+                        positionDelta.sum(magnetVector);
                         this._increaseSize(positionDelta.x, positionDelta.y, false, false, keepProportions);
 
                         break;
@@ -105,7 +52,8 @@ export class Resizable extends Component {
                     }
                     case this._elements.edgeBottom: {
                         targets = new Set(['edgeBottom']);
-                        this._increaseSize(NaN, positionDelta.y, false, false, keepProportions);
+                        pointer.updateMagnetVector({bottom: positionDelta.y});
+                        this._increaseSize(NaN, positionDelta.y + magnetVector.y, false, false, keepProportions);
 
                         break;
                     }

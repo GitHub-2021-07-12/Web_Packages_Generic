@@ -40,33 +40,41 @@ export class Draggable extends GestureArea {
                 // let positionDelta = this._pointerMain._positionDelta.clone().sum(this._pointerMain._magnetVector).toRangeLength(0, this.radius);
                 // let positionDelta = this._pointerMain._positionDelta.clone().toRangeLength(0, this.radius);
 
-                let magnetVector = this._pointerMain._magnetVector;
+                // let domRect = this.constructor.getDomRect(this.target, true);
+                // this._pointerMain._updateMagnetVector(domRect);
+                // this._pointerMain._updateMagnetVector({
+                //     bottom: this.axis != 'x' ? this._pointerMain._positionDelta.y : 0,
+                //     left: this.axis != 'y' ? this._pointerMain._positionDelta.x : 0,
+                //     right: this.axis != 'y' ? this._pointerMain._positionDelta.x : 0,
+                //     top: this.axis != 'x' ? this._pointerMain._positionDelta.y : 0,
+                // });
+
                 let positionDelta = this._pointerMain._positionDelta.clone();
+
+                let magnetRectDelta = {};
+                // magnetRectDelta.bottom = magnetRectDelta.top = this.axis != 'x' ? this._pointerMain._positionDelta.y : 0;
+                // magnetRectDelta.left = magnetRectDelta.right = this.axis != 'y' ? this._pointerMain._positionDelta.x : 0;
+                magnetRectDelta.bottom = magnetRectDelta.top = this.axis != 'x' ? positionDelta.y : 0;
+                magnetRectDelta.left = magnetRectDelta.right = this.axis != 'y' ? positionDelta.x : 0;
+                this._pointerMain.updateMagnetVector(magnetRectDelta);
+
+                let magnetVector = this._pointerMain._magnetVector;
+                // let positionDelta = this._pointerMain._positionDelta.clone();
                 positionDelta.x += magnetVector.x || 0;
                 positionDelta.y += magnetVector.y || 0;
-
-                // if (magnetVector.isFinite()) {
-                //     positionDelta.sum(magnetVector);
-                // }
-
                 positionDelta.toRangeLength(0, this.radius);
 
                 if (this.axis != 'x') {
-                // if (this.axis != 'x' && !this._pointerMain._magnetVector.y) {
-                    // let step = this.stepY || this.step;
-                    let step = Number.isFinite(magnetVector.y) ? 1 : this.stepY || this.step;
+                    let step = magnetVector.y == undefined ? this.stepY || this.step : 1;
                     this._positionCurrent.y = this._positionInitial.y + Math.round(positionDelta.y / step) * step;
                 }
 
                 if (this.axis != 'y') {
-                // if (this.axis != 'y' && !this._pointerMain._magnetVector.x) {
-                    // let step = this.stepX || this.step;
-                    let step = Number.isFinite(magnetVector.x) ? 1 : this.stepX || this.step;
+                    let step = magnetVector.x == undefined ? this.stepX || this.step : 1;
                     this._positionCurrent.x = this._positionInitial.x + Math.round(positionDelta.x / step) * step;
                 }
 
                 this._positionCurrent.toRange(this._positionMin, this._positionMax).round();
-                // this._positionCurrent.sum(this._pointerMain._magnetVector).toRange(this._positionMin, this._positionMax).round();
 
                 if (this._position.isEqual(this._positionCurrent)) return;
 

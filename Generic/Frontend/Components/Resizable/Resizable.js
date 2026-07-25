@@ -12,6 +12,57 @@ export class Resizable extends Component {
         shadow: {
             capture: function (event) {
                 event.detail.pointer.magnetRect = this.constructor.getDomRect(this.target, true);
+
+                // let magnetRect = {...this.constructor.getDomRect(this.target, true)};
+
+                // switch (event.target) {
+                //     case this._elements.cornerLeftBottom: {
+                //         magnetRect.right = magnetRect.left;
+                //         magnetRect.top = magnetRect.bottom;
+
+                //         break;
+                //     }
+                //     case this._elements.cornerLeftTop: {
+                //         magnetRect.right = magnetRect.left;
+                //         magnetRect.bottom = magnetRect.top;
+
+                //         break;
+                //     }
+                //     case this._elements.cornerRightBottom: {
+                //         magnetRect.left = magnetRect.right;
+                //         magnetRect.top = magnetRect.bottom;
+
+                //         break;
+                //     }
+                //     case this._elements.cornerRightTop: {
+                //         magnetRect.left = magnetRect.right;
+                //         magnetRect.bottom = magnetRect.top;
+
+                //         break;
+                //     }
+                //     case this._elements.edgeBottom: {
+                //         magnetRect.top = magnetRect.bottom;
+
+                //         break;
+                //     }
+                //     case this._elements.edgeLeft: {
+                //         magnetRect.right = magnetRect.left;
+
+                //         break;
+                //     }
+                //     case this._elements.edgeRight: {
+                //         magnetRect.left = magnetRect.right;
+
+                //         break;
+                //     }
+                //     case this._elements.edgeTop: {
+                //         magnetRect.bottom = magnetRect.top;
+
+                //         break;
+                //     }
+                // }
+
+                // event.detail.pointer.magnetRect = magnetRect;
             },
 
             swipeMain: function (event) {
@@ -19,137 +70,149 @@ export class Resizable extends Component {
                 let pointer = event.detail.pointer;
                 let magnetVector = pointer._magnetVector;
                 let positionDelta = pointer._positionDelta.clone();
-                let targets = null;
+
+                event.target.magnetAreas.delete(this);
 
                 switch (event.target) {
                     case this._elements.cornerLeftBottom: {
-                        targets = new Set(['cornerLeftBottom', 'edgeBottom', 'edgeLeft']);
-                        pointer.updateMagnetVector({left: positionDelta.x, bottom: positionDelta.y});
+                        // pointer.updateMagnetVector({bottom: positionDelta.y, left: positionDelta.x});
+                        pointer.updateMagnetVector({bottom: positionDelta.y, left: positionDelta.x, right: positionDelta.x, top: positionDelta.y});
                         positionDelta.sum(magnetVector);
                         this._increaseSize(-positionDelta.x, positionDelta.y, true, false, keepProportions);
 
                         break;
                     }
                     case this._elements.cornerLeftTop: {
-                        targets = new Set(['cornerLeftTop', 'edgeLeft', 'edgeTop']);
+                        // pointer.updateMagnetVector({left: positionDelta.x, top: positionDelta.y});
+                        pointer.updateMagnetVector({bottom: positionDelta.y, left: positionDelta.x, right: positionDelta.x, top: positionDelta.y});
+                        positionDelta.sum(magnetVector);
                         this._increaseSize(-positionDelta.x, -positionDelta.y, true, true, keepProportions);
 
                         break;
                     }
                     case this._elements.cornerRightBottom: {
-                        targets = new Set(['cornerRightBottom', 'edgeBottom', 'edgeRight']);
-                        pointer.updateMagnetVector({right: positionDelta.x, bottom: positionDelta.y});
+                        pointer.updateMagnetVector({bottom: positionDelta.y, right: positionDelta.x});
+                        // pointer.updateMagnetVector({bottom: positionDelta.y, left: positionDelta.x, right: positionDelta.x, top: positionDelta.y});
                         positionDelta.sum(magnetVector);
                         this._increaseSize(positionDelta.x, positionDelta.y, false, false, keepProportions);
 
                         break;
                     }
                     case this._elements.cornerRightTop: {
-                        targets = new Set(['cornerRightTop', 'edgeRight', 'edgeTop']);
+                        // pointer.updateMagnetVector({right: positionDelta.x, top: positionDelta.y});
+                        pointer.updateMagnetVector({bottom: positionDelta.y, left: positionDelta.x, right: positionDelta.x, top: positionDelta.y});
+                        positionDelta.sum(magnetVector);
                         this._increaseSize(positionDelta.x, -positionDelta.y, false, true, keepProportions);
 
                         break;
                     }
                     case this._elements.edgeBottom: {
-                        targets = new Set(['edgeBottom']);
-                        pointer.updateMagnetVector({bottom: positionDelta.y});
-                        this._increaseSize(NaN, positionDelta.y + magnetVector.y, false, false, keepProportions);
+                        // pointer.updateMagnetVector({bottom: positionDelta.y});
+                        pointer.updateMagnetVector({bottom: positionDelta.y, top: positionDelta.y});
+                        positionDelta.sum(magnetVector);
+                        this._increaseSize(NaN, positionDelta.y, false, false, keepProportions);
 
                         break;
                     }
                     case this._elements.edgeLeft: {
-                        targets = new Set(['edgeLeft']);
+                        // pointer.updateMagnetVector({left: positionDelta.x});
+                        pointer.updateMagnetVector({left: positionDelta.x, right: positionDelta.x});
+                        positionDelta.sum(magnetVector);
                         this._increaseSize(-positionDelta.x, NaN, true, true, keepProportions);
 
                         break;
                     }
                     case this._elements.edgeRight: {
-                        targets = new Set(['edgeRight']);
+                        // pointer.updateMagnetVector({right: positionDelta.x});
+                        pointer.updateMagnetVector({left: positionDelta.x, right: positionDelta.x});
+                        positionDelta.sum(magnetVector);
                         this._increaseSize(positionDelta.x, NaN, false, false, keepProportions);
 
                         break;
                     }
                     case this._elements.edgeTop: {
-                        targets = new Set(['edgeTop']);
+                        // pointer.updateMagnetVector({top: positionDelta.y});
+                        pointer.updateMagnetVector({bottom: positionDelta.y, top: positionDelta.y});
+                        positionDelta.sum(magnetVector);
                         this._increaseSize(NaN, -positionDelta.y, true, true, keepProportions);
 
                         break;
                     }
                 }
 
-                this.dispatchEvent('resize', {targets});
+                this.dispatchEvent('resize', event.detail);
             },
 
-            swipeStartMain: function () {
-                this._defineMetrics();
+            swipeStartMain: function (event) {
+                this._resizing = true;
+                this._calcMetrics();
+                this.dispatchEvent('resizeStart', {...event.detail, targetNames: this._getTargetNames(event.target)});
+            },
+
+            swipeStopMain: function (event) {
+                this._resizing = false;
+                this.dispatchEvent('resizeStop', event.detail);
             },
 
             tap: function (event) {
                 if (!this.resettable || event.detail.tapsCount < 2) return;
 
-                let targets = null;
-
                 switch (event.target) {
                     case this._elements.cornerLeftBottom: {
-                        targets = new Set(['cornerLeftBottom', 'edgeBottom', 'edgeLeft']);
                         this.resetWidth(true);
                         this.resetHeight();
 
                         break;
                     }
                     case this._elements.cornerLeftTop: {
-                        targets = new Set(['cornerLeftTop', 'edgeLeft', 'edgeTop']);
                         this.resetWidth(true);
                         this.resetHeight(true);
 
                         break;
                     }
                     case this._elements.cornerRightBottom: {
-                        targets = new Set(['cornerRightBottom', 'edgeBottom', 'edgeRight']);
                         this.resetWidth();
                         this.resetHeight();
 
                         break;
                     }
                     case this._elements.cornerRightTop: {
-                        targets = new Set(['cornerRightTop', 'edgeRight', 'edgeTop']);
                         this.resetWidth();
                         this.resetHeight(true);
 
                         break;
                     }
                     case this._elements.edgeBottom: {
-                        targets = new Set(['edgeBottom']);
                         this.resetHeight();
 
                         break;
                     }
                     case this._elements.edgeLeft: {
-                        targets = new Set(['edgeLeft']);
                         this.resetWidth(true);
 
                         break;
                     }
                     case this._elements.edgeRight: {
-                        targets = new Set(['edgeRight']);
                         this.resetWidth();
 
                         break;
                     }
                     case this._elements.edgeTop: {
-                        targets = new Set(['edgeTop']);
                         this.resetHeight(true);
 
                         break;
                     }
                 }
 
-                this.dispatchEvent('reset', {targets});
+                this.dispatchEvent('reset', {targetNames: this._getTargetNames(event.target)});
             },
         },
     };
 
     static _fieldDescriptors = {
+        _resizing: false,
+
+
         fixed: false,
         keepProportions: false,
         resettable: false,
@@ -188,12 +251,61 @@ export class Resizable extends Component {
     _widthInitial = 0;
 
 
-    _defineMetrics() {
+    _calcMetrics() {
         this._heightInitial = this.constructor.getHeight(this.target, true);
         this._leftInitial = this.constructor.getLeft(this.target);
         this._topInitial = this.constructor.getTop(this.target);
         this._widthInitial = this.constructor.getWidth(this.target, true);
         this._aspectRatio = this._widthInitial / this._heightInitial;
+    }
+
+    _getTargetNames(eventTarget) {
+        let targetNames = null;
+
+        switch (eventTarget) {
+            case this._elements.cornerLeftBottom: {
+                targetNames = new Set(['cornerLeftBottom', 'edgeBottom', 'edgeLeft']);
+
+                break;
+            }
+            case this._elements.cornerLeftTop: {
+                targetNames = new Set(['cornerLeftTop', 'edgeLeft', 'edgeTop']);
+
+                break;
+            }
+            case this._elements.cornerRightBottom: {
+                targetNames = new Set(['cornerRightBottom', 'edgeBottom', 'edgeRight']);
+
+                break;
+            }
+            case this._elements.cornerRightTop: {
+                targetNames = new Set(['cornerRightTop', 'edgeRight', 'edgeTop']);
+
+                break;
+            }
+            case this._elements.edgeBottom: {
+                targetNames = new Set(['edgeBottom']);
+
+                break;
+            }
+            case this._elements.edgeLeft: {
+                targetNames = new Set(['edgeLeft']);
+
+                break;
+            }
+            case this._elements.edgeRight: {
+                targetNames = new Set(['edgeRight']);
+
+                break;
+            }
+            case this._elements.edgeTop: {
+                targetNames = new Set(['edgeTop']);
+
+                break;
+            }
+        }
+
+        return targetNames;
     }
 
     _increaseSize(widthIncrement, heightIncrement, withLeft, withTop, keepProportions) {

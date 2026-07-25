@@ -279,7 +279,7 @@ export class ScrollArea extends GestureArea {
         if (this._scrollWidth) {
             let scrollBarX_length = this._elements.scrollBarX.getSizeInline();
             this._puckX_length = Math.round(this._elements.display.clientWidth / this._elements.display.scrollWidth * scrollBarX_length);
-            this._elements.scrollBarX.defineMetrics();
+            this._elements.scrollBarX.calcMetrics();
             this._elements.scrollBarX.refreshField('range');
         }
         else {
@@ -289,7 +289,7 @@ export class ScrollArea extends GestureArea {
         if (this._scrollHeight) {
             let scrollBarY_length = this._elements.scrollBarY.getSizeInline();
             this._puckY_length = Math.round(this._elements.display.clientHeight / this._elements.display.scrollHeight * scrollBarY_length);
-            this._elements.scrollBarY.defineMetrics();
+            this._elements.scrollBarY.calcMetrics();
             this._elements.scrollBarY.refreshField('range');
         }
         else {

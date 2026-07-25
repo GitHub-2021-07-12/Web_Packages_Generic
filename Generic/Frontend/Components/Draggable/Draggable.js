@@ -37,32 +37,14 @@ export class Draggable extends GestureArea {
             swipeMain: function (event) {
                 if (this._pointerMainIsBlocked) return;
 
-                // let positionDelta = this._pointerMain._positionDelta.clone().sum(this._pointerMain._magnetVector).toRangeLength(0, this.radius);
-                // let positionDelta = this._pointerMain._positionDelta.clone().toRangeLength(0, this.radius);
-
-                // let domRect = this.constructor.getDomRect(this.target, true);
-                // this._pointerMain._updateMagnetVector(domRect);
-                // this._pointerMain._updateMagnetVector({
-                //     bottom: this.axis != 'x' ? this._pointerMain._positionDelta.y : 0,
-                //     left: this.axis != 'y' ? this._pointerMain._positionDelta.x : 0,
-                //     right: this.axis != 'y' ? this._pointerMain._positionDelta.x : 0,
-                //     top: this.axis != 'x' ? this._pointerMain._positionDelta.y : 0,
-                // });
-
+                let magnetVector = this._pointerMain._magnetVector;
                 let positionDelta = this._pointerMain._positionDelta.clone();
 
                 let magnetRectDelta = {};
-                // magnetRectDelta.bottom = magnetRectDelta.top = this.axis != 'x' ? this._pointerMain._positionDelta.y : 0;
-                // magnetRectDelta.left = magnetRectDelta.right = this.axis != 'y' ? this._pointerMain._positionDelta.x : 0;
                 magnetRectDelta.bottom = magnetRectDelta.top = this.axis != 'x' ? positionDelta.y : 0;
                 magnetRectDelta.left = magnetRectDelta.right = this.axis != 'y' ? positionDelta.x : 0;
                 this._pointerMain.updateMagnetVector(magnetRectDelta);
-
-                let magnetVector = this._pointerMain._magnetVector;
-                // let positionDelta = this._pointerMain._positionDelta.clone();
-                positionDelta.x += magnetVector.x || 0;
-                positionDelta.y += magnetVector.y || 0;
-                positionDelta.toRangeLength(0, this.radius);
+                positionDelta.sum(magnetVector).toRangeLength(0, this.radius);
 
                 if (this.axis != 'x') {
                     let step = magnetVector.y == undefined ? this.stepY || this.step : 1;
@@ -82,9 +64,9 @@ export class Draggable extends GestureArea {
                 this._detectDropTarget();
                 this.dispatchEvent('drag', event.detail);
 
-                if (this._dropTarget == this._dropTargetPrev) return;
-
-                this.dispatchEvent('dropTarget', event.detail);
+                if (this._dropTarget != this._dropTargetPrev) {
+                    this.dispatchEvent('dropTarget', event.detail);
+                }
             },
 
             swipeStartMain: function (event) {
@@ -99,15 +81,11 @@ export class Draggable extends GestureArea {
 
                 this._dragging = false;
                 this.dispatchEvent('dragStop', event.detail);
+                this._dropTarget = null;
 
-                if (this.dropAreas) {
-                    this.dispatchEvent('drop', event.detail);
-                    this._dropTarget = null;
+                if (this.springy) {
+                    this._position = this._positionInitial;
                 }
-
-                if (!this.springy) return;
-
-                this._position = this._positionInitial;
             },
         },
     };

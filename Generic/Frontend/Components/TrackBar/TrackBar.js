@@ -10,7 +10,7 @@ export class TrackBar extends GestureArea {
 
     static _eventHandlerDescriptors = {
         host: {
-            capture: function (event) {
+            capture: function () {
                 this._pointerMainIsBlocked = this.mode == 'normal' && this._pointerMain?._target != this._elements.puck;
 
                 if (this._pointerMainIsBlocked) return;
@@ -178,7 +178,7 @@ export class TrackBar extends GestureArea {
     }
 
     _init() {
-        this.defineMetrics();
+        this.calcMetrics();
     }
 
     _puck_definePosition() {
@@ -197,7 +197,7 @@ export class TrackBar extends GestureArea {
     }
 
 
-    defineMetrics() {
+    calcMetrics() {
         let puck_length = this.constructor.getSizeInline(this._elements.puck, true);
         let puck_lengthHalf = puck_length / 2;
         let track_length = this.constructor.getSizeInline(this._elements.track, true);
@@ -213,7 +213,7 @@ export class TrackBar extends GestureArea {
     }
 
     refresh() {
-        this.defineMetrics();
+        this.calcMetrics();
         this.refreshField('range');
     }
 }

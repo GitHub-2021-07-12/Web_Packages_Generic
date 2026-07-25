@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+
+
+<html>
+    <head>
+        <meta charset='utf-8' content='user-scalable=no, width=720' name='viewport'>
+        <title>Test</title>
+
+        <link href='/Packages/Generic/Frontend/Themes/Main/Main.css' rel='stylesheet'>
+
+        <style>
+            body {
+                padding: 10px;
+                user-select: none;
+            }
+
+            x-draggable {
+                --Component_displayInner: grid;
+                --GestureArea_dynamicEnvironment: true;
+                --GestureArea_magnetAreas: url('#{x-draggable}');
+                --GestureArea_magnetism: 10;
+
+                background: #f002;
+                height: 100px;
+                min-height: min-content;
+                min-width: min-content;
+                /* position: relative; */
+                position: absolute;
+                width: 100px;
+            }
+
+            x-repeater {
+                --Component_autoRefresh: true;
+            }
+
+            x-resizable {
+                /* --Component_eventsWithoutPropagation: pointerdown swipeMain; */
+                --Component_eventsWithoutPropagation: swipeMain;
+
+                background: #0f04;
+                border: #000 solid 1px;
+
+
+                &::part(display) {
+                    display: grid;
+                    place-items: center;
+                }
+
+                &::part(corner), &::part(edge) {
+                    --Component_eventsWithoutPropagation: pointerdown;
+                }
+            }
+        </style>
+
+        <script type='module'>
+            import * as generic from '/Packages/Generic/Generic.js';
+
+
+            let Component = generic.frontend.components.Component;
+            await Component._defined;
+        </script>
+    </head>
+
+    <body>
+        <x-repeater interpolationKey='repeater' model='100'>
+            <template Repeater_delegate>
+                <x-draggable>
+                    <x-resizable target='x-draggable'>
+                        {{repeater: data.value}}
+                    </x-resizable>
+                </x-draggable>
+            </template>
+        </x-repeater>
+    </body>
+</html>

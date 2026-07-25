@@ -173,16 +173,20 @@ export class GestureArea extends Component {
                     let deltaLeftLeft = magnetAreaRect.left - magnetRect.left;
                     let deltaRightRight = magnetAreaRect.right - magnetRect.right;
 
-                    if (Math.abs(deltaLeftLeft) <= magnetism) {
+                    // if (Math.abs(deltaLeftLeft) <= magnetism) {
+                    if (magnetRectDelta.left != undefined && Math.abs(deltaLeftLeft) <= magnetism) {
                         this._magnetVector.x = deltaLeftLeft;
                     }
-                    else if (Math.abs(deltaLeftRight) <= magnetism) {
+                    // else if (Math.abs(deltaLeftRight) <= magnetism) {
+                    else if (magnetRectDelta.left != undefined && Math.abs(deltaLeftRight) <= magnetism) {
                         this._magnetVector.x = deltaLeftRight;
                     }
-                    else if (Math.abs(deltaRightLeft) <= magnetism) {
+                    // else if (Math.abs(deltaRightLeft) <= magnetism) {
+                    else if (magnetRectDelta.right != undefined && Math.abs(deltaRightLeft) <= magnetism) {
                         this._magnetVector.x = deltaRightLeft;
                     }
-                    else if (Math.abs(deltaRightRight) <= magnetism) {
+                    // else if (Math.abs(deltaRightRight) <= magnetism) {
+                    else if (magnetRectDelta.right != undefined && Math.abs(deltaRightRight) <= magnetism) {
                         this._magnetVector.x = deltaRightRight;
                     }
                 }
@@ -208,14 +212,13 @@ export class GestureArea extends Component {
                 if (this._magnetVector.isFinite()) break;
             }
 
-            console.log(this._magnetVector)
+            // console.log(this._magnetVector)
         }
     };
 
     static _eventHandlerDescriptors = {
         host: {
             pointerdown: function (event) {
-                // if (!this.gestures.size || this.constructor._Pointer._idsCaptured.has(event.pointerId)) return;
                 if (!this.gestures.size) return;
 
                 if (this._pointerMain && !this.multiPoint) {
@@ -321,6 +324,8 @@ export class GestureArea extends Component {
                 else {
                     this._valuePrepared = null;
                 }
+
+                // console.log(this._component, this._valuePrepared)
             },
         },
 
@@ -376,8 +381,8 @@ export class GestureArea extends Component {
     _tapsCount = 0;
 
 
-    _addPointer(event) {
-        this._pointerMain = new this.constructor._Pointer(this, event);
+    _addPointer(pointerEvent) {
+        this._pointerMain = new this.constructor._Pointer(this, pointerEvent);
         this._pointerMain.capture();
         this._pointers.set(this._pointerMain._id, this._pointerMain);
     }

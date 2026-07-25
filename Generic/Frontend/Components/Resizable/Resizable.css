@@ -19,7 +19,7 @@
         --GestureArea_vertical: initial !important;
 
         --GestureArea_dynamicEnvironment: true;
-        --GestureArea_magnetAreas: url('#{x-draggable}');
+        --GestureArea_magnetAreas: url('#{x-resizable}');
         --GestureArea_magnetism: 10;
 
         box-sizing: border-box !important;

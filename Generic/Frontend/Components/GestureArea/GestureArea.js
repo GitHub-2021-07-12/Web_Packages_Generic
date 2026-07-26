@@ -173,20 +173,16 @@ export class GestureArea extends Component {
                     let deltaLeftLeft = magnetAreaRect.left - magnetRect.left;
                     let deltaRightRight = magnetAreaRect.right - magnetRect.right;
 
-                    // if (Math.abs(deltaLeftLeft) <= magnetism) {
-                    if (magnetRectDelta.left != undefined && Math.abs(deltaLeftLeft) <= magnetism) {
+                    if (magnetRectDelta.left && Math.abs(deltaLeftLeft) <= magnetism) {
                         this._magnetVector.x = deltaLeftLeft;
                     }
-                    // else if (Math.abs(deltaLeftRight) <= magnetism) {
-                    else if (magnetRectDelta.left != undefined && Math.abs(deltaLeftRight) <= magnetism) {
+                    else if (magnetRectDelta.right && Math.abs(deltaLeftRight) <= magnetism) {
                         this._magnetVector.x = deltaLeftRight;
                     }
-                    // else if (Math.abs(deltaRightLeft) <= magnetism) {
-                    else if (magnetRectDelta.right != undefined && Math.abs(deltaRightLeft) <= magnetism) {
+                    else if (magnetRectDelta.left && Math.abs(deltaRightLeft) <= magnetism) {
                         this._magnetVector.x = deltaRightLeft;
                     }
-                    // else if (Math.abs(deltaRightRight) <= magnetism) {
-                    else if (magnetRectDelta.right != undefined && Math.abs(deltaRightRight) <= magnetism) {
+                    else if (magnetRectDelta.right && Math.abs(deltaRightRight) <= magnetism) {
                         this._magnetVector.x = deltaRightRight;
                     }
                 }
@@ -195,16 +191,16 @@ export class GestureArea extends Component {
                     let deltaBottomBottom = magnetAreaRect.bottom - magnetRect.bottom;
                     let deltaTopTop = magnetAreaRect.top - magnetRect.top;
 
-                    if (Math.abs(deltaBottomBottom) <= magnetism) {
+                    if (magnetRectDelta.bottom && Math.abs(deltaBottomBottom) <= magnetism) {
                         this._magnetVector.y = deltaBottomBottom;
                     }
-                    else if (Math.abs(deltaBottomTop) <= magnetism) {
+                    else if (magnetRectDelta.top && Math.abs(deltaBottomTop) <= magnetism) {
                         this._magnetVector.y = deltaBottomTop;
                     }
-                    else if (Math.abs(deltaTopBottom) <= magnetism) {
+                    else if (magnetRectDelta.bottom && Math.abs(deltaTopBottom) <= magnetism) {
                         this._magnetVector.y = deltaTopBottom;
                     }
-                    else if (Math.abs(deltaTopTop) <= magnetism) {
+                    else if (magnetRectDelta.top && Math.abs(deltaTopTop) <= magnetism) {
                         this._magnetVector.y = deltaTopTop;
                     }
                 }
@@ -324,8 +320,6 @@ export class GestureArea extends Component {
                 else {
                     this._valuePrepared = null;
                 }
-
-                // console.log(this._component, this._valuePrepared)
             },
         },
 

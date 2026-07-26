@@ -10,7 +10,8 @@
 
         <style>
             body {
-                padding: 10px;
+                /* padding: 10px; */
+                /* position: relative; */
                 user-select: none;
             }
 
@@ -64,7 +65,7 @@
     <body>
         <x-repeater interpolationKey='repeater' model='100'>
             <template Repeater_delegate>
-                <x-draggable>
+                <x-draggable style='left: calc({{repeater: index}} * 120px); top: calc({{repeater: index}} * 120px);'>
                     <x-resizable target='x-draggable'>
                         {{repeater: data.value}}
                     </x-resizable>

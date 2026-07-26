@@ -75,16 +75,16 @@ export class Resizable extends Component {
 
                 switch (event.target) {
                     case this._elements.cornerLeftBottom: {
-                        // pointer.updateMagnetVector({bottom: positionDelta.y, left: positionDelta.x});
-                        pointer.updateMagnetVector({bottom: positionDelta.y, left: positionDelta.x, right: positionDelta.x, top: positionDelta.y});
+                        pointer.updateMagnetVector({bottom: positionDelta.y, left: positionDelta.x});
+                        // pointer.updateMagnetVector({bottom: positionDelta.y, left: positionDelta.x, right: positionDelta.x, top: positionDelta.y});
                         positionDelta.sum(magnetVector);
                         this._increaseSize(-positionDelta.x, positionDelta.y, true, false, keepProportions);
 
                         break;
                     }
                     case this._elements.cornerLeftTop: {
-                        // pointer.updateMagnetVector({left: positionDelta.x, top: positionDelta.y});
-                        pointer.updateMagnetVector({bottom: positionDelta.y, left: positionDelta.x, right: positionDelta.x, top: positionDelta.y});
+                        pointer.updateMagnetVector({left: positionDelta.x, top: positionDelta.y});
+                        // pointer.updateMagnetVector({bottom: positionDelta.y, left: positionDelta.x, right: positionDelta.x, top: positionDelta.y});
                         positionDelta.sum(magnetVector);
                         this._increaseSize(-positionDelta.x, -positionDelta.y, true, true, keepProportions);
 
@@ -99,40 +99,40 @@ export class Resizable extends Component {
                         break;
                     }
                     case this._elements.cornerRightTop: {
-                        // pointer.updateMagnetVector({right: positionDelta.x, top: positionDelta.y});
-                        pointer.updateMagnetVector({bottom: positionDelta.y, left: positionDelta.x, right: positionDelta.x, top: positionDelta.y});
+                        pointer.updateMagnetVector({right: positionDelta.x, top: positionDelta.y});
+                        // pointer.updateMagnetVector({bottom: positionDelta.y, left: positionDelta.x, right: positionDelta.x, top: positionDelta.y});
                         positionDelta.sum(magnetVector);
                         this._increaseSize(positionDelta.x, -positionDelta.y, false, true, keepProportions);
 
                         break;
                     }
                     case this._elements.edgeBottom: {
-                        // pointer.updateMagnetVector({bottom: positionDelta.y});
-                        pointer.updateMagnetVector({bottom: positionDelta.y, top: positionDelta.y});
+                        pointer.updateMagnetVector({bottom: positionDelta.y});
+                        // pointer.updateMagnetVector({bottom: positionDelta.y, top: positionDelta.y});
                         positionDelta.sum(magnetVector);
                         this._increaseSize(NaN, positionDelta.y, false, false, keepProportions);
 
                         break;
                     }
                     case this._elements.edgeLeft: {
-                        // pointer.updateMagnetVector({left: positionDelta.x});
-                        pointer.updateMagnetVector({left: positionDelta.x, right: positionDelta.x});
+                        pointer.updateMagnetVector({left: positionDelta.x});
+                        // pointer.updateMagnetVector({left: positionDelta.x, right: positionDelta.x});
                         positionDelta.sum(magnetVector);
                         this._increaseSize(-positionDelta.x, NaN, true, true, keepProportions);
 
                         break;
                     }
                     case this._elements.edgeRight: {
-                        // pointer.updateMagnetVector({right: positionDelta.x});
-                        pointer.updateMagnetVector({left: positionDelta.x, right: positionDelta.x});
+                        pointer.updateMagnetVector({right: positionDelta.x});
+                        // pointer.updateMagnetVector({left: positionDelta.x, right: positionDelta.x});
                         positionDelta.sum(magnetVector);
                         this._increaseSize(positionDelta.x, NaN, false, false, keepProportions);
 
                         break;
                     }
                     case this._elements.edgeTop: {
-                        // pointer.updateMagnetVector({top: positionDelta.y});
-                        pointer.updateMagnetVector({bottom: positionDelta.y, top: positionDelta.y});
+                        pointer.updateMagnetVector({top: positionDelta.y});
+                        // pointer.updateMagnetVector({bottom: positionDelta.y, top: positionDelta.y});
                         positionDelta.sum(magnetVector);
                         this._increaseSize(NaN, -positionDelta.y, true, true, keepProportions);
 

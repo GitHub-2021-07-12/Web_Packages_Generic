@@ -6,34 +6,6 @@ import {Vector2d} from '/Packages/Generic/Js/Vector2d/Vector2d.js';
 export class Draggable extends GestureArea {
     static _eventHandlerDescriptors = {
         host: {
-            capture: function () {
-                this._pointerMainIsBlocked = !this._pointerMain || !this._checkHandle(this._pointerMain._target);
-
-                if (this._pointerMainIsBlocked) return;
-
-                let domRect = this.constructor.getDomRect(this.target, true);
-                this._pointerMain.magnetRect = domRect;
-                this._positionCurrent.set(this.constructor.getLeft(this.target), this.constructor.getTop(this.target));
-                this._positionInitial.setVector(this._positionCurrent);
-
-                if (this.bound) {
-                    let domRectBound = this.constructor.getDomRect(this.bound);
-                    this._positionMax.x = this._positionInitial.x + domRectBound.right - domRect.right;
-                    this._positionMax.y = this._positionInitial.y + domRectBound.bottom - domRect.bottom;
-                    this._positionMin.x = this._positionInitial.x + domRectBound.left - domRect.left;
-                    this._positionMin.y = this._positionInitial.y + domRectBound.top - domRect.top;
-                }
-                else {
-                    this._positionMax.set(Infinity);
-                    this._positionMin.set(-Infinity);
-                }
-
-                if (!this.dynamicEnvironment) return;
-
-                this._defineDropAreaDomRects();
-                this._defineMagnetAreaRects();
-            },
-
             swipeMain: function (event) {
                 if (this._pointerMainIsBlocked) return;
 
@@ -70,9 +42,33 @@ export class Draggable extends GestureArea {
             },
 
             swipeStartMain: function (event) {
+                this._pointerMainIsBlocked = !this._pointerMain || !this._checkHandle(this._pointerMain._target);
+
                 if (this._pointerMainIsBlocked) return;
 
+                let domRect = this.constructor.getDomRect(this.target, true);
                 this._dragging = true;
+                this._pointerMain.magnetRect = domRect;
+                this._positionCurrent.set(this.constructor.getLeft(this.target), this.constructor.getTop(this.target));
+                this._positionInitial.setVector(this._positionCurrent);
+
+                if (this.bound) {
+                    let domRectBound = this.constructor.getDomRect(this.bound);
+                    this._positionMax.x = this._positionInitial.x + domRectBound.right - domRect.right;
+                    this._positionMax.y = this._positionInitial.y + domRectBound.bottom - domRect.bottom;
+                    this._positionMin.x = this._positionInitial.x + domRectBound.left - domRect.left;
+                    this._positionMin.y = this._positionInitial.y + domRectBound.top - domRect.top;
+                }
+                else {
+                    this._positionMax.set(Infinity);
+                    this._positionMin.set(-Infinity);
+                }
+
+                if (this.dynamicEnvironment) {
+                    this._defineDropAreaDomRects();
+                    this._defineMagnetAreaRects();
+                }
+
                 this.dispatchEvent('dragStart', event.detail);
             },
 
@@ -120,32 +116,12 @@ export class Draggable extends GestureArea {
             },
         },
 
-        dropAreas: {
-            default: '',
-            extra: true,
-
-            updateAfter() {
+        dropAreas: class Field extends super._fieldDescriptors.magnetAreas {
+            _updateAfter() {
                 if (this._component.dynamicEnvironment) return;
 
                 this._component._defineDropAreaDomRects();
-            },
-
-            updateBefore() {
-                if (this._valuePrepared?.constructor == String) {
-                    try {
-                        this._valuePrepared = new Set(document.querySelectorAll(this._valuePrepared));
-                    }
-                    catch {
-                        this._valuePrepared = null;
-                    }
-                }
-                else if (this._valuePrepared?.[Symbol.iterator]) {
-                    this._valuePrepared = new Set(this._valuePrepared);
-                }
-                else {
-                    this._valuePrepared = null;
-                }
-            },
+            }
         },
 
         handle: {

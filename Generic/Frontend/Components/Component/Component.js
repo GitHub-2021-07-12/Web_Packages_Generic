@@ -972,6 +972,14 @@ export class Component extends HTMLElement {
         return this.getCssPropNumber(element, 'left');
     }
 
+    static getRootNode(node) {
+        while (node?.parentNode) {
+            node = node.parentNode;
+        }
+
+        return node;
+    }
+
     static getSize(element, sizeType, outer = false) {
         let boxSizing = this.getCssProp(element, 'box-sizing');
         let size = this.getCssPropNumber(element, `${sizeType}-size`);
@@ -1241,10 +1249,7 @@ export class Component extends HTMLElement {
 
 
     static {
-        this.init({
-            abstract: true,
-            useGlobalStyleSheets: true,
-        });
+        this.init({useGlobalStyleSheets: true});
     }
 
 
@@ -1385,6 +1390,10 @@ export class Component extends HTMLElement {
 
     getLeft() {
         return this.constructor.getLeft(this._face);
+    }
+
+    getRootNode() {
+        return this.constructor.getRootNode(this);
     }
 
     getSizeBlock(outer = false) {

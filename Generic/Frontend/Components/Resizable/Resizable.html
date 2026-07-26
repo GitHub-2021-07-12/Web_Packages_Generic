@@ -1,13 +1,13 @@
 <div id='root'>
     <slot id='display' part='display'></slot>
 
-    <x-gestureArea id='edgeBottom' class='_Resizable_edge' part='edge edgeBottom'></x-gestureArea>
-    <x-gestureArea id='edgeLeft' class='_Resizable_edge' part='edge edgeLeft'></x-gestureArea>
-    <x-gestureArea id='edgeRight' class='_Resizable_edge' part='edge edgeRight'></x-gestureArea>
-    <x-gestureArea id='edgeTop' class='_Resizable_edge' part='edge edgeTop'></x-gestureArea>
+    <div id='edgeBottom' class='_Resizable_edge' part='edge edgeBottom'></div>
+    <div id='edgeLeft' class='_Resizable_edge' part='edge edgeLeft'></div>
+    <div id='edgeRight' class='_Resizable_edge' part='edge edgeRight'></div>
+    <div id='edgeTop' class='_Resizable_edge' part='edge edgeTop'></div>
 
-    <x-gestureArea id='cornerLeftBottom' class='_Resizable_corner' part='corner cornerLeftBottom'></x-gestureArea>
-    <x-gestureArea id='cornerLeftTop' class='_Resizable_corner' part='corner cornerLeftTop'></x-gestureArea>
-    <x-gestureArea id='cornerRightBottom' class='_Resizable_corner' part='corner cornerRightBottom'></x-gestureArea>
-    <x-gestureArea id='cornerRightTop' class='_Resizable_corner' part='corner cornerRightTop'></x-gestureArea>
+    <div id='cornerLeftBottom' class='_Resizable_corner _Resizable_edge' part='corner cornerLeftBottom edge'></div>
+    <div id='cornerLeftTop' class='_Resizable_corner _Resizable_edge' part='corner cornerLeftTop edge'></div>
+    <div id='cornerRightBottom' class='_Resizable_corner _Resizable_edge' part='corner cornerRightBottom edge'></div>
+    <div id='cornerRightTop' class='_Resizable_corner _Resizable_edge' part='corner cornerRightTop edge'></div>
 </div>

@@ -173,16 +173,16 @@ export class GestureArea extends Component {
                     let deltaLeftLeft = magnetAreaRect.left - magnetRect.left;
                     let deltaRightRight = magnetAreaRect.right - magnetRect.right;
 
-                    if (magnetRectDelta.left && Math.abs(deltaLeftLeft) <= magnetism) {
+                    if (magnetRectDelta.left != undefined && Math.abs(deltaLeftLeft) <= magnetism) {
                         this._magnetVector.x = deltaLeftLeft;
                     }
-                    else if (magnetRectDelta.right && Math.abs(deltaLeftRight) <= magnetism) {
+                    else if (magnetRectDelta.right != undefined && Math.abs(deltaLeftRight) <= magnetism) {
                         this._magnetVector.x = deltaLeftRight;
                     }
-                    else if (magnetRectDelta.left && Math.abs(deltaRightLeft) <= magnetism) {
+                    else if (magnetRectDelta.left != undefined && Math.abs(deltaRightLeft) <= magnetism) {
                         this._magnetVector.x = deltaRightLeft;
                     }
-                    else if (magnetRectDelta.right && Math.abs(deltaRightRight) <= magnetism) {
+                    else if (magnetRectDelta.right != undefined && Math.abs(deltaRightRight) <= magnetism) {
                         this._magnetVector.x = deltaRightRight;
                     }
                 }
@@ -191,31 +191,29 @@ export class GestureArea extends Component {
                     let deltaBottomBottom = magnetAreaRect.bottom - magnetRect.bottom;
                     let deltaTopTop = magnetAreaRect.top - magnetRect.top;
 
-                    if (magnetRectDelta.bottom && Math.abs(deltaBottomBottom) <= magnetism) {
+                    if (magnetRectDelta.bottom != undefined && Math.abs(deltaBottomBottom) <= magnetism) {
                         this._magnetVector.y = deltaBottomBottom;
                     }
-                    else if (magnetRectDelta.top && Math.abs(deltaBottomTop) <= magnetism) {
+                    else if (magnetRectDelta.top != undefined && Math.abs(deltaBottomTop) <= magnetism) {
                         this._magnetVector.y = deltaBottomTop;
                     }
-                    else if (magnetRectDelta.bottom && Math.abs(deltaTopBottom) <= magnetism) {
+                    else if (magnetRectDelta.bottom != undefined && Math.abs(deltaTopBottom) <= magnetism) {
                         this._magnetVector.y = deltaTopBottom;
                     }
-                    else if (magnetRectDelta.top && Math.abs(deltaTopTop) <= magnetism) {
+                    else if (magnetRectDelta.top != undefined && Math.abs(deltaTopTop) <= magnetism) {
                         this._magnetVector.y = deltaTopTop;
                     }
                 }
 
                 if (this._magnetVector.isFinite()) break;
             }
-
-            // console.log(this._magnetVector)
         }
     };
 
     static _eventHandlerDescriptors = {
         host: {
             pointerdown: function (event) {
-                if (!this.gestures.size) return;
+                if (!this.gestures.size || !this.receptive && this.constructor._Pointer._idsCaptured.has(event.pointerId)) return;
 
                 if (this._pointerMain && !this.multiPoint) {
                     this._deletePointer(this._pointerMain);
@@ -275,6 +273,7 @@ export class GestureArea extends Component {
         invertedY: false,
         jumping: false,
         multiPoint: false,
+        receptive: false,
         vertical: false,
 
         flickDurationMax: {
@@ -306,8 +305,10 @@ export class GestureArea extends Component {
 
             updateBefore() {
                 if (this._valuePrepared?.constructor == String) {
+                    let rootNode = this._component.getRootNode(this._component);
+
                     try {
-                        this._valuePrepared = new Set(document.querySelectorAll(this._valuePrepared));
+                        this._valuePrepared = new Set(rootNode?.querySelectorAll(this._valuePrepared));
                         this._valuePrepared.delete(this._component);
                     }
                     catch {

@@ -2,137 +2,85 @@ import {Component} from '/Packages/Generic/Frontend/Components/Component/Compone
 import {GestureArea} from '/Packages/Generic/Frontend/Components/GestureArea/GestureArea.js';
 
 
-export class Resizable extends Component {
-    static _components = [GestureArea];
+export class Resizable extends GestureArea {
     static _cssUrl = true;
     static _htmlUrl = true;
     static _url = import.meta.url;
 
     static _eventHandlerDescriptors = {
-        shadow: {
-            capture: function (event) {
-                event.detail.pointer.magnetRect = this.constructor.getDomRect(this.target, true);
+        host: {
+            capture: function () {
+                this._pointerMainIsBlocked = !this._pointerMain;
 
-                // let magnetRect = {...this.constructor.getDomRect(this.target, true)};
+                if (this._pointerMainIsBlocked) return;
 
-                // switch (event.target) {
-                //     case this._elements.cornerLeftBottom: {
-                //         magnetRect.right = magnetRect.left;
-                //         magnetRect.top = magnetRect.bottom;
+                this._defineEdgeTarget(this._pointerMain._target);
+                this._pointerMainIsBlocked ||= !this._edgeTargetNames;
 
-                //         break;
-                //     }
-                //     case this._elements.cornerLeftTop: {
-                //         magnetRect.right = magnetRect.left;
-                //         magnetRect.bottom = magnetRect.top;
-
-                //         break;
-                //     }
-                //     case this._elements.cornerRightBottom: {
-                //         magnetRect.left = magnetRect.right;
-                //         magnetRect.top = magnetRect.bottom;
-
-                //         break;
-                //     }
-                //     case this._elements.cornerRightTop: {
-                //         magnetRect.left = magnetRect.right;
-                //         magnetRect.bottom = magnetRect.top;
-
-                //         break;
-                //     }
-                //     case this._elements.edgeBottom: {
-                //         magnetRect.top = magnetRect.bottom;
-
-                //         break;
-                //     }
-                //     case this._elements.edgeLeft: {
-                //         magnetRect.right = magnetRect.left;
-
-                //         break;
-                //     }
-                //     case this._elements.edgeRight: {
-                //         magnetRect.left = magnetRect.right;
-
-                //         break;
-                //     }
-                //     case this._elements.edgeTop: {
-                //         magnetRect.bottom = magnetRect.top;
-
-                //         break;
-                //     }
-                // }
-
-                // event.detail.pointer.magnetRect = magnetRect;
+                if (this._pointerMainIsBlocked) {
+                    this._pointerMain.release();
+                }
             },
 
             swipeMain: function (event) {
+                if (this._pointerMainIsBlocked) return;
+
                 let keepProportions = this.keepProportions ^ event.detail.originalEvent.shiftKey;
-                let pointer = event.detail.pointer;
-                let magnetVector = pointer._magnetVector;
-                let positionDelta = pointer._positionDelta.clone();
+                let magnetVector = this._pointerMain._magnetVector;
+                let positionDelta = this._pointerMain._positionDelta.clone();
 
-                event.target.magnetAreas.delete(this);
-
-                switch (event.target) {
+                switch (this._pointerMain._target) {
                     case this._elements.cornerLeftBottom: {
-                        pointer.updateMagnetVector({bottom: positionDelta.y, left: positionDelta.x});
-                        // pointer.updateMagnetVector({bottom: positionDelta.y, left: positionDelta.x, right: positionDelta.x, top: positionDelta.y});
+                        this._pointerMain.updateMagnetVector({bottom: positionDelta.y, left: positionDelta.x});
                         positionDelta.sum(magnetVector);
                         this._increaseSize(-positionDelta.x, positionDelta.y, true, false, keepProportions);
 
                         break;
                     }
                     case this._elements.cornerLeftTop: {
-                        pointer.updateMagnetVector({left: positionDelta.x, top: positionDelta.y});
-                        // pointer.updateMagnetVector({bottom: positionDelta.y, left: positionDelta.x, right: positionDelta.x, top: positionDelta.y});
+                        this._pointerMain.updateMagnetVector({left: positionDelta.x, top: positionDelta.y});
                         positionDelta.sum(magnetVector);
                         this._increaseSize(-positionDelta.x, -positionDelta.y, true, true, keepProportions);
 
                         break;
                     }
                     case this._elements.cornerRightBottom: {
-                        pointer.updateMagnetVector({bottom: positionDelta.y, right: positionDelta.x});
-                        // pointer.updateMagnetVector({bottom: positionDelta.y, left: positionDelta.x, right: positionDelta.x, top: positionDelta.y});
+                        this._pointerMain.updateMagnetVector({bottom: positionDelta.y, right: positionDelta.x});
                         positionDelta.sum(magnetVector);
                         this._increaseSize(positionDelta.x, positionDelta.y, false, false, keepProportions);
 
                         break;
                     }
                     case this._elements.cornerRightTop: {
-                        pointer.updateMagnetVector({right: positionDelta.x, top: positionDelta.y});
-                        // pointer.updateMagnetVector({bottom: positionDelta.y, left: positionDelta.x, right: positionDelta.x, top: positionDelta.y});
+                        this._pointerMain.updateMagnetVector({right: positionDelta.x, top: positionDelta.y});
                         positionDelta.sum(magnetVector);
                         this._increaseSize(positionDelta.x, -positionDelta.y, false, true, keepProportions);
 
                         break;
                     }
                     case this._elements.edgeBottom: {
-                        pointer.updateMagnetVector({bottom: positionDelta.y});
-                        // pointer.updateMagnetVector({bottom: positionDelta.y, top: positionDelta.y});
+                        this._pointerMain.updateMagnetVector({bottom: positionDelta.y});
                         positionDelta.sum(magnetVector);
                         this._increaseSize(NaN, positionDelta.y, false, false, keepProportions);
 
                         break;
                     }
                     case this._elements.edgeLeft: {
-                        pointer.updateMagnetVector({left: positionDelta.x});
-                        // pointer.updateMagnetVector({left: positionDelta.x, right: positionDelta.x});
+                        this._pointerMain.updateMagnetVector({left: positionDelta.x});
                         positionDelta.sum(magnetVector);
                         this._increaseSize(-positionDelta.x, NaN, true, true, keepProportions);
 
                         break;
                     }
                     case this._elements.edgeRight: {
-                        pointer.updateMagnetVector({right: positionDelta.x});
-                        // pointer.updateMagnetVector({left: positionDelta.x, right: positionDelta.x});
+                        this._pointerMain.updateMagnetVector({right: positionDelta.x});
                         positionDelta.sum(magnetVector);
                         this._increaseSize(positionDelta.x, NaN, false, false, keepProportions);
 
                         break;
                     }
                     case this._elements.edgeTop: {
-                        pointer.updateMagnetVector({top: positionDelta.y});
-                        // pointer.updateMagnetVector({bottom: positionDelta.y, top: positionDelta.y});
+                        this._pointerMain.updateMagnetVector({top: positionDelta.y});
                         positionDelta.sum(magnetVector);
                         this._increaseSize(NaN, -positionDelta.y, true, true, keepProportions);
 
@@ -144,20 +92,25 @@ export class Resizable extends Component {
             },
 
             swipeStartMain: function (event) {
+                if (this._pointerMainIsBlocked) return;
+
                 this._resizing = true;
+                this._pointerMain.magnetRect = this.constructor.getDomRect(this.target, true);
                 this._calcMetrics();
-                this.dispatchEvent('resizeStart', {...event.detail, targetNames: this._getTargetNames(event.target)});
+                this.dispatchEvent('resizeStart', {...event.detail, targetNames: this._edgeTargetNames});
             },
 
             swipeStopMain: function (event) {
+                if (this._pointerMainIsBlocked) return;
+
                 this._resizing = false;
                 this.dispatchEvent('resizeStop', event.detail);
             },
 
             tap: function (event) {
-                if (!this.resettable || event.detail.tapsCount < 2) return;
+                if (this._pointerMainIsBlocked || !this.resettable || event.detail.tapsCount < 2) return;
 
-                switch (event.target) {
+                switch (this._pointerMain._target) {
                     case this._elements.cornerLeftBottom: {
                         this.resetWidth(true);
                         this.resetHeight();
@@ -204,7 +157,7 @@ export class Resizable extends Component {
                     }
                 }
 
-                this.dispatchEvent('reset', {targetNames: this._getTargetNames(event.target)});
+                this.dispatchEvent('reset', {targetNames: this._edgeTargetNames});
             },
         },
     };
@@ -245,8 +198,10 @@ export class Resizable extends Component {
 
 
     _aspectRatio = 0;
+    _edgeTargetNames = null;
     _heightInitial = 0;
     _leftInitial = 0;
+    _pointerMainIsBlocked = false;
     _topInitial = 0;
     _widthInitial = 0;
 
@@ -259,53 +214,51 @@ export class Resizable extends Component {
         this._aspectRatio = this._widthInitial / this._heightInitial;
     }
 
-    _getTargetNames(eventTarget) {
-        let targetNames = null;
+    _defineEdgeTarget(eventTarget) {
+        this._edgeTargetNames = null;
 
         switch (eventTarget) {
             case this._elements.cornerLeftBottom: {
-                targetNames = new Set(['cornerLeftBottom', 'edgeBottom', 'edgeLeft']);
+                this._edgeTargetNames = new Set(['cornerLeftBottom', 'edgeBottom', 'edgeLeft']);
 
                 break;
             }
             case this._elements.cornerLeftTop: {
-                targetNames = new Set(['cornerLeftTop', 'edgeLeft', 'edgeTop']);
+                this._edgeTargetNames = new Set(['cornerLeftTop', 'edgeLeft', 'edgeTop']);
 
                 break;
             }
             case this._elements.cornerRightBottom: {
-                targetNames = new Set(['cornerRightBottom', 'edgeBottom', 'edgeRight']);
+                this._edgeTargetNames = new Set(['cornerRightBottom', 'edgeBottom', 'edgeRight']);
 
                 break;
             }
             case this._elements.cornerRightTop: {
-                targetNames = new Set(['cornerRightTop', 'edgeRight', 'edgeTop']);
+                this._edgeTargetNames = new Set(['cornerRightTop', 'edgeRight', 'edgeTop']);
 
                 break;
             }
             case this._elements.edgeBottom: {
-                targetNames = new Set(['edgeBottom']);
+                this._edgeTargetNames = new Set(['edgeBottom']);
 
                 break;
             }
             case this._elements.edgeLeft: {
-                targetNames = new Set(['edgeLeft']);
+                this._edgeTargetNames = new Set(['edgeLeft']);
 
                 break;
             }
             case this._elements.edgeRight: {
-                targetNames = new Set(['edgeRight']);
+                this._edgeTargetNames = new Set(['edgeRight']);
 
                 break;
             }
             case this._elements.edgeTop: {
-                targetNames = new Set(['edgeTop']);
+                this._edgeTargetNames = new Set(['edgeTop']);
 
                 break;
             }
         }
-
-        return targetNames;
     }
 
     _increaseSize(widthIncrement, heightIncrement, withLeft, withTop, keepProportions) {

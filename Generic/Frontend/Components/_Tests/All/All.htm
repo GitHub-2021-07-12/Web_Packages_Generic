@@ -26,6 +26,9 @@
             }
 
             x-draggable {
+                --GestureArea_dynamicEnvironment: true;
+                --GestureArea_magnetAreas: url('#{x-draggable}');
+                --GestureArea_magnetism: 10;
                 --GestureArea_magnetism: 10px;
                 --GestureArea_shift: 10px;
                 /* --GestureArea_swipeFactor: 0.5; */
@@ -94,10 +97,13 @@
             x-resizable {
                 /* --Resizable_disabled: true; */
                 /* --Resizable_a: false; */
+                --GestureArea_dynamicEnvironment: true;
+                --GestureArea_magnetAreas: url('#{x-draggable}');
+                --GestureArea_magnetism: 10;
                 --Resizable_resettable: true;
 
                 /* background: var(--colorLightDim); */
-                background: #00f4;
+                background: #00f2;
                 height: 200px;
                 position: relative;
                 width: 300px;

@@ -1,6 +1,7 @@
 @layer {
     :host {
         --Component_displayInner: grid !important;
+        --GestureArea_gestures: swipe tap !important;
         --Resizable_cornerSize: var(--Resizable_edgeWidth);
         --Resizable_edgeWidth: 8px;
 
@@ -13,29 +14,20 @@
     }
 
 
-    x-gestureArea[part] {
-        --Component_disabled: var(--Resizable_fixed) !important;
-        --GestureArea_gestures: swipe tap !important;
-        --GestureArea_vertical: initial !important;
-
-        --GestureArea_dynamicEnvironment: true;
-        --GestureArea_magnetAreas: url('#{x-resizable}');
-        --GestureArea_magnetism: 10;
-
+    ._Resizable_edge[part] {
         box-sizing: border-box !important;
         grid-area: 1 / 1 / -1 / -1 !important;
         position: relative !important;
-    }
 
+
+        :host([fixed]) & {
+            pointer-events: none !important;
+        }
+    }
 
     ._Resizable_corner[part] {
         height: var(--Resizable_cornerSize) !important;
         width: var(--Resizable_cornerSize) !important;
-    }
-
-    ._Resizable_edge[part] {
-        height: initial !important;
-        width: initial !important;
     }
 
 

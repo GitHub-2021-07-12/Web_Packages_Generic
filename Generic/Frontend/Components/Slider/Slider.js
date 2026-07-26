@@ -35,8 +35,6 @@ export class Slider extends GestureArea {
         },
 
         host: {
-            ...super._eventHandlerDescriptors.host,
-
             capture: function () {
                 this._pointerMainIsBlocked = this.children.length < 2;
                 this._animationManager.stop(true);

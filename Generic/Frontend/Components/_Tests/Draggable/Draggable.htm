@@ -22,7 +22,8 @@
                 --Component_displayInner: grid;
                 /* --Component_eventsWithoutPropagation: pointerdown; */
                 --Component_eventsWithoutPropagation: swipeMain;
-                /* --Draggable_radius: 10px; */
+                /* --Draggable_axis: y; */
+                /* --Draggable_radius: 100px; */
                 /* --Draggable_step: 10px; */
                 --GestureArea_dynamicEnvironment: true;
                 /* --GestureArea_jumping: true; */
@@ -79,9 +80,21 @@
                 /* outline-offset: 2px; */
             }
 
-            [_Draggable_magnetTarget] {
+            [_Draggable_magnetArea] {
                 background: #f004;
             }
+
+            /* [_GestureArea_magnetAreaX] { */
+            /*     background: #f004; */
+            /* } */
+
+            /* [_GestureArea_magnetAreaY] { */
+            /*     background: #00f4; */
+            /* } */
+
+            /* [_GestureArea_magnetAreaX][_GestureArea_magnetAreaY] { */
+            /*     background: #f0f4; */
+            /* } */
         </style>
 
         <script type='module'>
@@ -147,7 +160,7 @@
             <x-draggable dropAreas='x-draggable, .dropArea, .root'>3</x-draggable>
             <x-draggable dropAreas='.dropArea' magnetAreas='x-draggable, .dropArea' wideDrop>4</x-draggable>
 
-            <x-draggable bound='#root' dropAreas='.dropArea' jumping_ handle='.handle' shift='10'>
+            <x-draggable bound='#root' deferredMagnetism dropAreas='.dropArea' jumping_ handle='.handle' shift='10' step_='10'>
                 <div class='handle'>Handle</div>
             </x-draggable>
         </div>

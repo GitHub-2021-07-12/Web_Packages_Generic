@@ -287,6 +287,14 @@ export class Resizable extends GestureArea {
         this.constructor.setHeight(this.target, height, true);
         this.constructor.setWidth(this.target, width, true);
 
+        // if (withLeft) {
+        //     this.constructor.setLeft(this.target, this._leftInitial + this._widthInitial - width);
+        // }
+
+        // if (withTop) {
+        //     this.constructor.setTop(this.target, this._topInitial + this._heightInitial - height);
+        // }
+
         if (withLeft) {
             let left = this._leftInitial + this._widthInitial - this.constructor.getWidth(this.target, true);
             this.constructor.setLeft(this.target, left);
@@ -296,6 +304,10 @@ export class Resizable extends GestureArea {
             let top = this._topInitial + this._heightInitial - this.constructor.getHeight(this.target, true);
             this.constructor.setTop(this.target, top);
         }
+    }
+
+    _setRect(rect, keepProportions) {
+
     }
 
 

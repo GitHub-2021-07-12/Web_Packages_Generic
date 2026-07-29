@@ -34,7 +34,6 @@
                 /* --GestureArea_swipeFactor: 0.5; */
 
                 anchor-name: --anchor;
-                background: var(--colorLightDim);
                 left: 500px;
                 position: relative;
                 width: fit-content;
@@ -100,6 +99,7 @@
                 --GestureArea_dynamicEnvironment: true;
                 --GestureArea_magnetAreas: url('#{x-draggable}');
                 --GestureArea_magnetism: 10;
+                /* --Resizable_deferredMagnetism: true; */
                 --Resizable_resettable: true;
 
                 /* background: var(--colorLightDim); */
@@ -202,6 +202,10 @@
                 padding: 10px;
             }
 
+
+            [_GestureArea_magnetAreaActive] {
+                background: #f004 !important;
+            }
 
             [popover] {
                 border: none;

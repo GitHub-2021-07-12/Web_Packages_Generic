@@ -152,7 +152,7 @@ export class GestureArea extends Component {
             let magnetAreas = this._component.magnetAreas;
             let magnetism = this._component.magnetism;
             this._magnetAreas.clear();
-            this._magnetVector.set(undefined);
+            this._magnetVector.set(null);
 
             if (!this.magnetRect || !magnetAreas?.size || !magnetism) return;
 
@@ -162,6 +162,7 @@ export class GestureArea extends Component {
                 right: this.magnetRect.right + (magnetRectDelta.right || 0),
                 top: this.magnetRect.top + (magnetRectDelta.top || 0),
             };
+            this._magnetVector.set(undefined);
 
             for (let magnetArea of magnetAreas) {
                 let magnetAreaRect = this._component._magnetAreaRects.get(magnetArea);
@@ -225,7 +226,7 @@ export class GestureArea extends Component {
             this._magnetVector.y ??= null;
 
             // console.log(this._magnetVector)
-            console.log(this._magnetVector, this._magnetAreas)
+            // console.log(this._magnetVector, this._magnetAreas)
         }
     };
 
@@ -258,6 +259,8 @@ export class GestureArea extends Component {
 
                 this._cancelPress(pointer);
                 this._detectSwipe(pointer, event);
+
+                this._updateMagnetAreasActive();
             },
 
             pointerup: function (event) {
@@ -266,6 +269,7 @@ export class GestureArea extends Component {
 
                 if (!pointer) return;
 
+                this._eventHandlers.host.pointermove.disabled = !this._pointers.size;
                 pointer.update(event);
 
                 this._detectTap(pointer, event);
@@ -275,7 +279,7 @@ export class GestureArea extends Component {
 
                 this._deletePointer(pointer);
                 this._cancelPress(pointer);
-                this._eventHandlers.host.pointermove.disabled = !this._pointers.size;
+                this._updateMagnetAreasActive();
             },
         },
 
@@ -287,6 +291,7 @@ export class GestureArea extends Component {
     };
 
     static _fieldDescriptors = {
+        deferredMagnetism: false,
         dynamicEnvironment: false,
         invertedX: false,
         invertedY: false,
@@ -387,6 +392,7 @@ export class GestureArea extends Component {
 
 
     _magnetAreaRects = new Map();
+    _magnetAreasActive = new Set();
     _pointerMain = null;
     _pointerTarget = null;
     _pointers = new Map();
@@ -492,6 +498,26 @@ export class GestureArea extends Component {
 
         pointer._GestureArea_detectPress = this._detectPress.bind(this, pointer, originalEvent);
         Executor.queueTask(pointer._GestureArea_detectPress, this.pressDuration);
+    }
+
+    _updateMagnetAreasActive() {
+        if (!this.magnetAreas) return;
+
+        for (let magnetAreaActive of this._magnetAreasActive) {
+            magnetAreaActive.removeAttribute('_GestureArea_magnetAreaActive');
+        }
+
+        this._magnetAreasActive.clear();
+
+        for (let pointer of this._pointers.values()) {
+            for (let magnetArea of pointer._magnetAreas) {
+                this._magnetAreasActive.add(magnetArea);
+            }
+        }
+
+        for (let magnetAreaActive of this._magnetAreasActive) {
+            magnetAreaActive.setAttribute('_GestureArea_magnetAreaActive', '');
+        }
     }
 
     _updateTapsCount(pointer) {

@@ -29,7 +29,6 @@ export class Draggable extends GestureArea {
                     right: this._positionDelta.x,
                     top: this._positionDelta.y,
                 });
-                this._magnetAreas = this._pointerMain._magnetAreas;
 
                 if (!this.deferredMagnetism) {
                     this._positionDelta = this._positionDelta.sum(this._pointerMain._magnetVector);
@@ -77,7 +76,6 @@ export class Draggable extends GestureArea {
                     this._position = this._position.setVector(this._positionInitial).sum(this._positionDelta);
                 }
 
-                this._magnetAreas = null;
                 this._dragging = false;
                 this.dispatchEvent('dragStop', event.detail);
                 this._dropTarget = null;
@@ -93,7 +91,6 @@ export class Draggable extends GestureArea {
         _dragging: false,
 
 
-        deferredMagnetism: false,
         springy: false,
         wideDrop: false,
 
@@ -189,14 +186,12 @@ export class Draggable extends GestureArea {
 
 
     __dropTarget = null;
-    __magnetAreas = null;
     __position = new Vector2d();
     __positionDelta = new Vector2d();
 
 
     _dropAreaDomRects = new Map();
     _dropTargetPrev = null;
-    // _magnetAreasPrev = null;
     _pointerMainIsBlocked = false;
     _positionDeltaMax = new Vector2d();
     _positionDeltaMin = new Vector2d();
@@ -215,25 +210,6 @@ export class Draggable extends GestureArea {
 
         this._dropTargetPrev?.removeAttribute('_Draggable_dropTarget');
         this._dropTarget?.setAttribute('_Draggable_dropTarget', '');
-    }
-
-    get _magnetAreas() {
-        return this.__magnetAreas;
-    }
-    set _magnetAreas(magnetAreas) {
-        if (this._magnetAreas) {
-            for (let magnetArea of this._magnetAreas) {
-                magnetArea.removeAttribute('_Draggable_magnetArea');
-            }
-        }
-
-        this.__magnetAreas = new Set(magnetAreas);
-
-        if (this._magnetAreas) {
-            for (let magnetArea of this._magnetAreas) {
-                magnetArea.setAttribute('_Draggable_magnetArea', '');
-            }
-        }
     }
 
     get _position() {

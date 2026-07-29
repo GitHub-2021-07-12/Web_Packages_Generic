@@ -18,6 +18,7 @@
             x-draggable {
                 --Component_displayInner: grid;
                 --Draggable_dropAreas: url('#{x-draggable}');
+                --GestureArea_deferredMagnetism: true;
                 --GestureArea_dynamicEnvironment: true;
                 --GestureArea_magnetAreas: url('#{x-draggable}');
                 --GestureArea_magnetism: 10;
@@ -49,11 +50,13 @@
             x-resizable {
                 --Component_eventsWithoutPropagation: swipeMain swipeStartMain swipeStopMain;
                 /* --Component_eventsWithoutPropagation: pointerdown swipeMain; */
+                --GestureArea_deferredMagnetism: true;
                 --GestureArea_dynamicEnvironment: true;
                 --GestureArea_magnetAreas: url('#{x-resizable}');
                 --GestureArea_magnetism: 10;
                 /* --Resizable_fixed: true; */
                 --Resizable_resettable: true;
+                --Resizable_target: url('#{x-draggable}');
 
                 background: #0f04;
                 border: #000 solid 1px;
@@ -75,7 +78,7 @@
                 border-color: #f00;
             }
 
-            [_Draggable_magnetArea] {
+            [_GestureArea_magnetAreaActive] {
                 background: #f004;
             }
         </style>
@@ -90,11 +93,10 @@
     </head>
 
     <body>
-        <x-repeater interpolationKey='repeater' model='100'>
+        <x-repeater interpolationKey='repeater' model='1000'>
             <template Repeater_delegate>
-                <!-- <x-draggable style='left: calc({{repeater: index}} * var(--size)); top: calc({{repeater: index}} * var(--size));'> -->
                 <x-draggable style='--index: {{repeater: index}};'>
-                    <x-resizable target='x-draggable'>
+                    <x-resizable>
                         {{repeater: data.value}}
                     </x-resizable>
                 </x-draggable>

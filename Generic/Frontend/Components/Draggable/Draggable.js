@@ -11,7 +11,7 @@ export class Draggable extends GestureArea {
 
                 this._positionDeltaPrev.setVector(this._positionDelta);
                 this._positionDelta = this._pointerMain._positionDelta;
-                this._detectDropTarget();
+                this._detectDropAreaTarget();
 
                 if (this.axis != 'x') {
                     let step = this.stepY || this.step;
@@ -78,7 +78,7 @@ export class Draggable extends GestureArea {
 
                 this._dragging = false;
                 this.dispatchEvent('dragStop', event.detail);
-                this._dropTarget = null;
+                this._dropAreaTarget = null;
 
                 if (this.springy) {
                     this._position = this._positionInitial;
@@ -185,13 +185,13 @@ export class Draggable extends GestureArea {
     }
 
 
-    __dropTarget = null;
+    __dropAreaTarget = null;
     __position = new Vector2d();
     __positionDelta = new Vector2d();
 
 
     _dropAreaDomRects = new Map();
-    _dropTargetPrev = null;
+    _dropAreaTargetPrev = null;
     _pointerMainIsBlocked = false;
     _positionDeltaMax = new Vector2d();
     _positionDeltaMin = new Vector2d();
@@ -199,17 +199,17 @@ export class Draggable extends GestureArea {
     _positionInitial = new Vector2d();
 
 
-    get _dropTarget() {
-        return this.__dropTarget;
+    get _dropAreaTarget() {
+        return this.__dropAreaTarget;
     }
-    set _dropTarget(dropTarget) {
-        this._dropTargetPrev = this._dropTarget;
-        this.__dropTarget = dropTarget;
+    set _dropAreaTarget(dropAreaTarget) {
+        this._dropAreaTargetPrev = this._dropAreaTarget;
+        this.__dropAreaTarget = dropAreaTarget;
 
-        if (this._dropTarget == this._dropTargetPrev) return;
+        if (this._dropAreaTarget == this._dropAreaTargetPrev) return;
 
-        this._dropTargetPrev?.removeAttribute('_Draggable_dropTarget');
-        this._dropTarget?.setAttribute('_Draggable_dropTarget', '');
+        this._dropAreaTargetPrev?.removeAttribute('_Draggable_dropAreaTarget');
+        this._dropAreaTarget?.setAttribute('_Draggable_dropAreaTarget', '');
     }
 
     get _position() {
@@ -257,12 +257,12 @@ export class Draggable extends GestureArea {
         }
     }
 
-    _detectDropTarget() {
+    _detectDropAreaTarget() {
         if (!this.dropAreas) return;
 
         if (this.wideDrop) {
             let domRect = this.constructor.getDomRect(this, true);
-            let dropTarget = null;
+            let dropAreaTarget = null;
             let intersectionSquareMax = 0;
 
             for (let dropArea of this.dropAreas) {
@@ -270,19 +270,19 @@ export class Draggable extends GestureArea {
 
                 if (intersectionSquare <= intersectionSquareMax) continue;
 
-                dropTarget = dropArea;
+                dropAreaTarget = dropArea;
                 intersectionSquareMax = intersectionSquare;
             }
 
-            this._dropTarget = dropTarget;
+            this._dropAreaTarget = dropAreaTarget;
         }
         else {
             let nodes = document.elementsFromPoint(this._pointerMain._positionOuter.x, this._pointerMain._positionOuter.y);
-            this._dropTarget = nodes.find((node) => this.dropAreas.has(node));
+            this._dropAreaTarget = nodes.find((node) => this.dropAreas.has(node));
         }
 
-        if (this._dropTarget != this._dropTargetPrev) {
-            this.dispatchEvent('dropTarget', event.detail);
+        if (this._dropAreaTarget != this._dropAreaTargetPrev) {
+            this.dispatchEvent('dropAreaTarget', event.detail);
         }
     }
 

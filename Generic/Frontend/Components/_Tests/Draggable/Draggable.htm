@@ -73,7 +73,7 @@
             }
 
 
-            [_Draggable_dropTarget] {
+            [_Draggable_dropAreaTarget] {
                 border-color: #f00;
             }
 
@@ -111,17 +111,17 @@
                         dragStop: function (event) {
                             let draggable = event.target;
 
-                            if (!draggable._dropTarget || draggable._dropTarget == draggable.parentElement) return;
-                            // if (draggable._dropTarget == draggable.parentElement) return;
+                            if (!draggable._dropAreaTarget || draggable._dropAreaTarget == draggable.parentElement) return;
+                            // if (draggable._dropAreaTarget == draggable.parentElement) return;
 
                             draggable.reset();
-                            (draggable._dropTarget || root).append(draggable);
+                            (draggable._dropAreaTarget || root).append(draggable);
                         },
 
-                        dropTarget: function (event) {
+                        dropAreaTarget: function (event) {
                             let draggable = event.target;
 
-                            console.log(draggable._dropTarget)
+                            console.log(draggable._dropAreaTarget)
                             // console.log(event)
                         },
                     },

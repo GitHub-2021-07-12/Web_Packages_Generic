@@ -102,6 +102,11 @@ export class Resizable extends GestureArea {
                 this._widthInitial = this.constructor.getWidth(this.target, true);
                 this._aspectRatio = this._widthInitial / this._heightInitial;
                 this._pointerMain.magnetRect = this.constructor.getDomRect(this.target, true);
+
+                if (this.dynamicEnvironment) {
+                    this._defineMagnetAreaRects();
+                }
+
                 this.dispatchEvent('resizeStart', {...event.detail, targetNames: this._edgeTargetNames});
             },
 

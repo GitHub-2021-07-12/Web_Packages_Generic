@@ -74,12 +74,28 @@
             }
 
 
-            [_Draggable_dropTarget] {
+            [_Draggable_dropAreaTarget] {
                 border-color: #f00;
             }
 
             [_GestureArea_magnetAreaActive] {
                 background: #f004;
+            }
+
+            [_GestureArea_magnetAreaActiveBottom] {
+                border-bottom: red solid 1px;
+            }
+
+            [_GestureArea_magnetAreaActiveLeft] {
+                border-left: red solid 1px;
+            }
+
+            [_GestureArea_magnetAreaActiveRight] {
+                border-right: red solid 1px;
+            }
+
+            [_GestureArea_magnetAreaActiveTop] {
+                border-top: red solid 1px;
             }
         </style>
 
@@ -93,7 +109,7 @@
     </head>
 
     <body>
-        <x-repeater interpolationKey='repeater' model='1000'>
+        <x-repeater interpolationKey='repeater' model='1e2'>
             <template Repeater_delegate>
                 <x-draggable style='--index: {{repeater: index}};'>
                     <x-resizable>

@@ -20,7 +20,8 @@
                 --Draggable_dropAreas: url('#{x-draggable}');
                 --GestureArea_deferredMagnetism: true;
                 --GestureArea_dynamicEnvironment: true;
-                --GestureArea_magnetAreas: url('#{x-draggable}');
+                /* --GestureArea_magnetAreas: url('#{x-draggable}'); */
+                --GestureArea_magnetAreas: url('#{x-draggable:not(:active)}');
                 --GestureArea_magnetism: 10;
                 /* --GestureArea_receptive: true; */
 

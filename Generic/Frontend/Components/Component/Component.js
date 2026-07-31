@@ -338,6 +338,7 @@ export class Component extends HTMLElement {
         _resetBinded = this.constructor._flash ? this.reset.bind(this) : null;
         _value = undefined;
         _valuePrepared = undefined;
+        _valueReserved = undefined;
         _valuePrev = undefined;
 
 
@@ -433,8 +434,10 @@ export class Component extends HTMLElement {
         }
 
         _update(value) {
-            let defaultValue = this.constructor._defaultValue;
-            this._valuePrepared = defaultValue?.constructor == Set && value?.constructor == Array ? new Set(value) : value;
+            let defaultValueConstructor = this.constructor._defaultValue?.constructor;
+            let valueConstructor = value?.constructor;
+            this._valuePrepared = defaultValueConstructor == Set && valueConstructor == Array ? new Set(value) : value;
+            this._valueReserved = this.constructor._extra && valueConstructor == defaultValueConstructor ? value : undefined;
             this._check();
             let valuePrepared = this._valuePrepared;
             this._updateBefore();
@@ -488,7 +491,7 @@ export class Component extends HTMLElement {
         }
 
         refresh() {
-            this._update(this._value);
+            this._update(this._valueReserved ?? this._value);
         }
 
         reset(withEvent = true) {

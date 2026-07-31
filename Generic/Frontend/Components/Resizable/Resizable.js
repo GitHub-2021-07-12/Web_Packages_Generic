@@ -86,6 +86,7 @@ export class Resizable extends GestureArea {
                 this._widthDeltaMin = widthMin - this._widthInitial;
 
                 if (this.dynamicEnvironment) {
+                    this.refreshField('magnetAreas');
                     this._defineMagnetAreaRects();
                 }
 

@@ -373,7 +373,6 @@ export class GestureArea extends Component {
 
                     try {
                         this._valuePrepared = new Set(rootNode?.querySelectorAll(this._valuePrepared));
-                        this._valuePrepared.delete(this._component);
                     }
                     catch {
                         this._valuePrepared = null;

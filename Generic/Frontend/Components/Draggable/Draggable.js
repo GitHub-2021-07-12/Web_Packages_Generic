@@ -61,6 +61,8 @@ export class Draggable extends GestureArea {
                 }
 
                 if (this.dynamicEnvironment) {
+                    this.refreshField('dropAreas');
+                    this.refreshField('magnetAreas');
                     this._defineDropAreaDomRects();
                     this._defineMagnetAreaRects();
                 }

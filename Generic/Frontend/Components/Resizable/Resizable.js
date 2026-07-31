@@ -1,6 +1,8 @@
 import {Component} from '/Packages/Generic/Frontend/Components/Component/Component.js';
 import {GestureArea} from '/Packages/Generic/Frontend/Components/GestureArea/GestureArea.js';
 
+import {Common} from '/Packages/Generic/Js/Common/Common.js';
+
 
 export class Resizable extends GestureArea {
     static _cssUrl = true;
@@ -27,57 +29,22 @@ export class Resizable extends GestureArea {
 
                 let magnetVector = this._pointerMain._magnetVector;
                 let positionDelta = this._pointerMain._positionDelta;
-                this._rectDelta.bottom = undefined;
-                this._rectDelta.left = undefined;
-                this._rectDelta.right = undefined;
-                this._rectDelta.top = undefined;
-
-                switch (this._pointerMain._target) {
-                    case this._elements.cornerLeftBottom: {
-                        this._rectDelta.bottom = positionDelta.y;
-                        this._rectDelta.left = positionDelta.x;
-
-                        break;
-                    }
-                    case this._elements.cornerLeftTop: {
-                        this._rectDelta.left = positionDelta.x;
-                        this._rectDelta.top = positionDelta.y;
-
-                        break;
-                    }
-                    case this._elements.cornerRightBottom: {
-                        this._rectDelta.bottom = positionDelta.y;
-                        this._rectDelta.right = positionDelta.x;
-
-                        break;
-                    }
-                    case this._elements.cornerRightTop: {
-                        this._rectDelta.right = positionDelta.x;
-                        this._rectDelta.top = positionDelta.y;
-
-                        break;
-                    }
-                    case this._elements.edgeBottom: {
-                        this._rectDelta.bottom = positionDelta.y;
-
-                        break;
-                    }
-                    case this._elements.edgeLeft: {
-                        this._rectDelta.left = positionDelta.x;
-
-                        break;
-                    }
-                    case this._elements.edgeRight: {
-                        this._rectDelta.right = positionDelta.x;
-
-                        break;
-                    }
-                    case this._elements.edgeTop: {
-                        this._rectDelta.top = positionDelta.y;
-
-                        break;
-                    }
-                }
+                this._rectDelta.bottom = this._edgeTargetNames.has('edgeBottom')
+                    ? Common.toRange(positionDelta.y, this._heightDeltaMin, this._heightDeltaMax)
+                    : undefined
+                ;
+                this._rectDelta.left = this._edgeTargetNames.has('edgeLeft')
+                    ? Common.toRange(positionDelta.x, -this._widthDeltaMax, -this._widthDeltaMin)
+                    : undefined
+                ;
+                this._rectDelta.right = this._edgeTargetNames.has('edgeRight')
+                    ? Common.toRange(positionDelta.x, this._widthDeltaMin, this._widthDeltaMax)
+                    : undefined
+                ;
+                this._rectDelta.top = this._edgeTargetNames.has('edgeTop')
+                    ? Common.toRange(positionDelta.y, -this._heightDeltaMax, -this._heightDeltaMin)
+                    : undefined
+                ;
 
                 this._pointerMain.updateMagnetVector(this._rectDelta);
 
@@ -102,6 +69,21 @@ export class Resizable extends GestureArea {
                 this._widthInitial = this.constructor.getWidth(this.target, true);
                 this._aspectRatio = this._widthInitial / this._heightInitial;
                 this._pointerMain.magnetRect = this.constructor.getDomRect(this.target, true);
+
+                this.constructor.setHeight(this.target, Number.MIN_SAFE_INTEGER, true);
+                this.constructor.setWidth(this.target, Number.MIN_SAFE_INTEGER, true);
+                let heightMin = this.constructor.getHeight(this.target, true);
+                let widthMin = this.constructor.getWidth(this.target, true);
+                this.constructor.setHeight(this.target, Number.MAX_SAFE_INTEGER, true);
+                this.constructor.setWidth(this.target, Number.MAX_SAFE_INTEGER, true);
+                let heightMax = this.constructor.getWidth(this.target, true);
+                let widthMax = this.constructor.getWidth(this.target, true);
+                this.constructor.setHeight(this.target, null);
+                this.constructor.setWidth(this.target, null);
+                this._heightDeltaMax = heightMax - this._heightInitial;
+                this._heightDeltaMin = heightMin - this._heightInitial;
+                this._widthDeltaMax = widthMax - this._widthInitial;
+                this._widthDeltaMin = widthMin - this._widthInitial;
 
                 if (this.dynamicEnvironment) {
                     this._defineMagnetAreaRects();
@@ -129,51 +111,18 @@ export class Resizable extends GestureArea {
             tap: function (event) {
                 if (this._pointerMainIsBlocked || !this.resettable || event.detail.tapsCount < 2) return;
 
-                switch (this._pointerMain._target) {
-                    case this._elements.cornerLeftBottom: {
-                        this.resetWidth(true);
-                        this.resetHeight();
+                if (this._edgeTargetNames.has('edgeBottom')) {
+                    this.resetHeight();
+                }
+                else if (this._edgeTargetNames.has('edgeTop')) {
+                    this.resetHeight(true);
+                }
 
-                        break;
-                    }
-                    case this._elements.cornerLeftTop: {
-                        this.resetWidth(true);
-                        this.resetHeight(true);
-
-                        break;
-                    }
-                    case this._elements.cornerRightBottom: {
-                        this.resetWidth();
-                        this.resetHeight();
-
-                        break;
-                    }
-                    case this._elements.cornerRightTop: {
-                        this.resetWidth();
-                        this.resetHeight(true);
-
-                        break;
-                    }
-                    case this._elements.edgeBottom: {
-                        this.resetHeight();
-
-                        break;
-                    }
-                    case this._elements.edgeLeft: {
-                        this.resetWidth(true);
-
-                        break;
-                    }
-                    case this._elements.edgeRight: {
-                        this.resetWidth();
-
-                        break;
-                    }
-                    case this._elements.edgeTop: {
-                        this.resetHeight(true);
-
-                        break;
-                    }
+                if (this._edgeTargetNames.has('edgeLeft')) {
+                    this.resetWidth(true);
+                }
+                else if (this._edgeTargetNames.has('edgeRight')) {
+                    this.resetWidth();
                 }
 
                 this.dispatchEvent('reset', {targetNames: this._edgeTargetNames});
@@ -218,10 +167,14 @@ export class Resizable extends GestureArea {
 
     _aspectRatio = 0;
     _edgeTargetNames = null;
+    _heightDeltaMax = 0;
+    _heightDeltaMin = 0;
     _heightInitial = 0;
     _leftInitial = 0;
     _pointerMainIsBlocked = false;
     _topInitial = 0;
+    _widthDeltaMax = 0;
+    _widthDeltaMin = 0;
     _widthInitial = 0;
 
     _rectDelta = {
@@ -284,16 +237,20 @@ export class Resizable extends GestureArea {
         let widthIncrement = (this._rectDelta.right || 0) - (this._rectDelta.left || 0);
 
         if (this.keepProportions ^ keepProportions) {
-            let heightIncrementIsFinite = Number.isFinite(this._rectDelta.bottom || this._rectDelta.top);
-            let widthIncrementIsFinite = Number.isFinite(this._rectDelta.left || this._rectDelta.right);
+            let heightIncrementIsFinite = Number.isFinite(this._rectDelta.bottom) || Number.isFinite(this._rectDelta.top);
+            let widthIncrementIsFinite = Number.isFinite(this._rectDelta.left) || Number.isFinite(this._rectDelta.right);
 
             if (heightIncrementIsFinite && widthIncrementIsFinite) {
                 if (heightIncrement > widthIncrement / this._aspectRatio) {
                     widthIncrement = heightIncrement * this._aspectRatio;
                 }
                 else {
+                // if (widthIncrement < heightIncrement * this._aspectRatio) {
                     heightIncrement = widthIncrement / this._aspectRatio;
                 }
+                // else {
+                //     widthIncrement = heightIncrement * this._aspectRatio;
+                // }
             }
             else if (heightIncrementIsFinite) {
                 widthIncrement = heightIncrement * this._aspectRatio;

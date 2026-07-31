@@ -53,8 +53,6 @@
         grid-area: 1 / 1 / -1 / -1 !important;
         height: initial !important;
         overflow: hidden;
-        place-content: initial !important;
-        place-items: initial !important;
         place-self: initial !important;
         width: initial !important;
     }

@@ -1173,7 +1173,7 @@ export class Component extends HTMLElement {
             return;
         }
 
-        let boxSizing = this.getCssProp(element, `box-sizing`);
+        let boxSizing = this.getCssProp(element, 'box-sizing');
 
         if (outer) {
             size -= this.getCssPropNumber(element, `margin-${sizeType}-end`) + this.getCssPropNumber(element, `margin-${sizeType}-start`);

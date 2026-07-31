@@ -1,6 +1,5 @@
 import {Component} from '/Packages/Generic/Frontend/Components/Component/Component.js';
 
-import {Common} from '/Packages/Generic/Js/Common/Common.js';
 import {Executor} from '/Packages/Generic/Js/Executor/Executor.js';
 import {Vector2d} from '/Packages/Generic/Js/Vector2d/Vector2d.js';
 
@@ -166,30 +165,13 @@ export class GestureArea extends Component {
             let magnetAreasLeft = new Map();
             let magnetAreasRight = new Map();
             let magnetAreasTop = new Map();
-            let magnetVectorAbs = new Vector2d(Infinity);
-
             let magnetRect = {
                 bottom: this.magnetRect.bottom + (magnetRectDelta.bottom || 0),
                 left: this.magnetRect.left + (magnetRectDelta.left || 0),
                 right: this.magnetRect.right + (magnetRectDelta.right || 0),
                 top: this.magnetRect.top + (magnetRectDelta.top || 0),
             };
-
-            // if (magnetRectDelta.bottom == undefined) {
-            //     magnetRect.top = Math.min(magnetRect.top, magnetRect.bottom);
-            // }
-            // else if (magnetRectDelta.top == undefined) {
-            //     magnetRect.bottom = Math.max(magnetRect.bottom, magnetRect.top);
-            // }
-
-            // if (magnetRectDelta.left == undefined) {
-            //     magnetRect.right = Math.max(magnetRect.right, magnetRect.left);
-            // }
-            // else if (magnetRectDelta.right == undefined) {
-            //     magnetRect.left = Math.min(magnetRect.left, magnetRect.right);
-            // }
-
-            console.log(this.magnetRect, magnetRect)
+            let magnetVectorAbs = new Vector2d(Infinity);
 
             for (let magnetArea of magnetAreas) {
                 let magnetAreaRect = this._component._magnetAreaRects.get(magnetArea);
@@ -587,36 +569,24 @@ export class GestureArea extends Component {
 
         for (let pointer of this._pointers.values()) {
             for (let magnetArea of pointer._magnetAreasBottom) {
+                magnetArea.setAttribute('_GestureArea_magnetAreaActiveBottom', '');
                 this._magnetAreasActiveBottom.add(magnetArea);
             }
 
             for (let magnetArea of pointer._magnetAreasLeft) {
+                magnetArea.setAttribute('_GestureArea_magnetAreaActiveLeft', '');
                 this._magnetAreasActiveLeft.add(magnetArea);
             }
 
             for (let magnetArea of pointer._magnetAreasRight) {
+                magnetArea.setAttribute('_GestureArea_magnetAreaActiveRight', '');
                 this._magnetAreasActiveRight.add(magnetArea);
             }
 
             for (let magnetArea of pointer._magnetAreasTop) {
+                magnetArea.setAttribute('_GestureArea_magnetAreaActiveTop', '');
                 this._magnetAreasActiveTop.add(magnetArea);
             }
-        }
-
-        for (let magnetAreaActive of this._magnetAreasActiveBottom) {
-            magnetAreaActive.setAttribute('_GestureArea_magnetAreaActiveBottom', '');
-        }
-
-        for (let magnetAreaActive of this._magnetAreasActiveLeft) {
-            magnetAreaActive.setAttribute('_GestureArea_magnetAreaActiveLeft', '');
-        }
-
-        for (let magnetAreaActive of this._magnetAreasActiveRight) {
-            magnetAreaActive.setAttribute('_GestureArea_magnetAreaActiveRight', '');
-        }
-
-        for (let magnetAreaActive of this._magnetAreasActiveTop) {
-            magnetAreaActive.setAttribute('_GestureArea_magnetAreaActiveTop', '');
         }
     }
 

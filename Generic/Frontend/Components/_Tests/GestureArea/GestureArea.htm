@@ -24,23 +24,18 @@
                 --GestureArea_magnetism: 10;
                 /* --GestureArea_receptive: true; */
 
-                background: #f002;
+                box-sizing: border-box;
                 height: var(--size);
                 left: calc(var(--index) * var(--size));
-                /* min-height: min-content; */
+                max-height: 256px;
+                max-width: 256px;
+                /* margin: 2px; */
                 min-height: 64px;
-                min-width: min-content;
+                min-width: 64px;
+                outline: #0008 solid 1px;
                 position: absolute;
                 top: calc(var(--index) * var(--size));
                 width: var(--size);
-
-
-                &[_dragging] {
-                    background: #00f2;
-                }
-                /* &:not(&:has([_resizing])) { */
-                /*     --GestureArea_receptive: true; */
-                /* } */
             }
 
             x-repeater {
@@ -52,18 +47,26 @@
                 /* --Component_eventsWithoutPropagation: pointerdown swipeMain; */
                 --GestureArea_deferredMagnetism: true;
                 --GestureArea_dynamicEnvironment: true;
-                --GestureArea_magnetAreas: url('#{x-resizable}');
+                /* --GestureArea_magnetAreas: url('#{x-draggable}'); */
+                --GestureArea_magnetAreas: url('#{x-draggable:not(:active)}');
+                /* --GestureArea_magnetAreas: url('#{x-resizable}'); */
                 --GestureArea_magnetism: 10;
                 /* --Resizable_fixed: true; */
+                /* --Resizable_keepProportions: true; */
                 --Resizable_resettable: true;
                 --Resizable_target: url('#{x-draggable}');
 
                 background: #0f04;
-                border: #000 solid 1px;
+                min-height: auto;
+                min-width: auto;
 
 
                 &[_resizing] {
                     background: #00f4;
+                }
+
+                [_dragging] & {
+                    background: #f004;
                 }
 
 
@@ -75,7 +78,7 @@
 
 
             [_Draggable_dropAreaTarget] {
-                border-color: #f00;
+                /* border-color: #f00; */
             }
 
             [_GestureArea_magnetAreaActive] {
@@ -83,19 +86,19 @@
             }
 
             [_GestureArea_magnetAreaActiveBottom] {
-                border-bottom: red solid 1px;
+                border-bottom: red solid 2px;
             }
 
             [_GestureArea_magnetAreaActiveLeft] {
-                border-left: red solid 1px;
+                border-left: red solid 2px;
             }
 
             [_GestureArea_magnetAreaActiveRight] {
-                border-right: red solid 1px;
+                border-right: red solid 2px;
             }
 
             [_GestureArea_magnetAreaActiveTop] {
-                border-top: red solid 1px;
+                border-top: red solid 2px;
             }
         </style>
 

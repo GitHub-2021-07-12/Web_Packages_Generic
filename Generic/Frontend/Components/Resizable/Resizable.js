@@ -45,7 +45,6 @@ export class Resizable extends GestureArea {
                     ? Common.toRange(positionDelta.y, -this._heightDeltaMax, -this._heightDeltaMin)
                     : undefined
                 ;
-
                 this._pointerMain.updateMagnetVector(this._rectDelta);
 
                 if (!this.deferredMagnetism) {
@@ -246,12 +245,8 @@ export class Resizable extends GestureArea {
                     widthIncrement = heightIncrement * this._aspectRatio;
                 }
                 else {
-                // if (widthIncrement < heightIncrement * this._aspectRatio) {
                     heightIncrement = widthIncrement / this._aspectRatio;
                 }
-                // else {
-                //     widthIncrement = heightIncrement * this._aspectRatio;
-                // }
             }
             else if (heightIncrementIsFinite) {
                 widthIncrement = heightIncrement * this._aspectRatio;

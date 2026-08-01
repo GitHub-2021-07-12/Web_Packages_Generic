@@ -21,11 +21,12 @@
                 --GestureArea_deferredMagnetism: true;
                 --GestureArea_dynamicEnvironment: true;
                 /* --GestureArea_magnetAreas: url('#{x-draggable}'); */
-                --GestureArea_magnetAreas: url('#{x-draggable:not(:active)}');
+                --GestureArea_magnetAreas: url('#{x-resizable:not(:active)}');
                 --GestureArea_magnetism: 10;
                 /* --GestureArea_receptive: true; */
 
-                box-sizing: border-box;
+                /* box-sizing: border-box; */
+                /* background: #0f02; */
                 height: var(--size);
                 left: calc(var(--index) * var(--size));
                 max-height: 256px;
@@ -33,7 +34,6 @@
                 /* margin: 2px; */
                 min-height: 64px;
                 min-width: 64px;
-                outline: #0008 solid 1px;
                 position: absolute;
                 top: calc(var(--index) * var(--size));
                 width: var(--size);
@@ -49,7 +49,7 @@
                 --GestureArea_deferredMagnetism: true;
                 --GestureArea_dynamicEnvironment: true;
                 /* --GestureArea_magnetAreas: url('#{x-draggable}'); */
-                --GestureArea_magnetAreas: url('#{x-draggable:not(:active)}');
+                --GestureArea_magnetAreas: url('#{x-resizable:not(:active)}');
                 /* --GestureArea_magnetAreas: url('#{x-resizable}'); */
                 --GestureArea_magnetism: 10;
                 /* --Resizable_fixed: true; */
@@ -57,9 +57,12 @@
                 --Resizable_resettable: true;
                 --Resizable_target: url('#{x-draggable}');
 
+
                 background: #0f04;
-                min-height: auto;
-                min-width: auto;
+                border: #000 solid 1px;
+                /* background: #0f04; */
+                /* min-height: auto; */
+                /* min-width: auto; */
 
 
                 &[_resizing] {
@@ -88,18 +91,22 @@
 
             [_GestureArea_magnetAreaActiveBottom] {
                 border-bottom: red solid 2px;
+                /* border-bottom-color: red; */
             }
 
             [_GestureArea_magnetAreaActiveLeft] {
                 border-left: red solid 2px;
+                /* border-left-color: red; */
             }
 
             [_GestureArea_magnetAreaActiveRight] {
                 border-right: red solid 2px;
+                /* border-right-color: red; */
             }
 
             [_GestureArea_magnetAreaActiveTop] {
                 border-top: red solid 2px;
+                /* border-top-color: red; */
             }
         </style>
 

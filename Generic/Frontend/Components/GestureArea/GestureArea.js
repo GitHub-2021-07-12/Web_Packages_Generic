@@ -171,7 +171,7 @@ export class GestureArea extends Component {
                 right: this.magnetRect.right + (magnetRectDelta.right || 0),
                 top: this.magnetRect.top + (magnetRectDelta.top || 0),
             };
-            let magnetVectorAbs = new Vector2d(Infinity);
+            let magnetVector = new Vector2d(Infinity);
 
             for (let magnetArea of magnetAreas) {
                 let magnetAreaRect = this._component._magnetAreaRects.get(magnetArea);
@@ -187,13 +187,13 @@ export class GestureArea extends Component {
                     let deltaBottomBottomAbs = Math.abs(deltaBottomBottom);
                     let deltaTopBottomAbs = Math.abs(deltaTopBottom);
 
-                    if (deltaBottomBottomAbs <= magnetism && deltaBottomBottomAbs <= Math.abs(magnetVectorAbs.y)) {
-                        magnetVectorAbs.y = deltaBottomBottom;
-                        magnetAreasBottom.set(magnetArea, magnetVectorAbs.y);
+                    if (deltaBottomBottomAbs <= magnetism && deltaBottomBottomAbs <= Math.abs(magnetVector.y)) {
+                        magnetVector.y = deltaBottomBottom;
+                        magnetAreasBottom.set(magnetArea, magnetVector.y);
                     }
-                    else if (deltaTopBottomAbs <= magnetism && deltaTopBottomAbs <= Math.abs(magnetVectorAbs.y)) {
-                        magnetVectorAbs.y = deltaTopBottom;
-                        magnetAreasTop.set(magnetArea, magnetVectorAbs.y);
+                    else if (deltaTopBottomAbs <= magnetism && deltaTopBottomAbs <= Math.abs(magnetVector.y)) {
+                        magnetVector.y = deltaTopBottom;
+                        magnetAreasTop.set(magnetArea, magnetVector.y);
                     }
                 }
 
@@ -202,13 +202,13 @@ export class GestureArea extends Component {
                     let deltaLeftLeftAbs = Math.abs(deltaLeftLeft);
                     let deltaRightLeftAbs = Math.abs(deltaRightLeft);
 
-                    if (deltaLeftLeftAbs <= magnetism && deltaLeftLeftAbs <= Math.abs(magnetVectorAbs.x)) {
-                        magnetVectorAbs.x = deltaLeftLeft;
-                        magnetAreasLeft.set(magnetArea, magnetVectorAbs.x);
+                    if (deltaLeftLeftAbs <= magnetism && deltaLeftLeftAbs <= Math.abs(magnetVector.x)) {
+                        magnetVector.x = deltaLeftLeft;
+                        magnetAreasLeft.set(magnetArea, magnetVector.x);
                     }
-                    else if (deltaRightLeftAbs <= magnetism && deltaRightLeftAbs <= Math.abs(magnetVectorAbs.x)) {
-                        magnetVectorAbs.x = deltaRightLeft;
-                        magnetAreasRight.set(magnetArea, magnetVectorAbs.x);
+                    else if (deltaRightLeftAbs <= magnetism && deltaRightLeftAbs <= Math.abs(magnetVector.x)) {
+                        magnetVector.x = deltaRightLeft;
+                        magnetAreasRight.set(magnetArea, magnetVector.x);
                     }
                 }
 
@@ -217,13 +217,13 @@ export class GestureArea extends Component {
                     let deltaRightRightAbs = Math.abs(deltaRightRight);
                     let deltaLeftRightAbs = Math.abs(deltaLeftRight);
 
-                    if (deltaLeftRightAbs <= magnetism && deltaLeftRightAbs <= Math.abs(magnetVectorAbs.x)) {
-                        magnetVectorAbs.x = deltaLeftRight;
-                        magnetAreasLeft.set(magnetArea, magnetVectorAbs.x);
+                    if (deltaLeftRightAbs <= magnetism && deltaLeftRightAbs <= Math.abs(magnetVector.x)) {
+                        magnetVector.x = deltaLeftRight;
+                        magnetAreasLeft.set(magnetArea, magnetVector.x);
                     }
-                    else if (deltaRightRightAbs <= magnetism && deltaRightRightAbs <= Math.abs(magnetVectorAbs.x)) {
-                        magnetVectorAbs.x = deltaRightRight;
-                        magnetAreasRight.set(magnetArea, magnetVectorAbs.x);
+                    else if (deltaRightRightAbs <= magnetism && deltaRightRightAbs <= Math.abs(magnetVector.x)) {
+                        magnetVector.x = deltaRightRight;
+                        magnetAreasRight.set(magnetArea, magnetVector.x);
                     }
                 }
 
@@ -232,40 +232,40 @@ export class GestureArea extends Component {
                     let deltaTopTopAbs = Math.abs(deltaTopTop);
                     let deltaBottomTopAbs = Math.abs(deltaBottomTop);
 
-                    if (deltaBottomTopAbs <= magnetism && deltaBottomTopAbs <= Math.abs(magnetVectorAbs.y)) {
-                        magnetVectorAbs.y = deltaBottomTop;
-                        magnetAreasBottom.set(magnetArea, magnetVectorAbs.y);
+                    if (deltaBottomTopAbs <= magnetism && deltaBottomTopAbs <= Math.abs(magnetVector.y)) {
+                        magnetVector.y = deltaBottomTop;
+                        magnetAreasBottom.set(magnetArea, magnetVector.y);
                     }
-                    else if (deltaTopTopAbs <= magnetism && deltaTopTopAbs <= Math.abs(magnetVectorAbs.y)) {
-                        magnetVectorAbs.y = deltaTopTop;
-                        magnetAreasTop.set(magnetArea, magnetVectorAbs.y);
+                    else if (deltaTopTopAbs <= magnetism && deltaTopTopAbs <= Math.abs(magnetVector.y)) {
+                        magnetVector.y = deltaTopTop;
+                        magnetAreasTop.set(magnetArea, magnetVector.y);
                     }
                 }
             }
 
             for (let [magnetArea, magnetVectorY] of magnetAreasBottom) {
-                if (magnetVectorY != magnetVectorAbs.y) continue;
+                if (magnetVectorY != magnetVector.y) continue;
 
                 this._magnetVector.y = magnetVectorY;
                 this._magnetAreasBottom.add(magnetArea);
             }
 
             for (let [magnetArea, magnetVectorX] of magnetAreasLeft) {
-                if (magnetVectorX != magnetVectorAbs.x) continue;
+                if (magnetVectorX != magnetVector.x) continue;
 
                 this._magnetVector.x = magnetVectorX;
                 this._magnetAreasLeft.add(magnetArea);
             }
 
             for (let [magnetArea, magnetVectorX] of magnetAreasRight) {
-                if (magnetVectorX != magnetVectorAbs.x) continue;
+                if (magnetVectorX != magnetVector.x) continue;
 
                 this._magnetVector.x = magnetVectorX;
                 this._magnetAreasRight.add(magnetArea);
             }
 
             for (let [magnetArea, magnetVectorY] of magnetAreasTop) {
-                if (magnetVectorY != magnetVectorAbs.y) continue;
+                if (magnetVectorY != magnetVector.y) continue;
 
                 this._magnetVector.y = magnetVectorY;
                 this._magnetAreasTop.add(magnetArea);

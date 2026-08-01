@@ -338,8 +338,8 @@ export class Component extends HTMLElement {
         _resetBinded = this.constructor._flash ? this.reset.bind(this) : null;
         _value = undefined;
         _valuePrepared = undefined;
-        _valueReserved = undefined;
         _valuePrev = undefined;
+        _valueReserved = undefined;
 
 
         _check() {
@@ -469,9 +469,11 @@ export class Component extends HTMLElement {
         _updateExternals() {
             let attributeValue =
                 this.constructor._externalFlag !== false
-                && this._value?.constructor == this.constructor._defaultValue?.constructor
+                // && this._value?.constructor == this.constructor._defaultValue?.constructor
+                && ((this.constructor._extra ? this._valueReserved : this._value)?.constructor == this.constructor._defaultValue?.constructor)
                 && (!this._isDefault || this.constructor._externalFlag === true || this._value === true)
-                    ? this._value
+                    // ? this._value
+                    ? this._valueReserved ?? this._value
                     : undefined
             ;
             this._attributeIsBlocked = true;

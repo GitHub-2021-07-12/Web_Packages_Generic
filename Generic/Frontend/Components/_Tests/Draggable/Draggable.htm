@@ -27,7 +27,7 @@
                 /* --Draggable_step: 10px; */
                 --GestureArea_dynamicEnvironment: true;
                 /* --GestureArea_jumping: true; */
-                --GestureArea_magnetAreas: url('#{x-draggable, .dropArea}');
+                --GestureArea_magnetAreas: url('#{x-draggable:not([_dragging]), .dropArea}');
                 --GestureArea_magnetism: 20;
                 /* --GestureArea_shift: 8; */
                 /* --GestureArea_swipeFactor: 2; */
@@ -142,8 +142,8 @@
         <div id='root' class='root'>
             <x-draggable dropAreas='.dropArea, .root' wideDrop>1</x-draggable>
             <x-draggable dropAreas='.dropArea' wideDrop>2</x-draggable>
-            <x-draggable dropAreas='x-draggable, .dropArea, .root'>3</x-draggable>
-            <x-draggable dropAreas='.dropArea' magnetAreas='x-draggable, .dropArea' wideDrop>4</x-draggable>
+            <x-draggable dropAreas='x-draggable:not(:active), .dropArea, .root'>3</x-draggable>
+            <x-draggable dropAreas='.dropArea' magnetAreas='x-draggable:not(:active), .dropArea' wideDrop>4</x-draggable>
 
             <x-draggable bound='#root' deferredMagnetism dropAreas='.dropArea' jumping_ handle='.handle' shift='10' step_='10'>
                 <div class='handle'>Handle</div>

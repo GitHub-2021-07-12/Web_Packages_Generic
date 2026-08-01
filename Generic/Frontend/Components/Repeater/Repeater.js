@@ -157,7 +157,8 @@ export class Repeater extends Component {
                         break;
                     }
                     default: {
-                        this._valuePrepared = new Model();
+                        // this._valuePrepared = new Model();
+                        this._valuePrepared = null;
                     }
                 }
             },
@@ -314,7 +315,8 @@ export class Repeater extends Component {
     _defineItems() {
         this._clear();
 
-        if (!this.delegate || !this.target) return;
+        // if (!this.delegate || !this.target) return;
+        if (!this.delegate || !this.model || !this.target) return;
 
         for (let modelItem of this.model._items) {
             this._createItem(modelItem);

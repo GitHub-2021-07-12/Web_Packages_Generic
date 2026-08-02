@@ -85,7 +85,7 @@ export class Resizable extends GestureArea {
                 this._widthDeltaMin = widthMin - this._widthInitial;
 
                 if (this.dynamicEnvironment) {
-                    this.refreshField('magnetAreas');
+                    this.refreshField('magnetAreas', true);
                     this._defineMagnetAreaRects();
                 }
 
@@ -140,20 +140,22 @@ export class Resizable extends GestureArea {
 
         target: {
             default: '',
-            extra: true,
 
-            updateBefore() {
-                if (!(this._valuePrepared instanceof Node)) {
-                    let selector = this._valuePrepared + '';
+            updateBefore(value) {
+                if (value instanceof Node) {
+                    this._valueExtra = value;
+                }
+                else {
+                    let selector = value + '';
 
                     try {
-                        this._valuePrepared = this._component.closest(selector) || this._component.querySelector(selector);
+                        this._valueExtra = this._component.closest(selector) || this._component.querySelector(selector);
                     }
                     catch {
-                        this._valuePrepared = null;
+                        this._valueExtra = null;
                     }
 
-                    this._valuePrepared ||= this._component;
+                    this._valueExtra ||= this._component;
                 }
             },
         },

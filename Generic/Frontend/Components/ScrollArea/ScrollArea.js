@@ -158,7 +158,12 @@ export class ScrollArea extends GestureArea {
 
         snag: {
             default: '',
-            extra: true,
+
+            updateBefore(value) {
+                if (!(value instanceof Node)) return;
+
+                this._valueExtra = value;
+            },
         },
 
         velocityMax: {
@@ -334,9 +339,9 @@ export class ScrollArea extends GestureArea {
     scrollToElement(element, opts = null) {
         element.scrollIntoView(opts);
 
-        Executor.queueRendering(() => {
-            element.scrollIntoView(opts);
-            document.scrollingElement.scrollTop = 0;
-        });
+        // Executor.queueRendering(() => {
+        //     element.scrollIntoView(opts);
+        //     // document.scrollingElement.scrollTop = 0;
+        // });
     }
 }

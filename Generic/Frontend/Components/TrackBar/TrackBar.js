@@ -113,11 +113,11 @@ export class TrackBar extends GestureArea {
             },
 
             updateBefore() {
-                this._valuePrepared[0] = Math.round(this._valuePrepared[0]);
-                this._valuePrepared[1] = Math.round(this._valuePrepared[1]);
+                this._valueSimple[0] = Math.round(this._valueSimple[0]);
+                this._valueSimple[1] = Math.round(this._valueSimple[1]);
 
-                if (!Common.inRangeStrict(this._valuePrepared[1] - this._valuePrepared[0], 0, this._component._freeSpaceLength)) {
-                    this._valuePrepared = undefined;
+                if (!Common.inRangeStrict(this._valueSimple[1] - this._valueSimple[0], 0, this._component._freeSpaceLength)) {
+                    this._valueSimple = undefined;
                 }
             },
         },
@@ -132,14 +132,14 @@ export class TrackBar extends GestureArea {
 
             updateBefore() {
                 if (this._component.range[0] < this._component.range[1]) {
-                    this._valuePrepared = Common.toRange(Math.round(this._valuePrepared), ...this._component.range);
+                    this._valueSimple = Common.toRange(Math.round(this._valueSimple), ...this._component.range);
                 }
                 else {
                     if (this._component.discrete) {
-                        this._valuePrepared = Math.round(this._component._freeSpaceLength * this._valuePrepared) / this._component._freeSpaceLength;
+                        this._valueSimple = Math.round(this._component._freeSpaceLength * this._valueSimple) / this._component._freeSpaceLength;
                     }
 
-                    this._valuePrepared = Common.toRange(this._valuePrepared, 0, 1);
+                    this._valueSimple = Common.toRange(this._valueSimple, 0, 1);
                 }
             },
         },

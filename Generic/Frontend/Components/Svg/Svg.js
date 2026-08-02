@@ -17,7 +17,7 @@ export class Svg extends Component {
             },
 
             updateBefore() {
-                this._valuePrepared = this._valuePrepared.trim();
+                this._valueSimple = this._valueSimple.trim();
             },
         },
     };

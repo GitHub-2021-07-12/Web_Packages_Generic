@@ -134,7 +134,7 @@ export class Slider extends GestureArea {
             },
 
             updateBefore() {
-                this._valuePrepared = Math.sign(this._valuePrepared);
+                this._valueSimple = Math.sign(this._valueSimple);
             },
         },
 
@@ -205,17 +205,17 @@ export class Slider extends GestureArea {
             }
 
             _updateBefore() {
-                this._valueRaw = this._valuePrepared;
-                this._valuePrepared = this._component._processIndex(this._valuePrepared);
+                this._valueRaw = this._valueSimple;
+                this._valueSimple = this._component._processIndex(this._valueSimple);
 
                 if (
                     this._component._flipDirection
                     && this._component._frameCurrentIndex != undefined
-                    && this._valuePrepared != this._component._frameCurrentIndex
-                    && this._valuePrepared != this._component._frameNextIndex
+                    && this._valueSimple != this._component._frameCurrentIndex
+                    && this._valueSimple != this._component._frameNextIndex
                 ) {
-                    this._valueQueued = this._valuePrepared;
-                    this._valuePrepared = undefined;
+                    this._valueQueued = this._valueSimple;
+                    this._valueSimple = undefined;
                     this._component._animationManager.duration = Math.min(this._component.flipDurationMin, this._component._animationManager._durationDefault);
                 }
                 else {

@@ -44,7 +44,6 @@ export class Component extends HTMLElement {
         static _defaultValue = undefined;
         static _enum = null;
         static _externalFlag = undefined;
-        static _extra = false;
         static _flash = false;
         static _name = '';
         static _protected = undefined;
@@ -287,7 +286,6 @@ export class Component extends HTMLElement {
             default: defaultValue = undefined,
             enum: enum_ = undefined,
             externalFlag = undefined,
-            extra = undefined,
             flash = undefined,
             getInitialValue = undefined,
             name,
@@ -304,7 +302,6 @@ export class Component extends HTMLElement {
                     _defaultValue: defaultValue,
                     _enum: enum_?.[Symbol.iterator] && new Set(enum_),
                     _externalFlag: externalFlag,
-                    _extra: extra,
                     _flash: flash,
                     _name: name,
                     _range: range,
@@ -337,50 +334,47 @@ export class Component extends HTMLElement {
         _isDefault = true;
         _resetBinded = this.constructor._flash ? this.reset.bind(this) : null;
         _value = undefined;
-        _valuePrepared = undefined;
+        _valueExtra = undefined;
         _valuePrev = undefined;
-        _valueReserved = undefined;
+        _valueSimple = undefined;
 
 
         _check() {
             let defaultValue = this.constructor._defaultValue;
             let defaultValueConstructor = defaultValue?.constructor;
-            let valid = undefined;
+            let valid = false;
 
-            if (defaultValueConstructor && this._valuePrepared?.constructor == defaultValueConstructor) {
+            if (defaultValueConstructor && this._valueSimple?.constructor == defaultValueConstructor) {
                 switch (defaultValueConstructor) {
                     case Array: {
                         valid =
-                            (!defaultValue.length || this._valuePrepared.length == defaultValue.length)
-                            && this._valuePrepared.every(this._checkItemBinded)
-                            && !Common.compare(this._valuePrepared, defaultValue)
+                            (!defaultValue.length || this._valueSimple.length == defaultValue.length)
+                            && this._valueSimple.every(this._checkItemBinded)
+                            && !Common.compare(this._valueSimple, defaultValue)
                         ;
 
                         break;
                     }
                     case Set: {
-                        let subSet = defaultValue.symmetricDifference(this._valuePrepared);
+                        let subSet = defaultValue.symmetricDifference(this._valueSimple);
                         valid = subSet.size && subSet.values().every(this._checkItemBinded);
 
                         break;
                     }
                     default: {
                         valid =
-                            !Common.compare(this._valuePrepared, defaultValue)
-                            && (!this.constructor._enum || this.constructor._enum.has(this._valuePrepared))
-                            && (!this.constructor._range || Common.inRange(this._valuePrepared, ...this.constructor._range))
+                            !Common.compare(this._valueSimple, defaultValue)
+                            && (!this.constructor._enum || this.constructor._enum.has(this._valueSimple))
+                            && (!this.constructor._range || Common.inRange(this._valueSimple, ...this.constructor._range))
                         ;
                     }
                 }
-            }
-            else {
-                valid = this.constructor._extra && this._valuePrepared !== undefined;
             }
 
             this._isDefault = !valid;
 
             if (this._isDefault) {
-                this._valuePrepared = structuredClone(defaultValue);
+                this._valueSimple = structuredClone(defaultValue);
             }
         }
 
@@ -430,26 +424,25 @@ export class Component extends HTMLElement {
                 value = this._fromCssProp();
             }
 
-            this._value = value;
+            this._valueSimple = value;
+            this._value = this._valueSimple;
         }
 
         _update(value) {
-            let defaultValueConstructor = this.constructor._defaultValue?.constructor;
-            let valueConstructor = value?.constructor;
-            this._valuePrepared = defaultValueConstructor == Set && valueConstructor == Array ? new Set(value) : value;
-            this._valueReserved = this.constructor._extra && valueConstructor == defaultValueConstructor ? value : undefined;
+            let valueSimple = this.constructor._defaultValue?.constructor == Set && value?.constructor == Array ? new Set(value) : value;
+            this._valueExtra = undefined;
+            this._valueSimple = valueSimple;
             this._check();
-            let valuePrepared = this._valuePrepared;
-            this._updateBefore();
+            this._updateBefore(value);
 
-            if (this._valuePrepared === undefined) return;
+            if (this._valueSimple === undefined) return;
 
-            if (this._valuePrepared !== valuePrepared) {
+            if (this._valueSimple !== valueSimple) {
                 this._check();
             }
 
-            this._value = this._valuePrepared;
-            this._valuePrepared = undefined;
+            this._value = this._valueExtra !== undefined ? this._valueExtra : this._valueSimple;
+            this._valueExtra = undefined;
             this._updateExternals();
             this._updateAfter();
 
@@ -464,16 +457,14 @@ export class Component extends HTMLElement {
 
         _updateAfter() {}
 
-        _updateBefore() {}
+        _updateBefore(value) {}
 
         _updateExternals() {
             let attributeValue =
                 this.constructor._externalFlag !== false
-                // && this._value?.constructor == this.constructor._defaultValue?.constructor
-                && ((this.constructor._extra ? this._valueReserved : this._value)?.constructor == this.constructor._defaultValue?.constructor)
-                && (!this._isDefault || this.constructor._externalFlag === true || this._value === true)
-                    // ? this._value
-                    ? this._valueReserved ?? this._value
+                && this._valueSimple?.constructor == this.constructor._defaultValue?.constructor
+                && (!this._isDefault || this.constructor._externalFlag === true || this._valueSimple === true)
+                    ? this._valueSimple
                     : undefined
             ;
             this._attributeIsBlocked = true;
@@ -492,8 +483,10 @@ export class Component extends HTMLElement {
             this._initValue();
         }
 
-        refresh() {
-            this._update(this._valueReserved ?? this._value);
+        refresh(simple = false) {
+            if (simple && this._isDefault) return;
+
+            this._update(simple ? this._valueSimple : this._value);
         }
 
         reset(withEvent = true) {
@@ -510,6 +503,8 @@ export class Component extends HTMLElement {
             if (withEvent) {
                 this._dispatchEvent();
             }
+
+            this._valuePrev = undefined;
         }
 
         set(value, withEvent = true) {
@@ -522,6 +517,8 @@ export class Component extends HTMLElement {
             if (withEvent) {
                 this._dispatchEvent();
             }
+
+            this._valuePrev = undefined;
         }
 
         updateByAttribute() {
@@ -1419,15 +1416,17 @@ export class Component extends HTMLElement {
 
     refresh() {}
 
-    refreshField(fieldName) {
-        this._fields[fieldName]?.refresh();
+    refreshField(fieldName, simple = false) {
+        this._fields[fieldName]?.refresh(simple);
     }
 
-    refreshFields(...fieldNames) {
-        fieldNames = fieldNames.length ? fieldNames : Object.keys(this._fields);
+    refreshFields(fieldNames = null, simple = false) {
+        if (!fieldNames?.length) {
+            fieldNames = Object.keys(this._fields);
+        }
 
         for (let fieldName of fieldNames) {
-            this.refreshField(fieldName);
+            this.refreshField(fieldName, simple);
         }
     }
 

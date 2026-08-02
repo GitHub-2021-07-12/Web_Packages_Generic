@@ -51,7 +51,7 @@ export class TextField extends TextInput {
             },
 
             updateBefore() {
-                this._valuePrepared = this._valuePrepared ? new RichString(this._valuePrepared).slice(0, 1).value : undefined;
+                this._valueSimple = this._valueSimple ? new RichString(this._valueSimple).slice(0, 1).value : undefined;
             },
         },
 
@@ -65,10 +65,9 @@ export class TextField extends TextInput {
 
         regExp: {
             default: '',
-            extra: true,
 
             updateBefore() {
-                this._valuePrepared = new RegExp(this._valuePrepared);
+                this._valueExtra = new RegExp(this._valueSimple);
             },
         },
     };

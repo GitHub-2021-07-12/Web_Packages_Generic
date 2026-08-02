@@ -126,7 +126,7 @@ export class Select extends Repeater {
             },
 
             updateBefore() {
-                this._valuePrepared &&= !!this._component.model._items.length;
+                this._valueSimple &&= !!this._component.model._items.length;
             },
         },
 
@@ -156,7 +156,7 @@ export class Select extends Repeater {
             },
 
             updateBefore() {
-                this._valuePrepared = Math.min(this._valuePrepared, this._component.model._items.length - 1);
+                this._valueSimple = Math.min(this._valueSimple, this._component.model._items.length - 1);
             },
         },
     };

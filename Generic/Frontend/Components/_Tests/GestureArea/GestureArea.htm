@@ -120,7 +120,7 @@
     </head>
 
     <body>
-        <x-repeater interpolationKey='repeater' model='1e2'>
+        <x-repeater interpolationKey='repeater' model='1e2' target_='x-repeater'>
             <template Repeater_delegate>
                 <x-draggable style='--index: {{repeater: index}};'>
                     <x-resizable>
@@ -128,6 +128,12 @@
                     </x-resizable>
                 </x-draggable>
             </template>
+
+            <!-- <template Repeater_model> -->
+            <!--     <script> -->
+            <!--         [1, 2, 3] -->
+            <!--     </script> -->
+            <!-- </template> -->
         </x-repeater>
     </body>
 </html>

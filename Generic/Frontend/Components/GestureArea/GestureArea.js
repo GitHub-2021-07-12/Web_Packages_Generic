@@ -359,7 +359,6 @@ export class GestureArea extends Component {
 
         magnetAreas: {
             default: '',
-            extra: true,
 
             updateAfter() {
                 if (this._component.dynamicEnvironment) return;
@@ -367,22 +366,22 @@ export class GestureArea extends Component {
                 this._component._defineMagnetAreaRects();
             },
 
-            updateBefore() {
-                if (this._valuePrepared?.constructor == String) {
+            updateBefore(value) {
+                if (value?.constructor == String) {
                     let rootNode = this._component.getRootNode(this._component);
 
                     try {
-                        this._valuePrepared = new Set(rootNode?.querySelectorAll(this._valuePrepared));
+                        this._valueExtra = new Set(rootNode?.querySelectorAll(value));
                     }
                     catch {
-                        this._valuePrepared = null;
+                        this._valueExtra = null;
                     }
                 }
-                else if (this._valuePrepared?.[Symbol.iterator]) {
-                    this._valuePrepared = new Set(this._valuePrepared);
+                else if (value?.[Symbol.iterator]) {
+                    this._valueExtra = new Set(value);
                 }
                 else {
-                    this._valuePrepared = null;
+                    this._valueExtra = null;
                 }
             },
         },

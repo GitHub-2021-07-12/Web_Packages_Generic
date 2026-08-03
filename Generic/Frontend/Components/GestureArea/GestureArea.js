@@ -270,8 +270,6 @@ export class GestureArea extends Component {
                 this._magnetVector.y = magnetVectorY;
                 this._magnetAreasTop.add(magnetArea);
             }
-
-            // console.log(this._magnetVector, this._magnetAreasBottom, this._magnetAreasLeft, this._magnetAreasRight, this._magnetAreasTop)
         }
     };
 

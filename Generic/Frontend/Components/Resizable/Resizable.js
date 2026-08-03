@@ -27,34 +27,62 @@ export class Resizable extends GestureArea {
             swipeMain: function (event) {
                 if (this._pointerMainIsBlocked) return;
 
-                let magnetVector = this._pointerMain._magnetVector;
                 let positionDelta = this._pointerMain._positionDelta;
-                this._rectDelta.bottom = this._edgeTargetNames.has('edgeBottom')
-                    ? Common.toRange(positionDelta.y, this._heightDeltaMin, this._heightDeltaMax)
-                    : undefined
-                ;
-                this._rectDelta.left = this._edgeTargetNames.has('edgeLeft')
-                    ? Common.toRange(positionDelta.x, -this._widthDeltaMax, -this._widthDeltaMin)
-                    : undefined
-                ;
-                this._rectDelta.right = this._edgeTargetNames.has('edgeRight')
-                    ? Common.toRange(positionDelta.x, this._widthDeltaMin, this._widthDeltaMax)
-                    : undefined
-                ;
-                this._rectDelta.top = this._edgeTargetNames.has('edgeTop')
-                    ? Common.toRange(positionDelta.y, -this._heightDeltaMax, -this._heightDeltaMin)
-                    : undefined
-                ;
+                this._rectDelta.bottom = this._edgeTargetNames.has('edgeBottom') ? positionDelta.y : undefined;
+                this._rectDelta.left = this._edgeTargetNames.has('edgeLeft') ? positionDelta.x : undefined;
+                this._rectDelta.right = this._edgeTargetNames.has('edgeRight') ? positionDelta.x : undefined;
+                this._rectDelta.top = this._edgeTargetNames.has('edgeTop') ? positionDelta.y : undefined;
+
+                if (this.keepProportions ^ event.detail.originalEvent.shiftKey) {
+                    if (this._rectDelta.bottom == undefined && this._rectDelta.right == undefined) {
+                        if (this._rectDelta.top == undefined || this._rectDelta.left < this._rectDelta.top * this._aspectRatio) {
+                            this._rectDelta.top = this._rectDelta.left / this._aspectRatio;
+                        }
+                        else {
+                            this._rectDelta.left = this._rectDelta.top * this._aspectRatio;
+                        }
+                    }
+                    else if (this._rectDelta.left == undefined && this._rectDelta.top == undefined) {
+                        if (this._rectDelta.bottom == undefined || this._rectDelta.right > this._rectDelta.bottom * this._aspectRatio) {
+                            this._rectDelta.bottom = this._rectDelta.right / this._aspectRatio;
+                        }
+                        else {
+                            this._rectDelta.right = this._rectDelta.bottom * this._aspectRatio;
+                        }
+                    }
+                    else if (this._rectDelta.left != undefined) {
+                        if (this._rectDelta.left < -this._rectDelta.bottom * this._aspectRatio) {
+                            this._rectDelta.bottom = -this._rectDelta.left / this._aspectRatio;
+                        }
+                        else {
+                            this._rectDelta.left = -this._rectDelta.bottom * this._aspectRatio;
+                        }
+                    }
+                    else if (this._rectDelta.right != undefined) {
+                        if (this._rectDelta.right > -this._rectDelta.top * this._aspectRatio) {
+                            this._rectDelta.top = -this._rectDelta.right / this._aspectRatio;
+                        }
+                        else {
+                            this._rectDelta.right = -this._rectDelta.top * this._aspectRatio;
+                        }
+                    }
+                }
+
+                this._rectDelta.bottom = Common.toRange(this._rectDelta.bottom, this._heightDeltaMin, this._heightDeltaMax);
+                this._rectDelta.left = Common.toRange(this._rectDelta.left, -this._widthDeltaMax, -this._widthDeltaMin);
+                this._rectDelta.right = Common.toRange(this._rectDelta.right, this._widthDeltaMin, this._widthDeltaMax);
+                this._rectDelta.top = Common.toRange(this._rectDelta.top, -this._heightDeltaMax, -this._heightDeltaMin);
                 this._pointerMain.updateMagnetVector(this._rectDelta);
 
                 if (!this.deferredMagnetism) {
+                    let magnetVector = this._pointerMain._magnetVector;
                     this._rectDelta.bottom += magnetVector.y;
                     this._rectDelta.left += magnetVector.x;
                     this._rectDelta.right += magnetVector.x;
                     this._rectDelta.top += magnetVector.y;
                 }
 
-                this._updateSize(event.detail.originalEvent.shiftKey);
+                this._updateSize();
                 this.dispatchEvent('resize', event.detail);
             },
 
@@ -101,7 +129,7 @@ export class Resizable extends GestureArea {
                     this._rectDelta.left += magnetVector.x;
                     this._rectDelta.right += magnetVector.x;
                     this._rectDelta.top += magnetVector.y;
-                    this._updateSize(event.detail.originalEvent.shiftKey);
+                    this._updateSize();
                 }
 
                 this._resizing = false;
@@ -234,30 +262,9 @@ export class Resizable extends GestureArea {
         }
     }
 
-    _updateSize(keepProportions = false) {
+    _updateSize() {
         let heightIncrement = (this._rectDelta.bottom || 0) - (this._rectDelta.top || 0);
         let widthIncrement = (this._rectDelta.right || 0) - (this._rectDelta.left || 0);
-
-        if (this.keepProportions ^ keepProportions) {
-            let heightIncrementIsFinite = Number.isFinite(this._rectDelta.bottom) || Number.isFinite(this._rectDelta.top);
-            let widthIncrementIsFinite = Number.isFinite(this._rectDelta.left) || Number.isFinite(this._rectDelta.right);
-
-            if (heightIncrementIsFinite && widthIncrementIsFinite) {
-                if (heightIncrement > widthIncrement / this._aspectRatio) {
-                    widthIncrement = heightIncrement * this._aspectRatio;
-                }
-                else {
-                    heightIncrement = widthIncrement / this._aspectRatio;
-                }
-            }
-            else if (heightIncrementIsFinite) {
-                widthIncrement = heightIncrement * this._aspectRatio;
-            }
-            else if (widthIncrementIsFinite) {
-                heightIncrement = widthIncrement / this._aspectRatio;
-            }
-        }
-
         this.constructor.setHeight(this.target, this._heightInitial + heightIncrement, true);
         this.constructor.setWidth(this.target, this._widthInitial + widthIncrement, true);
 

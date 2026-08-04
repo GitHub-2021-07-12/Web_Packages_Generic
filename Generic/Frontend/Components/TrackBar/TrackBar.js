@@ -198,9 +198,9 @@ export class TrackBar extends GestureArea {
 
 
     calcMetrics() {
-        let puck_length = this.constructor.getSizeInline(this._elements.puck, true);
+        let puck_length = this.constructor.getSize(this._elements.puck, 'inline', true);
         let puck_lengthHalf = puck_length / 2;
-        let track_length = this.constructor.getSizeInline(this._elements.track, true);
+        let track_length = this.constructor.getSize(this._elements.track, 'inline', true);
         this._filler_positionShift =
             this.constructor.getCssPropNumber(this._elements.track, 'border-inline-start-width')
             + this.constructor.getCssPropNumber(this._elements.track, 'margin-inline-start')

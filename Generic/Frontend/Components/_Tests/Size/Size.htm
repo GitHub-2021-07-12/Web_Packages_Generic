@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+
+
+<html>
+    <head>
+        <meta charset='utf-8' content='user-scalable=no, width=720' name='viewport'>
+        <title>Size</title>
+
+        <link href='/Packages/Generic/Frontend/Themes/Main/Main.css' rel='stylesheet'>
+
+        <style>
+            body {
+                padding: 10px;
+            }
+
+            div {
+                border: green solid 5px;
+                height: 100px;
+                margin: 10px;
+                padding: 5px;
+                position: relative;
+                width: 100px;
+            }
+
+
+            #borderBox {
+                box-sizing: border-box;
+            }
+        </style>
+
+        <script type='module'>
+            import * as generic from '/Packages/Generic/Generic.js';
+
+
+            window.Component = generic.frontend.components.Component;
+            await Component._defined;
+
+
+            console.log(Component.getSize(contentBox, 'inline'), Component.getSize(contentBox, 'inline', true))
+            console.log(Component.getSize(borderBox, 'inline'), Component.getSize(borderBox, 'inline', true))
+            // console.log(Component.getSize_2(contentBox, 'inline'), Component.getSize_2(contentBox, 'inline', true))
+            // console.log(Component.getSize_2(borderBox, 'inline'), Component.getSize_2(borderBox, 'inline', true))
+
+            Component.setSize(contentBox, 'inline', 200);
+            Component.setSize(borderBox, 'inline', 200);
+            Component.setSize(contentBox, 'inline', 200, true);
+            Component.setSize(borderBox, 'inline', 200, true);
+            // Component.setSize_2(contentBox, 'inline', 200);
+            // Component.setSize_2(borderBox, 'inline', 200);
+            // Component.setSize_2(contentBox, 'inline', 200, true);
+            // Component.setSize_2(borderBox, 'inline', 200, true);
+
+            // console.log(Component.getSizeEdging(contentBox, 'inline'))
+        </script>
+    </head>
+
+    <body>
+        <div id='contentBox'>ContentBox</div>
+        <div id='borderBox'>BorderBox</div>
+    </body>
+</html>

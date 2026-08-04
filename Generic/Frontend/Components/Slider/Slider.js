@@ -312,7 +312,7 @@ export class Slider extends GestureArea {
     }
 
     refresh() {
-        this._sizeInline = this.getSizeInline();
+        this._sizeInline = this.getSize('inline');
     }
 
     unbindElements(elements) {

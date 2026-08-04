@@ -940,34 +940,11 @@ export class Component extends HTMLElement {
     }
 
     static getHeight(element, outer = false) {
-        let boxSizing = this.getCssProp(element, 'box-sizing');
-        let height = this.getCssPropNumber(element, 'height');
-
-        if (outer) {
-            height += this.getCssPropNumber(element, 'margin-bottom') + this.getCssPropNumber(element, 'margin-top');
-        }
-
-        if (outer ? boxSizing != 'border-box' : boxSizing == 'border-box') {
-            let heightExtra =
-                this.getCssPropNumber(element, 'border-bottom-width') + this.getCssPropNumber(element, 'border-top-width')
-                + this.getCssPropNumber(element, 'padding-bottom') + this.getCssPropNumber(element, 'padding-top')
-            ;
-            height += heightExtra * (outer ? 1 : -1);
-        }
-
-        return height;
+        return this.getCssPropNumber(element, 'height') + this.getSizeEdging(element, 'block', outer);
     }
 
-    static getInset(element, insetType) {
-        return this.getCssPropNumber(element, `inset-${insetType}-start`);
-    }
-
-    static getInsetBlock(element) {
-        return this.getInset(element, 'block');
-    }
-
-    static getInsetInline(element) {
-        return this.getInset(element, 'inline');
+    static getInset(element, insetType, fromEnd = false) {
+        return this.getCssPropNumber(element, `inset-${insetType}-${fromEnd ? 'end' : 'start'}`);
     }
 
     static getLeft(element) {
@@ -983,30 +960,26 @@ export class Component extends HTMLElement {
     }
 
     static getSize(element, sizeType, outer = false) {
-        let boxSizing = this.getCssProp(element, 'box-sizing');
-        let size = this.getCssPropNumber(element, `${sizeType}-size`);
+        return this.getCssPropNumber(element, `${sizeType}-size`) + this.getSizeEdging(element, sizeType, outer);
+    }
 
-        if (outer) {
-            size += this.getCssPropNumber(element, `margin-${sizeType}-end`) + this.getCssPropNumber(element, `margin-${sizeType}-start`);
+    static getSizeEdging(element, sizeType, sizeIsOuter = false) {
+        let isBorderBox = this.getCssProp(element, 'box-sizing') == 'border-box';
+        let sizeEdging = 0;
+
+        if (sizeIsOuter) {
+            sizeEdging += this.getCssPropNumber(element, `margin-${sizeType}-start`) + this.getCssPropNumber(element, `margin-${sizeType}-end`);
         }
 
-        if (outer ? boxSizing != 'border-box' : boxSizing == 'border-box') {
-            let sizeExtra =
-                this.getCssPropNumber(element, `border-${sizeType}-end-width`) + this.getCssPropNumber(element, `border-${sizeType}-start-width`)
-                + this.getCssPropNumber(element, `padding-${sizeType}-end`) + this.getCssPropNumber(element, `padding-${sizeType}-start`)
+        if (sizeIsOuter ? !isBorderBox : isBorderBox) {
+            let sizeEdgingInner =
+                this.getCssPropNumber(element, `border-${sizeType}-start-width`) + this.getCssPropNumber(element, `border-${sizeType}-end-width`)
+                + this.getCssPropNumber(element, `padding-${sizeType}-start`) + this.getCssPropNumber(element, `padding-${sizeType}-end`)
             ;
-            size += sizeExtra * (outer ? 1 : -1);
+            sizeEdging += sizeIsOuter ? sizeEdgingInner : -sizeEdgingInner;
         }
 
-        return size;
-    }
-
-    static getSizeBlock(element, outer = false) {
-        return this.getSize(element, 'block', outer);
-    }
-
-    static getSizeInline(element, outer = false) {
-        return this.getSize(element, 'inline', outer);
+        return sizeEdging;
     }
 
     static getTop(element) {
@@ -1014,22 +987,7 @@ export class Component extends HTMLElement {
     }
 
     static getWidth(element, outer = false) {
-        let boxSizing = this.getCssProp(element, 'box-sizing');
-        let width = this.getCssPropNumber(element, 'width');
-
-        if (outer) {
-            width += this.getCssPropNumber(element, 'margin-left') + this.getCssPropNumber(element, 'margin-right');
-        }
-
-        if (outer ? boxSizing != 'border-box' : boxSizing == 'border-box') {
-            let widthExtra =
-                this.getCssPropNumber(element, 'border-left-width') + this.getCssPropNumber(element, 'border-right-width')
-                + this.getCssPropNumber(element, 'padding-left') + this.getCssPropNumber(element, 'padding-right')
-            ;
-            width += widthExtra * (outer ? 1 : -1);
-        }
-
-        return width;
+        return this.getCssPropNumber(element, 'width') + this.getSizeEdging(element, 'inline', outer);
     }
 
     static async init({
@@ -1116,124 +1074,34 @@ export class Component extends HTMLElement {
     }
 
     static setHeight(element, height, outer = false, important = false) {
-        if (!height && height !== 0) {
-            this.setCssProp(element, 'height', null);
-
-            return;
-        }
-
-        let boxSizing = this.getCssProp(element, 'box-sizing');
-
-        if (outer) {
-            height -= this.getCssPropNumber(element, 'margin-bottom') + this.getCssPropNumber(element, 'margin-top');
-        }
-
-        if (outer ? boxSizing != 'border-box' : boxSizing == 'border-box') {
-            let heightExtra =
-                this.getCssPropNumber(element, 'border-bottom-width') + this.getCssPropNumber(element, 'border-top-width')
-                + this.getCssPropNumber(element, 'padding-bottom') + this.getCssPropNumber(element, 'padding-top')
-            ;
-            height += heightExtra * (outer ? -1 : 1);
-        }
-
-        height = Math.max(height, 0);
-        this.setCssProp(element, 'height', `${height}px`, important);
+        height = height || height === 0 ? Math.max(height - this.getSizeEdging(element, 'block', outer), 0) + 'px' : null;
+        this.setCssProp(element, 'height', height, important);
     }
 
-    static setInset(element, insetType, inset, important = false) {
-        if (!inset && inset !== 0) {
-            this.setCssProp(element, `inset-${insetType}-start`, null);
-
-            return;
-        }
-
-        this.setCssProp(element, `inset-${insetType}-start`, `${inset}px`, important);
-    }
-
-    static setInsetBlock(element, inset, important = false) {
-        this.setInset(element, 'block', inset, important);
-    }
-
-    static setInsetInline(element, inset, important = false) {
-        this.setInset(element, 'inline', inset, important);
+    static setInset(element, insetType, inset, fromEnd = false, important = false) {
+        inset = inset || inset === 0 ? `${inset}px` : null;
+        let insetName = `inset-${insetType}-${fromEnd ? 'end' : 'start'}`;
+        this.setCssProp(element, insetName, inset, important);
     }
 
     static setLeft(element, left, important = false) {
-        if (!left && left !== 0) {
-            this.setCssProp(element, 'left', null);
-
-            return;
-        }
-
-        this.setCssProp(element, 'left', `${left}px`, important);
+        left = left || left === 0 ? `${left}px` : null;
+        this.setCssProp(element, 'left', left, important);
     }
 
     static setSize(element, sizeType, size, outer = false, important = false) {
-        if (!size && size !== 0) {
-            this.setCssProp(element, `${sizeType}-size`, null);
-
-            return;
-        }
-
-        let boxSizing = this.getCssProp(element, 'box-sizing');
-
-        if (outer) {
-            size -= this.getCssPropNumber(element, `margin-${sizeType}-end`) + this.getCssPropNumber(element, `margin-${sizeType}-start`);
-        }
-
-        if (outer ? boxSizing != `border-box` : boxSizing == `border-box`) {
-            let sizeExtra =
-                this.getCssPropNumber(element, `border-${sizeType}-end-width`) + this.getCssPropNumber(element, `border-${sizeType}-start-width`)
-                + this.getCssPropNumber(element, `padding-${sizeType}-end`) + this.getCssPropNumber(element, `padding-${sizeType}-start`)
-            ;
-            size += sizeExtra * (outer ? -1 : 1);
-        }
-
-        size = Math.max(size, 0);
-        this.setCssProp(element, `${sizeType}-size`, `${size}px`, important);
-    }
-
-    static setSizeBlock(element, size, outer = false, important = false) {
-        this.setSize(element, 'block', size, outer, important);
-    }
-
-    static setSizeInline(element, size, outer = false, important = false) {
-        this.setSize(element, 'inline', size, outer, important);
+        size = size || size === 0 ? Math.max(size - this.getSizeEdging(element, sizeType, outer), 0) + 'px' : null;
+        this.setCssProp(element, `${sizeType}-size`, size, important);
     }
 
     static setTop(element, top, important = false) {
-        if (!top && top !== 0) {
-            this.setCssProp(element, 'top', null);
-
-            return;
-        }
-
-        this.setCssProp(element, 'top', `${top}px`, important);
+        top = top || top === 0 ? `${top}px` : null;
+        this.setCssProp(element, 'top', top, important);
     }
 
     static setWidth(element, width, outer = false, important = false) {
-        if (!width && width !== 0) {
-            this.setCssProp(element, 'width', null);
-
-            return;
-        }
-
-        let boxSizing = this.getCssProp(element, 'box-sizing');
-
-        if (outer) {
-            width -= this.getCssPropNumber(element, 'margin-left') + this.getCssPropNumber(element, 'margin-right');
-        }
-
-        if (outer ? boxSizing != 'border-box' : boxSizing == 'border-box') {
-            let widthExtra =
-                this.getCssPropNumber(element, 'border-left-width') + this.getCssPropNumber(element, 'border-right-width')
-                + this.getCssPropNumber(element, 'padding-left') + this.getCssPropNumber(element, 'padding-right')
-            ;
-            width += widthExtra * (outer ? -1 : 1);
-        }
-
-        width = Math.max(width, 0);
-        this.setCssProp(element, 'width', `${width}px`, important);
+        width = width || width === 0 ? Math.max(width - this.getSizeEdging(element, 'inline', outer), 0) + 'px' : null;
+        this.setCssProp(element, 'width', width, important);
     }
 
     static wrap(nodes, wrapper) {
@@ -1390,6 +1258,10 @@ export class Component extends HTMLElement {
         return this.constructor.getHeight(this._face, outer);
     }
 
+    getInset(insetType, fromEnd = false) {
+        return this.constructor.getInset(this._face, fromEnd);
+    }
+
     getLeft() {
         return this.constructor.getLeft(this._face);
     }
@@ -1398,12 +1270,8 @@ export class Component extends HTMLElement {
         return this.constructor.getRootNode(this);
     }
 
-    getSizeBlock(outer = false) {
-        return this.constructor.getSizeBlock(this._face, outer);
-    }
-
-    getSizeInline(outer = false) {
-        return this.constructor.getSizeInline(this._face, outer);
+    getSize(sizeType, outer = false) {
+        return this.constructor.getSize(this._face, sizeType, outer);
     }
 
     getTop() {
@@ -1450,16 +1318,16 @@ export class Component extends HTMLElement {
         return this.constructor.setHeight(this._face, height, outer, important);
     }
 
+    setInset(insetType, inset, fromEnd = false, important = false) {
+        return this.constructor.setInset(this._face, insetType, inset, fromEnd, important);
+    }
+
     setLeft(left, important = false) {
         return this.constructor.setLeft(this._face, left, important);
     }
 
-    setSizeBlock(size, outer = false, important = false) {
-        this.constructor.setSizeBlock(this._face, size, outer, important);
-    }
-
-    setSizeInline(size, outer = false, important = false) {
-        this.constructor.setSizeInline(this._face, size, outer, important);
+    setSize(sizeType, size, outer = false, important = false) {
+        this.constructor.setSize(this._face, sizeType, size, outer, important);
     }
 
     setTop(top, important = false) {

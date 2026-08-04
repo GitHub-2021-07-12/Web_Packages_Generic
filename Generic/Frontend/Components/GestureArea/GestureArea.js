@@ -428,6 +428,7 @@ export class GestureArea extends Component {
 
 
     _magnetAreaRects = new Map();
+    _magnetAreasActive = new Set();
     _magnetAreasActiveBottom = new Set();
     _magnetAreasActiveLeft = new Set();
     _magnetAreasActiveRight = new Set();
@@ -542,22 +543,11 @@ export class GestureArea extends Component {
     _updateMagnetAreasActive() {
         if (!this.magnetAreas) return;
 
-        for (let magnetArea of this._magnetAreasActiveBottom) {
-            magnetArea.removeAttribute('_GestureArea_magnetAreaActiveBottom');
+        for (let magnetArea of this._magnetAreasActive) {
+            magnetArea.removeAttribute('_GestureArea_magnetEdges');
         }
 
-        for (let magnetArea of this._magnetAreasActiveLeft) {
-            magnetArea.removeAttribute('_GestureArea_magnetAreaActiveLeft');
-        }
-
-        for (let magnetArea of this._magnetAreasActiveRight) {
-            magnetArea.removeAttribute('_GestureArea_magnetAreaActiveRight');
-        }
-
-        for (let magnetArea of this._magnetAreasActiveTop) {
-            magnetArea.removeAttribute('_GestureArea_magnetAreaActiveTop');
-        }
-
+        this._magnetAreasActive.clear();
         this._magnetAreasActiveBottom.clear();
         this._magnetAreasActiveLeft.clear();
         this._magnetAreasActiveRight.clear();
@@ -565,23 +555,47 @@ export class GestureArea extends Component {
 
         for (let pointer of this._pointers.values()) {
             for (let magnetArea of pointer._magnetAreasBottom) {
-                magnetArea.setAttribute('_GestureArea_magnetAreaActiveBottom', '');
+                this._magnetAreasActive.add(magnetArea);
                 this._magnetAreasActiveBottom.add(magnetArea);
             }
 
             for (let magnetArea of pointer._magnetAreasLeft) {
-                magnetArea.setAttribute('_GestureArea_magnetAreaActiveLeft', '');
+                this._magnetAreasActive.add(magnetArea);
                 this._magnetAreasActiveLeft.add(magnetArea);
             }
 
             for (let magnetArea of pointer._magnetAreasRight) {
-                magnetArea.setAttribute('_GestureArea_magnetAreaActiveRight', '');
+                this._magnetAreasActive.add(magnetArea);
                 this._magnetAreasActiveRight.add(magnetArea);
             }
 
             for (let magnetArea of pointer._magnetAreasTop) {
-                magnetArea.setAttribute('_GestureArea_magnetAreaActiveTop', '');
+                this._magnetAreasActive.add(magnetArea);
                 this._magnetAreasActiveTop.add(magnetArea);
+            }
+        }
+
+        for (let magnetArea of this._magnetAreasActive) {
+            let edgeNames = [];
+
+            if (this._magnetAreasActiveBottom.has(magnetArea)) {
+                edgeNames.push('bottom');
+            }
+
+            if (this._magnetAreasActiveLeft.has(magnetArea)) {
+                edgeNames.push('left');
+            }
+
+            if (this._magnetAreasActiveRight.has(magnetArea)) {
+                edgeNames.push('right');
+            }
+
+            if (this._magnetAreasActiveTop.has(magnetArea)) {
+                edgeNames.push('top');
+            }
+
+            if (edgeNames.length) {
+                magnetArea.setAttribute('_GestureArea_magnetEdges', edgeNames.join(' '));
             }
         }
     }

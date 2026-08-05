@@ -162,7 +162,7 @@ export class Slider extends GestureArea {
         },
 
         flipProgressThreshold: {
-            default: 0.4,
+            default: 0.5,
             range: [0, 1],
         },
 
@@ -277,7 +277,7 @@ export class Slider extends GestureArea {
     _defineFlipProgressRange() {
         let elasticThreshold = Math.min(this.elasticThreshold, 1 - 1e-9);
         this._flipProgressRange[0] = -this._frameCurrentIndex - elasticThreshold;
-        this._flipProgressRange[1] = (this.children.length - 1) - this._frameCurrentIndex + elasticThreshold;
+        this._flipProgressRange[1] = -this._frameCurrentIndex + elasticThreshold + (this.children.length - 1);
     }
 
     _init() {

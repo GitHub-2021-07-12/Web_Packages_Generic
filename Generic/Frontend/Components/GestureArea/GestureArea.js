@@ -359,7 +359,7 @@ export class GestureArea extends Component {
             default: '',
 
             updateAfter() {
-                if (this._component.dynamicEnvironment) return;
+                if (this._component.dynamicEnvironment || !this.magnetism) return;
 
                 this._component._defineMagnetAreaRects();
             },
@@ -454,7 +454,7 @@ export class GestureArea extends Component {
     }
 
     _defineMagnetAreaRects() {
-        if (!this.magnetAreas) return;
+        if (!this.magnetAreas || !this.magnetism) return;
 
         this._magnetAreaRects.clear();
 
@@ -541,7 +541,7 @@ export class GestureArea extends Component {
     }
 
     _updateMagnetAreasActive() {
-        if (!this.magnetAreas) return;
+        if (!this.magnetAreas || !this.magnetism) return;
 
         for (let magnetArea of this._magnetAreasActive) {
             magnetArea.removeAttribute('_GestureArea_magnetEdges');

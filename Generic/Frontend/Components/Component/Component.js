@@ -552,16 +552,12 @@ export class Component extends HTMLElement {
     };
 
     static _fieldDescriptors = {
-        autoRefresh: class Field extends this._Field {
-            static _defaultValue = false;
+        autoRefresh: {
+            default: false,
 
-
-            disabled = false;
-
-
-            _updateAfter() {
+            updateAfter() {
                 this._component._refreshAuto();
-            }
+            },
         },
 
         disabled: {
@@ -1123,6 +1119,7 @@ export class Component extends HTMLElement {
     }
 
 
+    _autoRefreshIsBlocked = false;
     _domSubtreesReleased = new Set();
     _elements = {};
     _eventHandlers = null;
@@ -1166,11 +1163,11 @@ export class Component extends HTMLElement {
         this._defineFace();
         this._createFields();
 
-        this._fields.autoRefresh.disabled = true;
+        this._autoRefreshIsBlocked = true;
         this._init();
         this.refreshFields();
-        this._fields.autoRefresh.disabled = false;
-        this._refreshAuto();
+        this._autoRefreshIsBlocked = false;
+        // this._refreshAuto();
     }
 
     _createFieldObserver() {
@@ -1202,7 +1199,7 @@ export class Component extends HTMLElement {
     _init() {}
 
     _refreshAuto(...args) {
-        if (!this.autoRefresh || this._fields.autoRefresh.disabled) return;
+        if (!this.autoRefresh || this._autoRefreshIsBlocked) return;
 
         this.refresh(...args);
     }

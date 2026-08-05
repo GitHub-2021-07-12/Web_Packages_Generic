@@ -35,8 +35,9 @@
 
     #textMeter {
         all: inherit;
+        color: red;
         display: revert;
-        visibility: hidden;
+        /* visibility: hidden; */
 
 
         &::after {

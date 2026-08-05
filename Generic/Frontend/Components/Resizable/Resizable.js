@@ -97,6 +97,10 @@ export class Resizable extends GestureArea {
                 this._aspectRatio = this._widthInitial / this._heightInitial;
                 this._pointerMain.magnetRect = this.constructor.getDomRect(this.target, true);
 
+                this._elements.display.style.contentVisibility = 'hidden';
+                // this.constructor.setCssProp(this._elements.display, 'height', this.constructor.getCssProp(this._elements.display, 'height'), true);
+                // this.constructor.setCssProp(this._elements.display, 'width', this.constructor.getCssProp(this._elements.display, 'width'), true);
+
                 this.constructor.setHeight(this.target, Number.MIN_SAFE_INTEGER, true);
                 this.constructor.setWidth(this.target, Number.MIN_SAFE_INTEGER, true);
                 let heightMin = this.constructor.getHeight(this.target, true);
@@ -105,14 +109,18 @@ export class Resizable extends GestureArea {
                 this.constructor.setWidth(this.target, Number.MAX_SAFE_INTEGER, true);
                 let heightMax = this.constructor.getWidth(this.target, true);
                 let widthMax = this.constructor.getWidth(this.target, true);
-                this.constructor.setHeight(this.target, null);
-                this.constructor.setWidth(this.target, null);
+                this.constructor.setHeight(this.target, this._heightInitial, true);
+                this.constructor.setWidth(this.target, this._widthInitial, true);
                 this._heightDeltaMax = heightMax - this._heightInitial;
                 this._heightDeltaMin = heightMin - this._heightInitial;
                 this._widthDeltaMax = widthMax - this._widthInitial;
                 this._widthDeltaMin = widthMin - this._widthInitial;
 
-                if (this.dynamicEnvironment) {
+                this._elements.display.style.contentVisibility = null;
+                // this.constructor.setCssProp(this._elements.display, 'height', null);
+                // this.constructor.setCssProp(this._elements.display, 'width', null);
+
+                if (this.dynamicEnvironment && this.magnetism) {
                     this.refreshField('magnetAreas', true);
                     this._defineMagnetAreaRects();
                 }
@@ -162,7 +170,7 @@ export class Resizable extends GestureArea {
         _resizing: false,
 
 
-        fixed: false,
+        frozen: false,
         keepProportions: false,
         resettable: false,
 

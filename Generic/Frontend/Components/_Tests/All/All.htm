@@ -106,12 +106,22 @@
                 background: #00f2;
                 height: 200px;
                 position: relative;
-                width: 300px;
+                /* width: 300px; */
+                width: 100px;
 
 
                 &::part(display) {
+                    display: grid;
                     overflow: auto;
                 }
+            }
+
+            .resizable {
+                background: #00f2;
+                display: grid;
+                height: 200px;
+                position: relative;
+                width: 100px;
             }
 
             x-scrollArea {
@@ -121,8 +131,10 @@
                 --GestureArea_gestures: flick swipe;
 
                 /* background: var(--colorLightDim); */
-                height: 100%;
-                width: 100%;
+                /* height: 100%; */
+                /* width: 100%; */
+                /* height: 200px; */
+                /* width: 100px; */
 
 
                 &[_scrolling] {
@@ -222,8 +234,7 @@
 
         <script type='module'>
             import * as generic from '/Packages/Generic/Generic.js';
-            // import * as frontend from '/Packages/Generic/Frontend/Frontend.js';
-            // import * as js from '/Packages/Generic/Js/Js.js';
+
 
             window.frontend = generic.frontend;
             window.js = generic.js;
@@ -241,24 +252,18 @@
             //     useGlobalStyleSheets: false,
             // });
 
-            await frontend.components.Draggable._defined;
+            await frontend.components.Resizable._defined;
+            await frontend.components.ScrollArea._defined;
             await frontend.components.Slider._defined;
 
             let draggable = document.querySelector('x-draggable');
             let popup = document.querySelector('#popup');
+            let scrollArea = document.querySelector('x-scrollArea');
             let slider = document.querySelector('x-slider');
 
-            // draggable.magnetLinesX = [100, 110, 200];
-            draggable.magnetLinesY = [100, 200];
-            // draggable.magnetPoints = [[300, 300], [600, 600]];
+            // scrollArea.refresh();
+            // scrollArea.scrollY = Infinity;
 
-            // draggable.addEventListener('swipeStartMain', () => {
-            //     popup.open = true;
-            // });
-            draggable.addEventListener('swipeMain', (event) => {
-                // console.clear();
-                // console.log(event.detail.pointer._positionOuter, event.detail.pointer._positionInner)
-            });
             draggable.addEventListener('press', (event) => {
                 console.log(event.detail.pointer._positionDelta)
             });
@@ -394,13 +399,15 @@
             </template>
         </x-repeater>
 
-        <x-resizable disabled_>
+        <x-resizable>
+        <!-- <div class='resizable'> -->
             <x-scrollArea>
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer lacinia risus vel mi lacinia ultrices. Curabitur sit amet turpis dapibus, egestas ante et, consectetur odio. Sed vestibulum commodo velit semper varius. Nulla bibendum nec tellus a elementum. Ut pellentesque imperdiet dictum. Sed blandit turpis cursus, luctus augue ac, facilisis felis. Nulla purus urna, sagittis quis mauris et, aliquet porta magna. Donec in orci nulla.
             </x-scrollArea>
         </x-resizable>
+        <!-- </div> -->
 
-        <x-slider index='1'>
+        <x-slider elasticThreshold='1' index='1'>
             <div>1</div>
             <div>2</div>
             <div>3</div>

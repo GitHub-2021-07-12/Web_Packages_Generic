@@ -304,9 +304,11 @@ export class ScrollArea extends GestureArea {
 
 
     refresh() {
+        console.log(this, this._scrollHeight)
+
         this._scrollBars_refresh();
-        this.scrollX = this.scrollX;
-        this.scrollY = this.scrollY;
+        // this.scrollX = this.scrollX;
+        // this.scrollY = this.scrollY;
         this._defineScrollEdges();
 
         if (this.sticky) {
@@ -320,6 +322,8 @@ export class ScrollArea extends GestureArea {
         }
 
         this._scrollBars_defineValues();
+
+        console.log(this, this._scrollHeight)
     }
 
     resetScroll() {
@@ -341,7 +345,7 @@ export class ScrollArea extends GestureArea {
 
         // Executor.queueRendering(() => {
         //     element.scrollIntoView(opts);
-        //     // document.scrollingElement.scrollTop = 0;
+        //     document.scrollingElement.scrollTop = 0;
         // });
     }
 }

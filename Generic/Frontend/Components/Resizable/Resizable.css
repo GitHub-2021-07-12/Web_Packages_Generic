@@ -20,8 +20,8 @@
         position: relative !important;
 
 
-        :host([fixed]) & {
-            pointer-events: none !important;
+        :host([frozen]) & {
+            display: none !important;
         }
     }
 
@@ -49,7 +49,6 @@
 
     #display[part] {
         box-sizing: border-box !important;
-        display: block;
         grid-area: 1 / 1 / -1 / -1 !important;
         height: initial !important;
         overflow: hidden;

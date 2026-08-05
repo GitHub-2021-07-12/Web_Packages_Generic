@@ -60,7 +60,7 @@ export class Draggable extends GestureArea {
                     this._positionDeltaMin.set(-Infinity);
                 }
 
-                if (this.dynamicEnvironment) {
+                if (this.dynamicEnvironment && this.magnetism) {
                     this.refreshField('dropAreas', true);
                     this.refreshField('magnetAreas', true);
                     this._defineDropAreaDomRects();
@@ -123,7 +123,7 @@ export class Draggable extends GestureArea {
 
         dropAreas: class Field extends super._fieldDescriptors.magnetAreas {
             _updateAfter() {
-                if (this._component.dynamicEnvironment) return;
+                if (this._component.dynamicEnvironment || !this.magnetism) return;
 
                 this._component._defineDropAreaDomRects();
             }

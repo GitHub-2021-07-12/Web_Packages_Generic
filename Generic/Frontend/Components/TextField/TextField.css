@@ -5,7 +5,7 @@
         --TextField_button_size: 24px;
 
         grid: auto / auto repeat(2, min-content) !important;
-        overflow: hidden;
+        /* overflow: hidden; */
         place-content: initial !important;
         width: 256px;
     }

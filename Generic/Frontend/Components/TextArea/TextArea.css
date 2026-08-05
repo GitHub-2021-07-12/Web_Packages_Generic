@@ -3,45 +3,31 @@
         --Component_displayInner: grid !important;
 
         grid: minmax(0, 1fr) / minmax(0, 1fr) !important;
-        height: 96px;
-        overflow: hidden;
+        /* overflow: hidden; */
+        place-content: initial !important;
         width: 256px;
     }
 
 
-    #input {
-        all: inherit;
-        display: revert;
-    }
-
-    #inputWrapper[part] {
-        cursor: text;
-        display: contents !important;
-        grid-area: 1 / 1 / -1 / -1 !important;
-        white-space: preserve wrap !important;
-        word-break: break-all !important;
+    #input[part] {
+        background: none;
+        border: none;
+        color: inherit;
+        field-sizing: content;
+        font: inherit;
+        outline: none;
+        resize: none !important;
+        word-break: break-all;
     }
 
     #root[part] {
-        --Component_autoRefresh: inherit !important;
+        --Component_autoRefresh: initial !important;
         --GestureArea_gestures: none !important;
         --ScrollArea_snag: initial !important;
 
 
         &::part(display) {
             display: grid !important;
-        }
-    }
-
-    #textMeter {
-        all: inherit;
-        color: red;
-        display: revert;
-        /* visibility: hidden; */
-
-
-        &::after {
-            content: ' ';
         }
     }
 }

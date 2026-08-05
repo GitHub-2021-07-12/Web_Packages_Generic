@@ -307,8 +307,8 @@ export class ScrollArea extends GestureArea {
         console.log(this, this._scrollHeight)
 
         this._scrollBars_refresh();
-        // this.scrollX = this.scrollX;
-        // this.scrollY = this.scrollY;
+        this.scrollX = this.scrollX;
+        this.scrollY = this.scrollY;
         this._defineScrollEdges();
 
         if (this.sticky) {

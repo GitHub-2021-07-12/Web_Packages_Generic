@@ -34,7 +34,6 @@ export class TextArea extends TextInput {
     }
     set _value(value) {
         super._value = value;
-        this._elements.textMeter.textContent = this.value;
         this._elements.root.refresh();
     }
 

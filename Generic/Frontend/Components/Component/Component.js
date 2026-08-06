@@ -362,11 +362,7 @@ export class Component extends HTMLElement {
                         break;
                     }
                     default: {
-                        valid =
-                            !Common.compare(this._valueSimple, defaultValue)
-                            && (!this.constructor._enum || this.constructor._enum.has(this._valueSimple))
-                            && (!this.constructor._range || Common.inRange(this._valueSimple, ...this.constructor._range))
-                        ;
+                        valid = !Common.compare(this._valueSimple, defaultValue) && (!this.constructor._enum || this.constructor._enum.has(this._valueSimple));
                     }
                 }
             }
@@ -379,12 +375,7 @@ export class Component extends HTMLElement {
         }
 
         _checkItem(item) {
-            return (
-                item !== ''
-                && item?.constructor == this.constructor._ItemConstructor
-                && (!this.constructor._enum || this.constructor._enum.has(item))
-                && (!this.constructor._range || Common.inRange(item, ...this.constructor._range))
-            );
+            return item !== '' && item?.constructor == this.constructor._ItemConstructor && (!this.constructor._enum || this.constructor._enum.has(item));
         }
 
         _dispatchEvent() {
@@ -429,15 +420,27 @@ export class Component extends HTMLElement {
         }
 
         _update(value) {
-            let valueSimple = this.constructor._defaultValue?.constructor == Set && value?.constructor == Array ? new Set(value) : value;
+            if (value?.constructor == Array) {
+                if (this.constructor._range) {
+                    value = value.map((item) => Common.toRange(item, ...this.constructor._range));
+                }
+
+                if (this.constructor._defaultValue?.constructor == Set) {
+                    value = new Set(value);
+                }
+            }
+            else if (this.constructor._range) {
+                value = Common.toRange(value, ...this.constructor._range);
+            }
+
             this._valueExtra = undefined;
-            this._valueSimple = valueSimple;
+            this._valueSimple = value;
             this._check();
             this._updateBefore(value);
 
             if (this._valueSimple === undefined) return;
 
-            if (this._valueSimple !== valueSimple) {
+            if (this._valueSimple !== value) {
                 this._check();
             }
 

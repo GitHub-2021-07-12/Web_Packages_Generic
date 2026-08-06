@@ -133,7 +133,7 @@ export class ScrollArea extends GestureArea {
                 }
                 else {
                     this._component._mutationObserver.disconnect();
-                    this._component._resizeObserver.unobserve(this._component);
+                    this._component._resizeObserver.disconnect();
                 }
             }
         },
@@ -277,9 +277,10 @@ export class ScrollArea extends GestureArea {
     }
 
     _scrollBars_refresh() {
-        this._scrollWidth = this._elements.display.scrollWidth - this._elements.display.clientWidth;
         this._scrollHeight = this._elements.display.scrollHeight - this._elements.display.clientHeight;
         this._scrollWidth = this._elements.display.scrollWidth - this._elements.display.clientWidth;
+        this._scrollHeight = this._elements.display.scrollHeight - this._elements.display.clientHeight;
+        // this._scrollWidth = this._elements.display.scrollWidth - this._elements.display.clientWidth;
 
         if (this._scrollWidth) {
             let scrollBarX_length = this._elements.scrollBarX.getSize('inline');
@@ -304,11 +305,9 @@ export class ScrollArea extends GestureArea {
 
 
     refresh() {
-        console.log(this, this._scrollHeight)
-
         this._scrollBars_refresh();
-        this.scrollX = this.scrollX;
-        this.scrollY = this.scrollY;
+        // this.scrollX = this.scrollX;
+        // this.scrollY = this.scrollY;
         this._defineScrollEdges();
 
         if (this.sticky) {
@@ -322,8 +321,6 @@ export class ScrollArea extends GestureArea {
         }
 
         this._scrollBars_defineValues();
-
-        console.log(this, this._scrollHeight)
     }
 
     resetScroll() {

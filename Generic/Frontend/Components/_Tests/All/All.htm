@@ -105,23 +105,17 @@
                 /* background: var(--colorLightDim); */
                 background: #00f2;
                 height: 200px;
+                /* min-width: min-content; */
                 position: relative;
-                /* width: 300px; */
-                width: 100px;
+                /* position: absolute; */
+                width: 300px;
+                /* width: 100px; */
 
 
                 &::part(display) {
                     display: grid;
                     overflow: auto;
                 }
-            }
-
-            .resizable {
-                background: #00f2;
-                display: grid;
-                height: 200px;
-                position: relative;
-                width: 100px;
             }
 
             x-scrollArea {
@@ -219,6 +213,13 @@
             }
 
 
+            .container {
+                border: #000 solid 1px;
+                height: 300px;
+                overflow: auto;
+            }
+
+
             [_GestureArea_magnetAreaActive] {
                 background: #f004 !important;
             }
@@ -259,6 +260,8 @@
             await frontend.components.Resizable._defined;
             await frontend.components.ScrollArea._defined;
             await frontend.components.Slider._defined;
+
+            await frontend.components.Resizable.init();
 
             let draggable = document.querySelector('x-draggable');
             let popup = document.querySelector('#popup');
@@ -403,12 +406,12 @@
             </template>
         </x-repeater>
 
-        <x-resizable>
-        <!-- <div class='resizable'> -->
-            <x-scrollArea>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer lacinia risus vel mi lacinia ultrices. Curabitur sit amet turpis dapibus, egestas ante et, consectetur odio. Sed vestibulum commodo velit semper varius. Nulla bibendum nec tellus a elementum. Ut pellentesque imperdiet dictum. Sed blandit turpis cursus, luctus augue ac, facilisis felis. Nulla purus urna, sagittis quis mauris et, aliquet porta magna. Donec in orci nulla.
-            </x-scrollArea>
-        </x-resizable>
+        <!-- <div class='container'> -->
+            <x-resizable>
+                <x-scrollArea>
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer lacinia risus vel mi lacinia ultrices. Curabitur sit amet turpis dapibus, egestas ante et, consectetur odio. Sed vestibulum commodo velit semper varius. Nulla bibendum nec tellus a elementum. Ut pellentesque imperdiet dictum. Sed blandit turpis cursus, luctus augue ac, facilisis felis. Nulla purus urna, sagittis quis mauris et, aliquet porta magna. Donec in orci nulla.
+                </x-scrollArea>
+            </x-resizable>
         <!-- </div> -->
 
         <x-slider elasticThreshold='1' index='1'>

@@ -868,8 +868,8 @@ export class Component extends HTMLElement {
         return style.getPropertyValue(cssPropName);
     }
 
-    static getCssPropNumber(element, cssPropName) {
-        let cssPropValue = this.getCssProp(element, cssPropName);
+    static getCssPropNumber(element, cssPropName, inline = false) {
+        let cssPropValue = this.getCssProp(element, cssPropName, inline);
 
         return parseFloat(cssPropValue);
     }
@@ -1167,7 +1167,7 @@ export class Component extends HTMLElement {
         this._init();
         this.refreshFields();
         this._autoRefreshIsBlocked = false;
-        // this._refreshAuto();
+        this._refreshAuto();
     }
 
     _createFieldObserver() {
@@ -1239,8 +1239,8 @@ export class Component extends HTMLElement {
         return this.constructor.getCssProp(this._face, cssPropName, inline);
     }
 
-    getCssPropNumber(cssPropName) {
-        return this.constructor.getCssPropNumber(this._face, cssPropName);
+    getCssPropNumber(cssPropName, inline = false) {
+        return this.constructor.getCssPropNumber(this._face, cssPropName, inline);
     }
 
     getDomPath(root) {

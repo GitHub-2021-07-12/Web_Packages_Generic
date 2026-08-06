@@ -5,7 +5,6 @@
         --TextField_button_size: 24px;
 
         grid: auto / auto repeat(2, min-content) !important;
-        /* overflow: hidden; */
         place-content: initial !important;
         width: 256px;
     }
@@ -37,6 +36,7 @@
         color: inherit;
         font: inherit;
         outline: none;
+        place-self: initial !important;
         text-align: inherit;
     }
 }

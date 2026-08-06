@@ -3,7 +3,6 @@
         --Component_displayInner: grid !important;
 
         grid: minmax(0, 1fr) / minmax(0, 1fr) !important;
-        /* overflow: hidden; */
         place-content: initial !important;
         width: 256px;
     }
@@ -16,6 +15,7 @@
         field-sizing: content;
         font: inherit;
         outline: none;
+        place-self: initial !important;
         resize: none !important;
         word-break: break-all;
     }
@@ -28,6 +28,9 @@
 
         &::part(display) {
             display: grid !important;
+            grid-template: minmax(max-content, 1fr) / auto !important;
+            place-content: initial !important;
+            place-items: initial !important;
         }
     }
 }

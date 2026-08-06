@@ -9,6 +9,7 @@
         grid: minmax(0, 1fr) / minmax(0, 1fr) !important;
         min-height: 64px;
         min-width: 64px;
+        padding: initial !important;
         place-content: initial !important;
         place-items: initial !important;
     }

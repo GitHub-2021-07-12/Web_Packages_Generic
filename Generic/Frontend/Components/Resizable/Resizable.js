@@ -97,10 +97,11 @@ export class Resizable extends GestureArea {
                 this._aspectRatio = this._widthInitial / this._heightInitial;
                 this._pointerMain.magnetRect = this.constructor.getDomRect(this.target, true);
 
-                this._elements.display.style.contentVisibility = 'hidden';
-                // this.constructor.setCssProp(this._elements.display, 'height', this.constructor.getCssProp(this._elements.display, 'height'), true);
-                // this.constructor.setCssProp(this._elements.display, 'width', this.constructor.getCssProp(this._elements.display, 'width'), true);
-
+                this.setCssProp('content-visibility', 'hidden', true);
+                let plug = document.createElement('div');
+                this.constructor.setHeight(plug, this._heightInitial);
+                this.constructor.setWidth(plug, this._widthInitial);
+                this.target.before(plug);
                 this.constructor.setHeight(this.target, Number.MIN_SAFE_INTEGER, true);
                 this.constructor.setWidth(this.target, Number.MIN_SAFE_INTEGER, true);
                 let heightMin = this.constructor.getHeight(this.target, true);
@@ -111,14 +112,13 @@ export class Resizable extends GestureArea {
                 let widthMax = this.constructor.getWidth(this.target, true);
                 this.constructor.setHeight(this.target, this._heightInitial, true);
                 this.constructor.setWidth(this.target, this._widthInitial, true);
+                this.setCssProp('content-visibility', null);
+                plug.remove();
+
                 this._heightDeltaMax = heightMax - this._heightInitial;
                 this._heightDeltaMin = heightMin - this._heightInitial;
                 this._widthDeltaMax = widthMax - this._widthInitial;
                 this._widthDeltaMin = widthMin - this._widthInitial;
-
-                this._elements.display.style.contentVisibility = null;
-                // this.constructor.setCssProp(this._elements.display, 'height', null);
-                // this.constructor.setCssProp(this._elements.display, 'width', null);
 
                 if (this.dynamicEnvironment && this.magnetism) {
                     this.refreshField('magnetAreas', true);

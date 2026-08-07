@@ -21,7 +21,7 @@ export class Component extends HTMLElement {
     static _idAttribute = 'id';
     static _interpolationKey = this.name;
     static _interpolationRegExp = /{{\s*(?<key>.*?)\s*:\s*(?<value>.*?)\s*}}/g;
-    static _interpolations = {};
+    static _interpolationArgs = {};
     static _propsExtended = ['_eventHandlerDescriptors', '_fieldDescriptors', '_shadowOpts'];
     static _rootTag = 'slot';
     static _styleSheet = null;
@@ -643,13 +643,13 @@ export class Component extends HTMLElement {
         [css, html] = await Promise.all([css, html]);
 
         if (css) {
-            css = this.interpolate(css, this._interpolationKey, this._interpolations);
+            css = this.interpolate(css, this._interpolationKey, this._interpolationArgs);
             await this._styleSheet.replace(css);
         }
 
         if (html) {
             html = html.trim().replace(/\s{2,}/g, ' ');
-            html = this.interpolate(html, this._interpolationKey, this._interpolations);
+            html = this.interpolate(html, this._interpolationKey, this._interpolationArgs);
             root = this.createDom(html);
         }
         else {
@@ -996,8 +996,8 @@ export class Component extends HTMLElement {
         html = undefined,
         htmlUrl = undefined,
         idAttribute = undefined,
+        interpolationArgs = undefined,
         interpolationKey = undefined,
-        interpolations = undefined,
         rootTag = undefined,
         styleSheetDescriptors = undefined,
         tagPrefix = undefined,
@@ -1014,8 +1014,8 @@ export class Component extends HTMLElement {
                 _html: html,
                 _htmlUrl: htmlUrl,
                 _idAttribute: idAttribute,
+                _interpolationArgs: interpolationArgs,
                 _interpolationKey: interpolationKey,
-                _interpolations: interpolations,
                 _rootTag: rootTag,
                 _styleSheetDescriptors: styleSheetDescriptors,
                 _tagPrefix: tagPrefix,
@@ -1052,11 +1052,11 @@ export class Component extends HTMLElement {
         ObjectManager.init(this);
     }
 
-    static interpolate(string, interpolationKey, interpolations) {
+    static interpolate(string, interpolationKey, interpolationArgs) {
         let f = (match, key, value) => {
             if (key != interpolationKey) return match;
 
-            return ObjectManager.queryProp(interpolations, value) ?? '';
+            return Executor.executeExpression(value, interpolationArgs) ?? '';
         };
 
         return string.replace(this._interpolationRegExp, f);

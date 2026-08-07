@@ -32,7 +32,7 @@
                 left: calc(var(--index) * var(--size));
                 max-height: 256px;
                 max-width: 256px;
-                margin: 5px;
+                /* margin: 5px; */
                 min-height: 64px;
                 min-width: 64px;
                 position: absolute;
@@ -115,7 +115,19 @@
     <body>
         <x-repeater interpolationKey='repeater' model='1e2' target_='x-repeater'>
             <template Repeater_delegate>
-                <x-draggable style='--index: {{repeater: index}};'>
+                <!-- <x-draggable style='--index: {{repeater: index}};'> -->
+                <!-- <x-draggable -->
+                <!--     style=' -->
+                <!--         left: {{repeater: Math.round(Math.random() * 2e3)}}px; -->
+                <!--         top: {{repeater: Math.round(Math.random() * 1e3)}}px; -->
+                <!--     ' -->
+                <!-- > -->
+                <x-draggable
+                    style='
+                        left: calc({{repeater: index % 10}} * var(--size));
+                        top: calc({{repeater: index / 10 ^ 0}} * var(--size));
+                    '
+                >
                     <x-resizable>
                         {{repeater: data.value}}
                     </x-resizable>

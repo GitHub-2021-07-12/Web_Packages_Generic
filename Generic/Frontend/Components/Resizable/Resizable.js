@@ -68,21 +68,13 @@ export class Resizable extends GestureArea {
                     }
                 }
 
-                this._rectDelta.bottom = Common.toRange(this._rectDelta.bottom, this._heightDeltaMin, this._heightDeltaMax);
-                this._rectDelta.left = Common.toRange(this._rectDelta.left, -this._widthDeltaMax, -this._widthDeltaMin);
-                this._rectDelta.right = Common.toRange(this._rectDelta.right, this._widthDeltaMin, this._widthDeltaMax);
-                this._rectDelta.top = Common.toRange(this._rectDelta.top, -this._heightDeltaMax, -this._heightDeltaMin);
+                this._updateSize();
                 this._pointerMain.updateMagnetVector(this._rectDelta);
 
                 if (!this.deferredMagnetism) {
-                    let magnetVector = this._pointerMain._magnetVector;
-                    this._rectDelta.bottom += magnetVector.y;
-                    this._rectDelta.left += magnetVector.x;
-                    this._rectDelta.right += magnetVector.x;
-                    this._rectDelta.top += magnetVector.y;
+                    this._updateSize(true);
                 }
 
-                this._updateSize();
                 this.dispatchEvent('resize', event.detail);
             },
 
@@ -97,29 +89,6 @@ export class Resizable extends GestureArea {
                 this._aspectRatio = this._widthInitial / this._heightInitial;
                 this._pointerMain.magnetRect = this.constructor.getDomRect(this.target, true);
 
-                this.setCssProp('content-visibility', 'hidden', true);
-                let plug = document.createElement('div');
-                this.constructor.setHeight(plug, this._heightInitial);
-                this.constructor.setWidth(plug, this._widthInitial);
-                this.target.before(plug);
-                this.constructor.setHeight(this.target, Number.MIN_SAFE_INTEGER, true);
-                this.constructor.setWidth(this.target, Number.MIN_SAFE_INTEGER, true);
-                let heightMin = this.constructor.getHeight(this.target, true);
-                let widthMin = this.constructor.getWidth(this.target, true);
-                this.constructor.setHeight(this.target, Number.MAX_SAFE_INTEGER, true);
-                this.constructor.setWidth(this.target, Number.MAX_SAFE_INTEGER, true);
-                let heightMax = this.constructor.getWidth(this.target, true);
-                let widthMax = this.constructor.getWidth(this.target, true);
-                this.constructor.setHeight(this.target, this._heightInitial, true);
-                this.constructor.setWidth(this.target, this._widthInitial, true);
-                this.setCssProp('content-visibility', null);
-                plug.remove();
-
-                this._heightDeltaMax = heightMax - this._heightInitial;
-                this._heightDeltaMin = heightMin - this._heightInitial;
-                this._widthDeltaMax = widthMax - this._widthInitial;
-                this._widthDeltaMin = widthMin - this._widthInitial;
-
                 if (this.dynamicEnvironment && this.magnetism) {
                     this.refreshField('magnetAreas', true);
                     this._defineMagnetAreaRects();
@@ -132,12 +101,7 @@ export class Resizable extends GestureArea {
                 if (this._pointerMainIsBlocked) return;
 
                 if (this.deferredMagnetism) {
-                    let magnetVector = this._pointerMain._magnetVector;
-                    this._rectDelta.bottom += magnetVector.y;
-                    this._rectDelta.left += magnetVector.x;
-                    this._rectDelta.right += magnetVector.x;
-                    this._rectDelta.top += magnetVector.y;
-                    this._updateSize();
+                    this._updateSize(true);
                 }
 
                 this._resizing = false;
@@ -205,14 +169,10 @@ export class Resizable extends GestureArea {
 
     _aspectRatio = 0;
     _edgeTargetNames = null;
-    _heightDeltaMax = 0;
-    _heightDeltaMin = 0;
     _heightInitial = 0;
     _leftInitial = 0;
     _pointerMainIsBlocked = false;
     _topInitial = 0;
-    _widthDeltaMax = 0;
-    _widthDeltaMin = 0;
     _widthInitial = 0;
 
     _rectDelta = {
@@ -270,19 +230,48 @@ export class Resizable extends GestureArea {
         }
     }
 
-    _updateSize() {
-        let heightIncrement = (this._rectDelta.bottom || 0) - (this._rectDelta.top || 0);
-        let widthIncrement = (this._rectDelta.right || 0) - (this._rectDelta.left || 0);
-        this.constructor.setHeight(this.target, this._heightInitial + heightIncrement, true);
-        this.constructor.setWidth(this.target, this._widthInitial + widthIncrement, true);
+    _updateSize(magnetism = false) {
+        if (magnetism) {
+            let magnetVector = this._pointerMain._magnetVector;
+            this._rectDelta.bottom += magnetVector.y;
+            this._rectDelta.left += magnetVector.x;
+            this._rectDelta.right += magnetVector.x;
+            this._rectDelta.top += magnetVector.y;
+        }
+
+        let height = this._heightInitial + (this._rectDelta.bottom || 0) - (this._rectDelta.top || 0);
+        let width = this._widthInitial + (this._rectDelta.right || 0) - (this._rectDelta.left || 0);
+        this.constructor.setHeight(this.target, height, true);
+        this.constructor.setWidth(this.target, width, true);
+        let heightReal = this.constructor.getHeight(this.target, true);
+        let widthReal = this.constructor.getWidth(this.target, true);
+
+        if (!magnetism) {
+            let heightDelta = heightReal - height;
+            let widthDelta = widthReal - width;
+
+            if (this._rectDelta.bottom != undefined) {
+                this._rectDelta.bottom += heightDelta;
+            }
+            else if (this._rectDelta.top != undefined) {
+                this._rectDelta.top -= heightDelta;
+            }
+
+            if (this._rectDelta.left != undefined) {
+                this._rectDelta.left -= widthDelta;
+            }
+            else if (this._rectDelta.right != undefined) {
+                this._rectDelta.right += widthDelta;
+            }
+        }
 
         if (Number.isFinite(this._rectDelta.left)) {
-            let left = this._leftInitial + this._widthInitial - this.constructor.getWidth(this.target, true);
+            let left = this._leftInitial + this._widthInitial - widthReal;
             this.constructor.setLeft(this.target, left);
         }
 
         if (Number.isFinite(this._rectDelta.top)) {
-            let top = this._topInitial + this._heightInitial - this.constructor.getHeight(this.target, true);
+            let top = this._topInitial + this._heightInitial - heightReal;
             this.constructor.setTop(this.target, top);
         }
     }

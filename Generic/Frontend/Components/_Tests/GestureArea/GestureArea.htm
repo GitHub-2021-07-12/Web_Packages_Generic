@@ -43,6 +43,7 @@
 
             x-repeater {
                 --Component_autoRefresh: true;
+                --Component_display: contents;
             }
 
             x-resizable {
@@ -107,7 +108,7 @@
             import * as generic from '/Packages/Generic/Generic.js';
 
 
-            let Component = generic.frontend.components.Component;
+            window.Component = generic.frontend.components.Component;
             await Component._defined;
         </script>
     </head>

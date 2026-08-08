@@ -89,7 +89,7 @@ export class Repeater extends Component {
             updateAfter() {
                 this._component._modelPropsInterpolated.clear();
 
-                if (this._component.interpolationKey) {
+                if (this._value) {
                     let interpolations = this._component._delegateHtml.matchAll(this._component.constructor._interpolationRegExp);
 
                     for (let interpolation of interpolations) {
@@ -116,7 +116,7 @@ export class Repeater extends Component {
 
             updateAfter() {
                 this._component._refreshAuto();
-                EventManager.applyEventHandlers(this._component._eventHandlers.model, this._component.model);
+                EventManager.applyEventHandlers(this._component._eventHandlers.model, this._value);
             },
 
             updateBefore(value) {

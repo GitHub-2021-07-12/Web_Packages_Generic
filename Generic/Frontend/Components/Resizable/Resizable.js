@@ -1,8 +1,6 @@
 import {Component} from '/Packages/Generic/Frontend/Components/Component/Component.js';
 import {GestureArea} from '/Packages/Generic/Frontend/Components/GestureArea/GestureArea.js';
 
-import {Common} from '/Packages/Generic/Js/Common/Common.js';
-
 
 export class Resizable extends GestureArea {
     static _cssUrl = true;
@@ -166,6 +164,9 @@ export class Resizable extends GestureArea {
         this.init();
     }
 
+    connectedCallback() {
+        this._build();
+    }
 
     _aspectRatio = 0;
     _edgeTargetNames = null;

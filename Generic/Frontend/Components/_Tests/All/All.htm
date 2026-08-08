@@ -235,6 +235,11 @@
                     pointer-events: auto !important;
                 }
             }
+
+
+            /* :not(:defined) { */
+            /*     display: none; */
+            /* } */
         </style>
 
         <script type='module'>
@@ -257,11 +262,13 @@
             //     useGlobalStyleSheets: false,
             // });
 
-            await frontend.components.Resizable._defined;
+            frontend.components.ScrollArea.init({components: [frontend.components.Resizable]});
+
+            // await frontend.components.Resizable._defined;
             await frontend.components.ScrollArea._defined;
             await frontend.components.Slider._defined;
 
-            await frontend.components.Resizable.init();
+            // await frontend.components.Resizable.init();
 
             let draggable = document.querySelector('x-draggable');
             let popup = document.querySelector('#popup');
@@ -269,7 +276,12 @@
             let slider = document.querySelector('x-slider');
 
             // scrollArea.refresh();
-            // scrollArea.scrollY = Infinity;
+            scrollArea.scrollY = Infinity;
+            console.log(scrollArea.getHeight(), scrollArea.scrollY, scrollArea._elements.display.scrollHeight - scrollArea._elements.display.clientHeight)
+
+            // if (!scrollArea.scrollY) {
+            //     debugger;
+            // }
 
             draggable.addEventListener('press', (event) => {
                 console.log(event.detail.pointer._positionDelta)
@@ -406,13 +418,11 @@
             </template>
         </x-repeater>
 
-        <!-- <div class='container'> -->
-            <x-resizable>
-                <x-scrollArea>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer lacinia risus vel mi lacinia ultrices. Curabitur sit amet turpis dapibus, egestas ante et, consectetur odio. Sed vestibulum commodo velit semper varius. Nulla bibendum nec tellus a elementum. Ut pellentesque imperdiet dictum. Sed blandit turpis cursus, luctus augue ac, facilisis felis. Nulla purus urna, sagittis quis mauris et, aliquet porta magna. Donec in orci nulla.
-                </x-scrollArea>
-            </x-resizable>
-        <!-- </div> -->
+        <x-resizable>
+            <x-scrollArea>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer lacinia risus vel mi lacinia ultrices. Curabitur sit amet turpis dapibus, egestas ante et, consectetur odio. Sed vestibulum commodo velit semper varius. Nulla bibendum nec tellus a elementum. Ut pellentesque imperdiet dictum. Sed blandit turpis cursus, luctus augue ac, facilisis felis. Nulla purus urna, sagittis quis mauris et, aliquet porta magna. Donec in orci nulla.
+            </x-scrollArea>
+        </x-resizable>
 
         <x-slider elasticThreshold='1' index='1'>
             <div>1</div>

@@ -611,7 +611,7 @@ export class Component extends HTMLElement {
 
 
     static async _awaitComponents() {
-        let promises = this._components.map((component) => component._defined);
+        let promises = [...this._components].map((component) => component._defined);
         promises.push(Object.getPrototypeOf(this)._defined);
         await Promise.all(promises);
     }
@@ -991,6 +991,7 @@ export class Component extends HTMLElement {
 
     static async init({
         abstract = false,
+        components = [],
         css = undefined,
         cssUrl = undefined,
         html = undefined,
@@ -1009,6 +1010,7 @@ export class Component extends HTMLElement {
         ObjectManager.assignProps(
             this,
             {
+                _components: new Set([...this._components, ...components]),
                 _css: css,
                 _cssUrl: cssUrl,
                 _html: html,

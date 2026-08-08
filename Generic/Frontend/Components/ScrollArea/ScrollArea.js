@@ -127,6 +127,8 @@ export class ScrollArea extends GestureArea {
 
         autoRefresh: class Field extends super._fieldDescriptors.autoRefresh {
             _updateAfter() {
+                super._updateAfter();
+
                 if (this._value) {
                     this._component._mutationObserver.observe(this._component, {childList: true, subtree: true});
                     this._component._resizeObserver.observe(this._component);
@@ -208,7 +210,7 @@ export class ScrollArea extends GestureArea {
     }
     set scrollX(scrollX) {
         scrollX = Math.round(scrollX);
-        this._elements.display.scrollLeft = Math.min(scrollX, this._scrollWidth);
+        this._elements.display.scrollLeft = Math.min(scrollX, Number.MAX_SAFE_INTEGER);
     }
 
     get scrollY() {
@@ -216,7 +218,7 @@ export class ScrollArea extends GestureArea {
     }
     set scrollY(scrollY) {
         scrollY = Math.round(scrollY);
-        this._elements.display.scrollTop = Math.min(scrollY, this._scrollHeight);
+        this._elements.display.scrollTop = Math.min(scrollY, Number.MAX_SAFE_INTEGER);
     }
 
 
@@ -241,8 +243,7 @@ export class ScrollArea extends GestureArea {
     }
 
     _init() {
-        this.scrollX = 0;
-        this.scrollY = 0;
+        this.resetScroll();
     }
 
     _observers_callback() {
@@ -280,7 +281,6 @@ export class ScrollArea extends GestureArea {
         this._scrollHeight = this._elements.display.scrollHeight - this._elements.display.clientHeight;
         this._scrollWidth = this._elements.display.scrollWidth - this._elements.display.clientWidth;
         this._scrollHeight = this._elements.display.scrollHeight - this._elements.display.clientHeight;
-        // this._scrollWidth = this._elements.display.scrollWidth - this._elements.display.clientWidth;
 
         if (this._scrollWidth) {
             let scrollBarX_length = this._elements.scrollBarX.getSize('inline');
@@ -306,8 +306,6 @@ export class ScrollArea extends GestureArea {
 
     refresh() {
         this._scrollBars_refresh();
-        // this.scrollX = this.scrollX;
-        // this.scrollY = this.scrollY;
         this._defineScrollEdges();
 
         if (this.sticky) {

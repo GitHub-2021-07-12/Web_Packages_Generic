@@ -25,7 +25,7 @@ export class Resizable extends GestureArea {
             swipeMain: function (event) {
                 if (this._pointerMainIsBlocked) return;
 
-                let positionDelta = this._pointerMain._positionDelta;
+                let positionDelta = this._pointerMain._positionDeltaModified;
                 this._rectDelta.bottom = this._edgeTargetNames.has('edgeBottom') ? positionDelta.y : undefined;
                 this._rectDelta.left = this._edgeTargetNames.has('edgeLeft') ? positionDelta.x : undefined;
                 this._rectDelta.right = this._edgeTargetNames.has('edgeRight') ? positionDelta.x : undefined;
@@ -85,9 +85,10 @@ export class Resizable extends GestureArea {
                 this._topInitial = this.constructor.getTop(this.target);
                 this._widthInitial = this.constructor.getWidth(this.target, true);
                 this._aspectRatio = this._widthInitial / this._heightInitial;
-                this._pointerMain.magnetRect = this.constructor.getDomRect(this.target, true);
+                // this._pointerMain.magnetRect = this.constructor.getDomRect(this.target, true);
+                this._pointerMain.rectInitial = this.constructor.getDomRect(this.target, true);
 
-                if (this.dynamicEnvironment && this.magnetism) {
+                if (this.magnetism && !this.staticEnvironment) {
                     this.refreshField('magnetAreas', true);
                     this._defineMagnetAreaRects();
                 }
@@ -231,8 +232,8 @@ export class Resizable extends GestureArea {
         }
     }
 
-    _updateSize(magnetism = false) {
-        if (magnetism) {
+    _updateSize(withMagnetism = false) {
+        if (withMagnetism) {
             let magnetVector = this._pointerMain._magnetVector;
             this._rectDelta.bottom += magnetVector.y;
             this._rectDelta.left += magnetVector.x;
@@ -247,7 +248,7 @@ export class Resizable extends GestureArea {
         let heightReal = this.constructor.getHeight(this.target, true);
         let widthReal = this.constructor.getWidth(this.target, true);
 
-        if (!magnetism) {
+        if (!withMagnetism) {
             let heightDelta = heightReal - height;
             let widthDelta = widthReal - width;
 

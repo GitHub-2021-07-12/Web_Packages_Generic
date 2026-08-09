@@ -12,6 +12,9 @@ export class GestureArea extends Component {
         static pointsCountMax = 4;
 
 
+        __rectInitial = null;
+
+
         _component = null;
         _id = 0;
         _magnetAreasBottom = new Set();
@@ -21,6 +24,9 @@ export class GestureArea extends Component {
         _magnetVector = new Vector2d();
         _points = [];
         _positionDelta = new Vector2d();
+        _positionDeltaMax = new Vector2d();
+        _positionDeltaMin = new Vector2d();
+        _positionDeltaModified = new Vector2d();
         _positionInner = new Vector2d();
         _positionInnerInitial = new Vector2d();
         _positionOuter = new Vector2d();
@@ -32,8 +38,26 @@ export class GestureArea extends Component {
         _velocity = new Vector2d();
 
 
-        magnetRect = null;
+        get rectInitial() {
+            return this.__rectInitial;
+        }
+        set rectInitial(rectInitial) {
+            this.__rectInitial = rectInitial;
+            this._definePositionDeltaBounds();
+        }
 
+
+        _definePositionDeltaBounds() {
+            if (this.rectInitial && this._component.bound) {
+                let boundDomRect = GestureArea.getDomRect(this._component.bound);
+                this._positionDeltaMax.set(boundDomRect.right - this.rectInitial.right, boundDomRect.bottom - this.rectInitial.bottom);
+                this._positionDeltaMin.set(boundDomRect.left - this.rectInitial.left, boundDomRect.top - this.rectInitial.top);
+            }
+            else {
+                this._positionDeltaMax.set(Infinity);
+                this._positionDeltaMin.set(-Infinity);
+            }
+        }
 
         _defineVelocity() {
             let pointFirst = this._points[0];
@@ -50,13 +74,14 @@ export class GestureArea extends Component {
 
             this._shifted = true;
 
-            if (this._component.jumping || this._component.shift <= 1) return;
+            if (this._component.shiftJumping || this._component.shift <= 1) return;
 
             this._positionDelta.length = this._component.shift - 1;
             this._positionDelta.round();
             this._positionInnerInitial.sum(this._positionDelta);
             this._positionOuterInitial.sum(this._positionDelta);
             this._positionDelta.set(0);
+            // this._positionDeltaModified.set(0);
         }
 
         _updatePoints() {
@@ -125,6 +150,7 @@ export class GestureArea extends Component {
             this._component = component;
             this._id = event.pointerId;
             this._target = this._component._pointerTarget || event.target;
+            this._definePositionDeltaBounds();
             this._updatePositions(event);
             this._positionInnerInitial.setVector(this._positionInner);
             this._positionOuterInitial.setVector(this._positionOuter);
@@ -141,16 +167,41 @@ export class GestureArea extends Component {
             this._timeStamp = performance.now();
             this._updatePositions(event);
             this._positionDelta.setVector(this._positionOuter).sub(this._positionOuterInitial);
+            this._positionDeltaModified.setVector(this._positionDelta);
+
+            if (this._component.axis == 'x') {
+                this._positionDeltaModified.y = 0;
+            }
+            else if (this._component.axis == 'y') {
+                this._positionDeltaModified.x = 0;
+            }
+
             this._detectShift();
 
             if (!this._shifted) return;
 
             this._updatePoints();
             this._defineVelocity();
-            this._positionDelta.prod(this._component.swipeFactor);
+
+            if (this._component.axis != 'x') {
+                let step = this._component.stepY || this._component.step;
+                this._positionDeltaModified.y = Math.round(this._positionDeltaModified.y / step) * step;
+            }
+
+            if (this._component.axis != 'y') {
+                let step = this._component.stepX || this._component.step;
+                this._positionDeltaModified.x = Math.round(this._positionDeltaModified.x / step) * step;
+            }
+
+            this._positionDeltaModified
+                .prod(this._component.swipeFactor)
+                .toRange(this._positionDeltaMin, this._positionDeltaMax)
+                .toRangeLength(0, this._component.radius)
+                .round()
+            ;
         }
 
-        updateMagnetVector(magnetRectDelta) {
+        updateMagnetVector(rectDelta) {
             let magnetAreas = this._component.magnetAreas;
             let magnetism = this._component.magnetism;
             this._magnetAreasBottom.clear();
@@ -159,17 +210,17 @@ export class GestureArea extends Component {
             this._magnetAreasTop.clear();
             this._magnetVector.set(null);
 
-            if (!this.magnetRect || !magnetAreas?.size || !magnetism) return;
+            if (!(magnetism && this.rectInitial && magnetAreas?.size)) return;
 
             let magnetAreasBottom = new Map();
             let magnetAreasLeft = new Map();
             let magnetAreasRight = new Map();
             let magnetAreasTop = new Map();
             let magnetRect = {
-                bottom: this.magnetRect.bottom + (magnetRectDelta.bottom || 0),
-                left: this.magnetRect.left + (magnetRectDelta.left || 0),
-                right: this.magnetRect.right + (magnetRectDelta.right || 0),
-                top: this.magnetRect.top + (magnetRectDelta.top || 0),
+                bottom: this.rectInitial.bottom + (rectDelta.bottom || 0),
+                left: this.rectInitial.left + (rectDelta.left || 0),
+                right: this.rectInitial.right + (rectDelta.right || 0),
+                top: this.rectInitial.top + (rectDelta.top || 0),
             };
             let magnetVector = new Vector2d(Infinity);
 
@@ -182,7 +233,7 @@ export class GestureArea extends Component {
 
                 if (deltaLeftRight > magnetism || deltaTopBottom > magnetism || deltaRightLeft < -magnetism || deltaBottomTop < -magnetism) continue;
 
-                if (magnetRectDelta.bottom != undefined) {
+                if (rectDelta.bottom != undefined) {
                     let deltaBottomBottom = magnetAreaRect.bottom - magnetRect.bottom;
                     let deltaBottomBottomAbs = Math.abs(deltaBottomBottom);
                     let deltaTopBottomAbs = Math.abs(deltaTopBottom);
@@ -197,7 +248,7 @@ export class GestureArea extends Component {
                     }
                 }
 
-                if (magnetRectDelta.left != undefined) {
+                if (rectDelta.left != undefined) {
                     let deltaLeftLeft = magnetAreaRect.left - magnetRect.left;
                     let deltaLeftLeftAbs = Math.abs(deltaLeftLeft);
                     let deltaRightLeftAbs = Math.abs(deltaRightLeft);
@@ -212,7 +263,7 @@ export class GestureArea extends Component {
                     }
                 }
 
-                if (magnetRectDelta.right != undefined) {
+                if (rectDelta.right != undefined) {
                     let deltaRightRight = magnetAreaRect.right - magnetRect.right;
                     let deltaRightRightAbs = Math.abs(deltaRightRight);
                     let deltaLeftRightAbs = Math.abs(deltaLeftRight);
@@ -227,7 +278,7 @@ export class GestureArea extends Component {
                     }
                 }
 
-                if (magnetRectDelta.top != undefined) {
+                if (rectDelta.top != undefined) {
                     let deltaTopTop = magnetAreaRect.top - magnetRect.top;
                     let deltaTopTopAbs = Math.abs(deltaTopTop);
                     let deltaBottomTopAbs = Math.abs(deltaBottomTop);
@@ -330,13 +381,38 @@ export class GestureArea extends Component {
 
     static _fieldDescriptors = {
         deferredMagnetism: false,
-        dynamicEnvironment: false,
         invertedX: false,
         invertedY: false,
-        jumping: false,
         multiPoint: false,
         receptive: false,
+        shiftJumping: false,
+        staticEnvironment: false,
         vertical: false,
+
+        axis: {
+            default: 'none',
+            enum: ['none', 'x', 'y'],
+        },
+
+        bound: {
+            default: '',
+
+            updateBefore(value) {
+                if (value instanceof Node) {
+                    this._valueExtra = value;
+                }
+                else {
+                    let selector = value + '';
+
+                    try {
+                        this._valueExtra = this._component.closest(selector);
+                    }
+                    catch {
+                        this._valueExtra = null;
+                    }
+                }
+            },
+        },
 
         flickDurationMax: {
             cssPropFactor: 1e3,
@@ -359,7 +435,7 @@ export class GestureArea extends Component {
             default: '',
 
             updateAfter() {
-                if (this._component.dynamicEnvironment || !this.magnetism) return;
+                if (!this._component.staticEnvironment || !this.magnetism) return;
 
                 this._component._defineMagnetAreaRects();
             },
@@ -397,10 +473,30 @@ export class GestureArea extends Component {
             range: [0, Infinity],
         },
 
+        radius: {
+            default: Infinity,
+            range: [1, Infinity],
+        },
+
         shift: {
             cssPropUnit: 'px',
             default: 1,
             range: [1, Infinity],
+        },
+
+        step: {
+            default: 1,
+            range: [1, Infinity],
+        },
+
+        stepX: {
+            default: 0,
+            range: [0, Infinity],
+        },
+
+        stepY: {
+            default: 0,
+            range: [0, Infinity],
         },
 
         swipeFactor: {

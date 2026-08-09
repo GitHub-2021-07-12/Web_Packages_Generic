@@ -19,14 +19,21 @@
 
             x-draggable {
                 --Component_displayInner: grid;
-                --Draggable_bound: url('#{body}');
+                /* --Draggable_bound: url('#{body}'); */
+                /* --GestureArea_axis: x; */
+                --GestureArea_bound: url('#{body}');
                 --Draggable_dropAreas: url('#{x-resizable:not(:active)}');
-                --GestureArea_deferredMagnetism: true;
+                /* --GestureArea_deferredMagnetism: true; */
                 --GestureArea_dynamicEnvironment: true;
                 --GestureArea_magnetAreas: url('#{x-draggable:not(:active)}');
                 /* --GestureArea_magnetAreas: url('#{x-resizable:not(:active)}'); */
                 --GestureArea_magnetism: 10;
                 /* --GestureArea_receptive: true; */
+                /* --GestureArea_radius: 100; */
+                --GestureArea_shift: 100;
+                /* --GestureArea_step: 10; */
+                /* --GestureArea_swipeFactor: 2; */
+                /* --GestureArea_shiftJumping: true; */
 
                 /* box-sizing: border-box; */
                 /* background: #f002; */
@@ -53,6 +60,7 @@
                 --Component_eventsWithoutPropagation: swipeMain swipeStartMain swipeStopMain;
                 /* --Component_eventsWithoutPropagation: pointerdown swipeMain; */
                 /* --GestureArea_deferredMagnetism: true; */
+                --GestureArea_bound: url('#{body}');
                 --GestureArea_dynamicEnvironment: true;
                 --GestureArea_magnetAreas: url('#{x-draggable:not(:active)}');
                 /* --GestureArea_magnetAreas: url('#{x-resizable:not(:active)}'); */

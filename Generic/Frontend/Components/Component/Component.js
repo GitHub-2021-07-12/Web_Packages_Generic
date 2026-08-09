@@ -14,7 +14,7 @@ export class Component extends HTMLElement {
     static _defined = null;
     static _dom = null;
     static _domSubtrees = {};
-    static _fieldNames = {};
+    static _fieldNamesByExternals = {};
     static _html = '';
     static _htmlUrl = '';
     static _httpClient = null;
@@ -22,7 +22,7 @@ export class Component extends HTMLElement {
     static _interpolationKey = this.name;
     static _interpolationRegExp = /{{\s*(?<key>.*?)\s*:\s*(?<value>.*?)\s*}}/g;
     static _interpolationArgs = {};
-    static _propsExtended = ['_eventHandlerDescriptors', '_fieldDescriptors', '_shadowOpts'];
+    static _propsExtended = ['_eventHandlerDescriptors', '_fieldDescriptors', '_fieldNamesByExternals', '_shadowOpts'];
     static _rootTag = 'slot';
     static _styleSheet = null;
     static _styleSheetDescriptors = {};
@@ -549,7 +549,7 @@ export class Component extends HTMLElement {
 
         fieldObserver: {
             transitionrun: function (event) {
-                this._fields[event.propertyName.replace(/--\w+?_/, '')].updateByCssProp();
+                this._fields[this.constructor._fieldNamesByExternals[event.propertyName]].updateByCssProp();
             },
         },
     };
@@ -731,21 +731,6 @@ export class Component extends HTMLElement {
         this._styleSheetsGlobal = await this.createStyleSheets(styleSheetDescriptors);
     }
 
-    static _defineObservedAttributes() {
-        if (!Object.hasOwn(this, '_fieldDescriptors')) return;
-
-        this._fieldNames = {};
-        this.observedAttributes = [];
-
-        for (let Field of Object.values(this._fieldDescriptors)) {
-            if (Field._protected) continue;
-
-            let attributeNameLowerCase = Field._attributeName.toLowerCase();
-            this._fieldNames[attributeNameLowerCase] = Field._name;
-            this.observedAttributes.push(attributeNameLowerCase);
-        }
-    }
-
     static _extractDomSubtrees() {
         this._domSubtrees = {};
         let domSubtrees = this._dom.querySelectorAll('[Component_subtree]');
@@ -757,6 +742,22 @@ export class Component extends HTMLElement {
             let domPlug = document.createElement('meta');
             domPlug.setAttribute('_Component_plug', domSubtreeKey);
             domSubtree.replaceWith(domPlug);
+        }
+    }
+
+    static _mapExternals() {
+        if (!Object.hasOwn(this, '_fieldDescriptors')) return;
+
+        this._fieldNamesByExternals = {};
+        this.observedAttributes = [...this.observedAttributes];
+
+        for (let Field of Object.values(this._fieldDescriptors)) {
+            if (Field._protected) continue;
+
+            let attributeNameLowerCase = Field._attributeName.toLowerCase();
+            this._fieldNamesByExternals[attributeNameLowerCase] = Field._name;
+            this._fieldNamesByExternals[Field._cssPropName] = Field._name;
+            this.observedAttributes.push(attributeNameLowerCase);
         }
     }
 
@@ -1031,13 +1032,13 @@ export class Component extends HTMLElement {
         this._defined = new ExternalPromise();
         this._normalizeFieldDescriptors();
         this._createFieldAccessors();
+        this._mapExternals();
         EventManager.normalizeEventHandlerDescriptors(this._eventHandlerDescriptors);
         ObjectManager.extendProps(this, null, ...this._propsExtended);
 
         await Executor.delay();
 
         this._httpClient = new HttpClient().init({urlBasic: this._url});
-        this._defineObservedAttributes();
         await Promise.all([
             this._awaitComponents(),
             this._createStyleSheets(),
@@ -1225,7 +1226,7 @@ export class Component extends HTMLElement {
 
 
     attributeChangedCallback(attributeName) {
-        this._fields[this.constructor._fieldNames[attributeName]]?.updateByAttribute();
+        this._fields[this.constructor._fieldNamesByExternals[attributeName]]?.updateByAttribute();
     }
 
     connectedCallback() {

@@ -9,14 +9,17 @@
         <link href='/Packages/Generic/Frontend/Themes/Main/Main.css' rel='stylesheet'>
 
         <style>
-            body {
+            :root {
                 --size: 100px;
 
+                height: 100%;
                 user-select: none;
             }
 
+
             x-draggable {
                 --Component_displayInner: grid;
+                --Draggable_bound: url('#{body}');
                 --Draggable_dropAreas: url('#{x-resizable:not(:active)}');
                 --GestureArea_deferredMagnetism: true;
                 --GestureArea_dynamicEnvironment: true;

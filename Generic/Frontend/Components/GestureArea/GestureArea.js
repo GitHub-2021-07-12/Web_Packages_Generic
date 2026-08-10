@@ -81,7 +81,6 @@ export class GestureArea extends Component {
             this._positionInnerInitial.sum(this._positionDelta);
             this._positionOuterInitial.sum(this._positionDelta);
             this._positionDelta.set(0);
-            // this._positionDeltaModified.set(0);
         }
 
         _updatePoints() {
@@ -167,28 +166,26 @@ export class GestureArea extends Component {
             this._timeStamp = performance.now();
             this._updatePositions(event);
             this._positionDelta.setVector(this._positionOuter).sub(this._positionOuterInitial);
-            this._positionDeltaModified.setVector(this._positionDelta);
-
-            if (this._component.axis == 'x') {
-                this._positionDeltaModified.y = 0;
-            }
-            else if (this._component.axis == 'y') {
-                this._positionDeltaModified.x = 0;
-            }
-
             this._detectShift();
 
             if (!this._shifted) return;
 
             this._updatePoints();
             this._defineVelocity();
+            this._positionDeltaModified.setVector(this._positionDelta);
 
-            if (this._component.axis != 'x') {
+            if (this._component.axis == 'x') {
+                this._positionDeltaModified.y = 0;
+            }
+            else {
                 let step = this._component.stepY || this._component.step;
                 this._positionDeltaModified.y = Math.round(this._positionDeltaModified.y / step) * step;
             }
 
-            if (this._component.axis != 'y') {
+            if (this._component.axis == 'y') {
+                this._positionDeltaModified.x = 0;
+            }
+            else {
                 let step = this._component.stepX || this._component.step;
                 this._positionDeltaModified.x = Math.round(this._positionDeltaModified.x / step) * step;
             }

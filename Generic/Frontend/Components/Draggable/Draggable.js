@@ -10,50 +10,17 @@ export class Draggable extends GestureArea {
                 if (this._pointerMainIsBlocked) return;
 
                 let positionDelta = this._pointerMain._positionDeltaModified;
-                // this._positionDeltaPrev.setVector(this._positionDelta);
-                // this._positionDeltaPrev.setVector(positionDelta);
-                // this._positionDelta = this._pointerMain._positionDelta;
                 this._detectDropAreaTarget();
-
-                // if (this.axis != 'x') {
-                //     let step = this.stepY || this.step;
-                //     this._positionDelta.y = Math.round(this._positionDelta.y / step) * step;
-                // }
-
-                // if (this.axis != 'y') {
-                //     let step = this.stepX || this.step;
-                //     this._positionDelta.x = Math.round(this._positionDelta.x / step) * step;
-                // }
-
-                // this._pointerMain.updateMagnetVector({
-                //     bottom: this._positionDelta.y,
-                //     left: this._positionDelta.x,
-                //     right: this._positionDelta.x,
-                //     top: this._positionDelta.y,
-                // });
-                this._pointerMain.updateMagnetVector({
+                this._pointerMain.updatePositionDeltaModified();
+                this._pointerMain.updateRectDelta({
                     bottom: positionDelta.y,
                     left: positionDelta.x,
                     right: positionDelta.x,
                     top: positionDelta.y,
                 });
-
-                if (!this.deferredMagnetism) {
-                    // this._positionDelta = this._positionDelta.sum(this._pointerMain._magnetVector);
-                    positionDelta = positionDelta.clone().sum(this._pointerMain._magnetVector);
-                }
-
-                // if (this._positionDelta.isEqual(this._positionDeltaPrev)) return;
-                // if (positionDelta.isEqual(this._positionDeltaPrev)) return;
-
-                // this._position = this._position.setVector(this._positionInitial).sum(this._positionDelta);
-                this._positionPrev.set(this._position);
-                this._position = this._position.setVector(this._positionInitial).sum(positionDelta);
-                // this._positionDeltaPrev.setVector(positionDelta);
-
-                if (!this._position.isEqual(this._positionPrev)) {
-                    this.dispatchEvent('drag', event.detail);
-                }
+                this._pointerMain.updateMagnetVector();
+                this._updatePosition(!this.deferredMagnetism);
+                this.dispatchEvent('drag', event.detail);
             },
 
             swipeStartMain: function (event) {
@@ -61,21 +28,9 @@ export class Draggable extends GestureArea {
 
                 if (this._pointerMainIsBlocked) return;
 
-                // let domRect = this.constructor.getDomRect(this.target, true);
                 this._dragging = true;
-                // this._pointerMain.magnetRect = domRect;
                 this._pointerMain.rectInitial = this.constructor.getDomRect(this.target, true);
                 this._positionInitial.set(this.constructor.getLeft(this.target), this.constructor.getTop(this.target));
-
-                // if (this.bound) {
-                //     let boundDomRect = this.constructor.getDomRect(this.bound);
-                //     this._positionDeltaMax.set(boundDomRect.right - domRect.right, boundDomRect.bottom - domRect.bottom);
-                //     this._positionDeltaMin.set(boundDomRect.left - domRect.left, boundDomRect.top - domRect.top);
-                // }
-                // else {
-                //     this._positionDeltaMax.set(Infinity);
-                //     this._positionDeltaMin.set(-Infinity);
-                // }
 
                 if (this.magnetism && !this.staticEnvironment) {
                     this.refreshField('dropAreas', true);
@@ -91,13 +46,8 @@ export class Draggable extends GestureArea {
                 if (this._pointerMainIsBlocked) return;
 
                 if (this.deferredMagnetism) {
-                    // this._positionDelta = this._positionDelta.sum(this._pointerMain._magnetVector);
-                    // this._position = this._position.setVector(this._positionInitial).sum(this._positionDelta);
-                    this._position = this._position
-                        .setVector(this._positionInitial)
-                        .sum(this._pointerMain._positionDeltaModified)
-                        .sum(this._pointerMain._magnetVector)
-                    ;
+                    this._pointerMain.updatePositionDeltaModified();
+                    this._updatePosition(true);
                 }
 
                 this._dragging = false;
@@ -118,31 +68,6 @@ export class Draggable extends GestureArea {
         springy: false,
         wideDrop: false,
 
-        // axis: {
-        //     default: 'none',
-        //     enum: ['none', 'x', 'y'],
-        // },
-
-        // bound: {
-        //     default: '',
-
-        //     updateBefore(value) {
-        //         if (value instanceof Node) {
-        //             this._valueExtra = value;
-        //         }
-        //         else {
-        //             let selector = value + '';
-
-        //             try {
-        //                 this._valueExtra = this._component.closest(selector);
-        //             }
-        //             catch {
-        //                 this._valueExtra = null;
-        //             }
-        //         }
-        //     },
-        // },
-
         dropAreas: class Field extends super._fieldDescriptors.magnetAreas {
             _updateAfter() {
                 if (!this._component.staticEnvironment || !this.magnetism) return;
@@ -160,26 +85,6 @@ export class Draggable extends GestureArea {
                 this._valueExtra = value;
             },
         },
-
-        // radius: {
-        //     default: Infinity,
-        //     range: [1, Infinity],
-        // },
-
-        // step: {
-        //     default: 1,
-        //     range: [1, Infinity],
-        // },
-
-        // stepX: {
-        //     default: 0,
-        //     range: [0, Infinity],
-        // },
-
-        // stepY: {
-        //     default: 0,
-        //     range: [0, Infinity],
-        // },
 
         target: {
             default: '',
@@ -219,18 +124,12 @@ export class Draggable extends GestureArea {
 
 
     __dropAreaTarget = null;
-    __position = new Vector2d();
-    // __positionDelta = new Vector2d();
 
 
     _dropAreaDomRects = new Map();
     _dropAreaTargetPrev = null;
     _pointerMainIsBlocked = false;
-    // _positionDeltaMax = new Vector2d();
-    // _positionDeltaMin = new Vector2d();
-    // _positionDeltaPrev = new Vector2d();
     _positionInitial = new Vector2d();
-    _positionPrev = new Vector2d();
 
 
     get _dropAreaTarget() {
@@ -245,27 +144,6 @@ export class Draggable extends GestureArea {
         this._dropAreaTargetPrev?.removeAttribute('_Draggable_dropAreaTarget');
         this._dropAreaTarget?.setAttribute('_Draggable_dropAreaTarget', '');
     }
-
-    get _position() {
-        return this.__position;
-    }
-    set _position(position) {
-        this.__position.setVector(position);
-        this.constructor.setLeft(this.target, this._position.x);
-        this.constructor.setTop(this.target, this._position.y);
-    }
-
-    // get _positionDelta() {
-    //     return this.__positionDelta;
-    // }
-    // set _positionDelta(positionDelta) {
-    //     this.__positionDelta
-    //         .set(this.axis != 'y' ? positionDelta.x : 0, this.axis != 'x' ? positionDelta.y : 0)
-    //         // .toRange(this._positionDeltaMin, this._positionDeltaMax)
-    //         .toRangeLength(0, this.radius)
-    //         .round()
-    //     ;
-    // }
 
 
     _checkHandle(target) {
@@ -318,6 +196,17 @@ export class Draggable extends GestureArea {
         if (this._dropAreaTarget != this._dropAreaTargetPrev) {
             this.dispatchEvent('dropAreaTarget', event.detail);
         }
+    }
+
+    _updatePosition(withMagnetism = false) {
+        let positionDelta = this._pointerMain._positionDeltaModified;
+
+        if (withMagnetism) {
+            this._pointerMain.updatePositionDeltaModified(positionDelta.clone().sum(this._pointerMain._magnetVector));
+        }
+
+        this.constructor.setLeft(this.target, this._positionInitial.x + positionDelta.x);
+        this.constructor.setTop(this.target, this._positionInitial.y + positionDelta.y);
     }
 
 

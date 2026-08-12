@@ -12,16 +12,24 @@
             :root {
                 --size: 100px;
 
+                box-sizing: border-box;
                 height: 100%;
+                padding: 10px;
+                position: relative;
                 user-select: none;
             }
 
+
+            body {
+                height: initial;
+                position: relative;
+            }
 
             x-draggable {
                 --Component_displayInner: grid;
                 /* --Draggable_bound: url('#{body}'); */
                 /* --GestureArea_axis: x; */
-                --GestureArea_bound: url('#{body}');
+                --GestureArea_bound: url('#{:root}');
                 --Draggable_dropAreas: url('#{x-resizable:not(:active)}');
                 /* --GestureArea_deferredMagnetism: true; */
                 --GestureArea_dynamicEnvironment: true;
@@ -59,8 +67,8 @@
             x-resizable {
                 --Component_eventsWithoutPropagation: swipeMain swipeStartMain swipeStopMain;
                 /* --Component_eventsWithoutPropagation: pointerdown swipeMain; */
-                /* --GestureArea_deferredMagnetism: true; */
-                --GestureArea_bound: url('#{body}');
+                --GestureArea_deferredMagnetism: true;
+                --GestureArea_bound: url('#{:root}');
                 --GestureArea_dynamicEnvironment: true;
                 --GestureArea_magnetAreas: url('#{x-draggable:not(:active)}');
                 /* --GestureArea_magnetAreas: url('#{x-resizable:not(:active)}'); */

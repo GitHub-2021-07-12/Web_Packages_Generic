@@ -26,48 +26,51 @@ export class Resizable extends GestureArea {
                 if (this._pointerMainIsBlocked) return;
 
                 let positionDelta = this._pointerMain._positionDeltaModified;
-                this._rectDelta.bottom = this._edgeTargetNames.has('edgeBottom') ? positionDelta.y : undefined;
-                this._rectDelta.left = this._edgeTargetNames.has('edgeLeft') ? positionDelta.x : undefined;
-                this._rectDelta.right = this._edgeTargetNames.has('edgeRight') ? positionDelta.x : undefined;
-                this._rectDelta.top = this._edgeTargetNames.has('edgeTop') ? positionDelta.y : undefined;
+                let rectDelta = {
+                    bottom: this._edgeTargetNames.has('edgeBottom') ? positionDelta.y : undefined,
+                    left: this._edgeTargetNames.has('edgeLeft') ? positionDelta.x : undefined,
+                    right: this._edgeTargetNames.has('edgeRight') ? positionDelta.x : undefined,
+                    top: this._edgeTargetNames.has('edgeTop') ? positionDelta.y : undefined,
+                };
 
                 if (this.keepProportions ^ event.detail.originalEvent.shiftKey) {
-                    if (this._rectDelta.bottom == undefined && this._rectDelta.right == undefined) {
-                        if (this._rectDelta.top == undefined || this._rectDelta.left < this._rectDelta.top * this._aspectRatio) {
-                            this._rectDelta.top = this._rectDelta.left / this._aspectRatio;
+                    if (!Number.isFinite(rectDelta.bottom) && !Number.isFinite(rectDelta.right)) {
+                        if (!Number.isFinite(rectDelta.top) || rectDelta.left < rectDelta.top * this._aspectRatio) {
+                            rectDelta.top = rectDelta.left / this._aspectRatio;
                         }
                         else {
-                            this._rectDelta.left = this._rectDelta.top * this._aspectRatio;
+                            rectDelta.left = rectDelta.top * this._aspectRatio;
                         }
                     }
-                    else if (this._rectDelta.left == undefined && this._rectDelta.top == undefined) {
-                        if (this._rectDelta.bottom == undefined || this._rectDelta.right > this._rectDelta.bottom * this._aspectRatio) {
-                            this._rectDelta.bottom = this._rectDelta.right / this._aspectRatio;
+                    else if (!Number.isFinite(rectDelta.left) && !Number.isFinite(rectDelta.top)) {
+                        if (!Number.isFinite(rectDelta.bottom) || rectDelta.right > rectDelta.bottom * this._aspectRatio) {
+                            rectDelta.bottom = rectDelta.right / this._aspectRatio;
                         }
                         else {
-                            this._rectDelta.right = this._rectDelta.bottom * this._aspectRatio;
+                            rectDelta.right = rectDelta.bottom * this._aspectRatio;
                         }
                     }
-                    else if (this._rectDelta.left != undefined) {
-                        if (this._rectDelta.left < -this._rectDelta.bottom * this._aspectRatio) {
-                            this._rectDelta.bottom = -this._rectDelta.left / this._aspectRatio;
+                    else if (Number.isFinite(rectDelta.left)) {
+                        if (rectDelta.left < -rectDelta.bottom * this._aspectRatio) {
+                            rectDelta.bottom = -rectDelta.left / this._aspectRatio;
                         }
                         else {
-                            this._rectDelta.left = -this._rectDelta.bottom * this._aspectRatio;
+                            rectDelta.left = -rectDelta.bottom * this._aspectRatio;
                         }
                     }
-                    else if (this._rectDelta.right != undefined) {
-                        if (this._rectDelta.right > -this._rectDelta.top * this._aspectRatio) {
-                            this._rectDelta.top = -this._rectDelta.right / this._aspectRatio;
+                    else if (Number.isFinite(rectDelta.right)) {
+                        if (rectDelta.right > -rectDelta.top * this._aspectRatio) {
+                            rectDelta.top = -rectDelta.right / this._aspectRatio;
                         }
                         else {
-                            this._rectDelta.right = -this._rectDelta.top * this._aspectRatio;
+                            rectDelta.right = -rectDelta.top * this._aspectRatio;
                         }
                     }
                 }
 
+                this._pointerMain.updateRectDelta(rectDelta);
                 this._updateSize();
-                this._pointerMain.updateMagnetVector(this._rectDelta);
+                this._pointerMain.updateMagnetVector();
 
                 if (!this.deferredMagnetism) {
                     this._updateSize(true);
@@ -85,7 +88,6 @@ export class Resizable extends GestureArea {
                 this._topInitial = this.constructor.getTop(this.target);
                 this._widthInitial = this.constructor.getWidth(this.target, true);
                 this._aspectRatio = this._widthInitial / this._heightInitial;
-                // this._pointerMain.magnetRect = this.constructor.getDomRect(this.target, true);
                 this._pointerMain.rectInitial = this.constructor.getDomRect(this.target, true);
 
                 if (this.magnetism && !this.staticEnvironment) {
@@ -177,13 +179,6 @@ export class Resizable extends GestureArea {
     _topInitial = 0;
     _widthInitial = 0;
 
-    _rectDelta = {
-        bottom: undefined,
-        left: undefined,
-        right: undefined,
-        top: undefined,
-    };
-
 
     _defineEdgeTarget(eventTarget) {
         this._edgeTargetNames = null;
@@ -233,48 +228,44 @@ export class Resizable extends GestureArea {
     }
 
     _updateSize(withMagnetism = false) {
+        let rectDelta = this._pointerMain._rectDelta;
+
         if (withMagnetism) {
             let magnetVector = this._pointerMain._magnetVector;
-            this._rectDelta.bottom += magnetVector.y;
-            this._rectDelta.left += magnetVector.x;
-            this._rectDelta.right += magnetVector.x;
-            this._rectDelta.top += magnetVector.y;
+            this._pointerMain.updateRectDelta({
+                bottom: rectDelta.bottom + magnetVector.y,
+                left: rectDelta.left + magnetVector.x,
+                right: rectDelta.right + magnetVector.x,
+                top: rectDelta.top + magnetVector.y,
+            });
         }
 
-        let height = this._heightInitial + (this._rectDelta.bottom || 0) - (this._rectDelta.top || 0);
-        let width = this._widthInitial + (this._rectDelta.right || 0) - (this._rectDelta.left || 0);
+        let height = this._heightInitial + (rectDelta.bottom || 0) - (rectDelta.top || 0);
+        let width = this._widthInitial + (rectDelta.right || 0) - (rectDelta.left || 0);
         this.constructor.setHeight(this.target, height, true);
         this.constructor.setWidth(this.target, width, true);
         let heightReal = this.constructor.getHeight(this.target, true);
         let widthReal = this.constructor.getWidth(this.target, true);
 
-        if (!withMagnetism) {
-            let heightDelta = heightReal - height;
-            let widthDelta = widthReal - width;
-
-            if (this._rectDelta.bottom != undefined) {
-                this._rectDelta.bottom += heightDelta;
-            }
-            else if (this._rectDelta.top != undefined) {
-                this._rectDelta.top -= heightDelta;
-            }
-
-            if (this._rectDelta.left != undefined) {
-                this._rectDelta.left -= widthDelta;
-            }
-            else if (this._rectDelta.right != undefined) {
-                this._rectDelta.right += widthDelta;
-            }
-        }
-
-        if (Number.isFinite(this._rectDelta.left)) {
+        if (Number.isFinite(rectDelta.left)) {
             let left = this._leftInitial + this._widthInitial - widthReal;
             this.constructor.setLeft(this.target, left);
         }
 
-        if (Number.isFinite(this._rectDelta.top)) {
+        if (Number.isFinite(rectDelta.top)) {
             let top = this._topInitial + this._heightInitial - heightReal;
             this.constructor.setTop(this.target, top);
+        }
+
+        if (!withMagnetism) {
+            let heightDelta = heightReal - height;
+            let widthDelta = widthReal - width;
+            this._pointerMain.updateRectDelta({
+                bottom: rectDelta.bottom + heightDelta,
+                left: rectDelta.left - widthDelta,
+                right: rectDelta.right + widthDelta,
+                top: rectDelta.top - heightDelta,
+            });
         }
     }
 

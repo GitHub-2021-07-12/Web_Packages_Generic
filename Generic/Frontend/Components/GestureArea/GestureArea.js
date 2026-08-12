@@ -1,5 +1,6 @@
 import {Component} from '/Packages/Generic/Frontend/Components/Component/Component.js';
 
+import {Common} from '/Packages/Generic/Js/Common/Common.js';
 import {Executor} from '/Packages/Generic/Js/Executor/Executor.js';
 import {Vector2d} from '/Packages/Generic/Js/Vector2d/Vector2d.js';
 
@@ -24,18 +25,27 @@ export class GestureArea extends Component {
         _magnetVector = new Vector2d();
         _points = [];
         _positionDelta = new Vector2d();
-        _positionDeltaMax = new Vector2d();
-        _positionDeltaMin = new Vector2d();
         _positionDeltaModified = new Vector2d();
         _positionInner = new Vector2d();
         _positionInnerInitial = new Vector2d();
         _positionOuter = new Vector2d();
         _positionOuterInitial = new Vector2d();
+        _rectDeltaBounded = null;
         _shifted = false;
         _target = null;
         _timeStamp = performance.now();
         _timeStampInitial = this._timeStamp;
         _velocity = new Vector2d();
+
+        _rectDelta = {
+            bottom: undefined,
+            left: undefined,
+            right: undefined,
+            top: undefined,
+        };
+
+
+        rectDelta = null;
 
 
         get rectInitial() {
@@ -43,20 +53,17 @@ export class GestureArea extends Component {
         }
         set rectInitial(rectInitial) {
             this.__rectInitial = rectInitial;
-            this._definePositionDeltaBounds();
-        }
+            this._rectDeltaBounded = null;
 
+            if (this.rectInitial && !this._component.bound) return;
 
-        _definePositionDeltaBounds() {
-            if (this.rectInitial && this._component.bound) {
-                let boundDomRect = GestureArea.getDomRect(this._component.bound);
-                this._positionDeltaMax.set(boundDomRect.right - this.rectInitial.right, boundDomRect.bottom - this.rectInitial.bottom);
-                this._positionDeltaMin.set(boundDomRect.left - this.rectInitial.left, boundDomRect.top - this.rectInitial.top);
-            }
-            else {
-                this._positionDeltaMax.set(Infinity);
-                this._positionDeltaMin.set(-Infinity);
-            }
+            let boundDomRect = GestureArea.getDomRect(this._component.bound);
+            this._rectDeltaBounded = {
+                bottom: boundDomRect.bottom - this.rectInitial.bottom,
+                left: boundDomRect.left - this.rectInitial.left,
+                right: boundDomRect.right - this.rectInitial.right,
+                top: boundDomRect.top - this.rectInitial.top,
+            };
         }
 
         _defineVelocity() {
@@ -149,7 +156,6 @@ export class GestureArea extends Component {
             this._component = component;
             this._id = event.pointerId;
             this._target = this._component._pointerTarget || event.target;
-            this._definePositionDeltaBounds();
             this._updatePositions(event);
             this._positionInnerInitial.setVector(this._positionInner);
             this._positionOuterInitial.setVector(this._positionOuter);
@@ -192,13 +198,12 @@ export class GestureArea extends Component {
 
             this._positionDeltaModified
                 .prod(this._component.swipeFactor)
-                .toRange(this._positionDeltaMin, this._positionDeltaMax)
                 .toRangeLength(0, this._component.radius)
                 .round()
             ;
         }
 
-        updateMagnetVector(rectDelta) {
+        updateMagnetVector() {
             let magnetAreas = this._component.magnetAreas;
             let magnetism = this._component.magnetism;
             this._magnetAreasBottom.clear();
@@ -207,17 +212,17 @@ export class GestureArea extends Component {
             this._magnetAreasTop.clear();
             this._magnetVector.set(null);
 
-            if (!(magnetism && this.rectInitial && magnetAreas?.size)) return;
+            if (!(magnetism && this._rectDelta && this.rectInitial && magnetAreas?.size)) return;
 
             let magnetAreasBottom = new Map();
             let magnetAreasLeft = new Map();
             let magnetAreasRight = new Map();
             let magnetAreasTop = new Map();
             let magnetRect = {
-                bottom: this.rectInitial.bottom + (rectDelta.bottom || 0),
-                left: this.rectInitial.left + (rectDelta.left || 0),
-                right: this.rectInitial.right + (rectDelta.right || 0),
-                top: this.rectInitial.top + (rectDelta.top || 0),
+                bottom: this.rectInitial.bottom + (this._rectDelta.bottom || 0),
+                left: this.rectInitial.left + (this._rectDelta.left || 0),
+                right: this.rectInitial.right + (this._rectDelta.right || 0),
+                top: this.rectInitial.top + (this._rectDelta.top || 0),
             };
             let magnetVector = new Vector2d(Infinity);
 
@@ -230,7 +235,7 @@ export class GestureArea extends Component {
 
                 if (deltaLeftRight > magnetism || deltaTopBottom > magnetism || deltaRightLeft < -magnetism || deltaBottomTop < -magnetism) continue;
 
-                if (rectDelta.bottom != undefined) {
+                if (Number.isFinite(this._rectDelta.bottom)) {
                     let deltaBottomBottom = magnetAreaRect.bottom - magnetRect.bottom;
                     let deltaBottomBottomAbs = Math.abs(deltaBottomBottom);
                     let deltaTopBottomAbs = Math.abs(deltaTopBottom);
@@ -245,7 +250,7 @@ export class GestureArea extends Component {
                     }
                 }
 
-                if (rectDelta.left != undefined) {
+                if (Number.isFinite(this._rectDelta.left)) {
                     let deltaLeftLeft = magnetAreaRect.left - magnetRect.left;
                     let deltaLeftLeftAbs = Math.abs(deltaLeftLeft);
                     let deltaRightLeftAbs = Math.abs(deltaRightLeft);
@@ -260,7 +265,7 @@ export class GestureArea extends Component {
                     }
                 }
 
-                if (rectDelta.right != undefined) {
+                if (Number.isFinite(this._rectDelta.right)) {
                     let deltaRightRight = magnetAreaRect.right - magnetRect.right;
                     let deltaRightRightAbs = Math.abs(deltaRightRight);
                     let deltaLeftRightAbs = Math.abs(deltaLeftRight);
@@ -275,7 +280,7 @@ export class GestureArea extends Component {
                     }
                 }
 
-                if (rectDelta.top != undefined) {
+                if (Number.isFinite(this._rectDelta.top)) {
                     let deltaTopTop = magnetAreaRect.top - magnetRect.top;
                     let deltaTopTopAbs = Math.abs(deltaTopTop);
                     let deltaBottomTopAbs = Math.abs(deltaBottomTop);
@@ -318,6 +323,26 @@ export class GestureArea extends Component {
                 this._magnetVector.y = magnetVectorY;
                 this._magnetAreasTop.add(magnetArea);
             }
+        }
+
+        updatePositionDeltaModified(vector = null) {
+            Object.assign(this._positionDeltaModified, vector);
+
+            if (!this._component.bound) return;
+
+            this._positionDeltaModified.x = Common.toRange(this._positionDeltaModified.x, this._rectDeltaBounded.left, this._rectDeltaBounded.right);
+            this._positionDeltaModified.y = Common.toRange(this._positionDeltaModified.y, this._rectDeltaBounded.top, this._rectDeltaBounded.bottom);
+        }
+
+        updateRectDelta(rect = null) {
+            Object.assign(this._rectDelta, rect);
+
+            if (!this._component.bound) return;
+
+            this._rectDelta.bottom = Math.min(this._rectDelta.bottom, this._rectDeltaBounded.bottom);
+            this._rectDelta.left = Math.max(this._rectDelta.left, this._rectDeltaBounded.left);
+            this._rectDelta.right = Math.min(this._rectDelta.right, this._rectDeltaBounded.right);
+            this._rectDelta.top = Math.max(this._rectDelta.top, this._rectDeltaBounded.top);
         }
     };
 

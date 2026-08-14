@@ -32,7 +32,7 @@
                 --GestureArea_bound: url('#{:root}');
                 --Draggable_dropAreas: url('#{x-resizable:not(:active)}');
                 /* --GestureArea_deferredMagnetism: true; */
-                --GestureArea_dynamicEnvironment: true;
+                /* --GestureArea_gestures: swipe; */
                 --GestureArea_magnetAreas: url('#{x-draggable:not(:active)}');
                 /* --GestureArea_magnetAreas: url('#{x-resizable:not(:active)}'); */
                 --GestureArea_magnetism: 10;
@@ -65,11 +65,11 @@
             }
 
             x-resizable {
-                --Component_eventsWithoutPropagation: swipeMain swipeStartMain swipeStopMain;
+                /* --Component_eventsWithoutPropagation: swipeMain swipeStartMain swipeStopMain; */
                 /* --Component_eventsWithoutPropagation: pointerdown swipeMain; */
                 --GestureArea_deferredMagnetism: true;
                 --GestureArea_bound: url('#{:root}');
-                --GestureArea_dynamicEnvironment: true;
+                --GestureArea_gestureCapturing: true;
                 --GestureArea_magnetAreas: url('#{x-draggable:not(:active)}');
                 /* --GestureArea_magnetAreas: url('#{x-resizable:not(:active)}'); */
                 /* --GestureArea_magnetAreas: url('#{x-resizable}'); */
@@ -129,6 +129,9 @@
 
             window.Component = generic.frontend.components.Component;
             await Component._defined;
+
+
+            document.body.addEventListener('tap', (event) => console.log(event.target));
         </script>
     </head>
 

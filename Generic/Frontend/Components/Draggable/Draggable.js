@@ -24,7 +24,13 @@ export class Draggable extends GestureArea {
             },
 
             swipeStartMain: function (event) {
-                this._pointerMainIsBlocked = !this._pointerMain || !this._checkHandle(this._pointerMain._target);
+                // this._pointerMainIsBlocked = !this._pointerMain || !this._checkHandle(this._pointerMain._target);
+                // this._pointerMainIsBlocked = event.detail.pointer != this._pointerMain || !this._checkHandle(this._pointerMain._target);
+                // this._pointerMainIsBlocked = this._getGestureCapture('swipe') || !this._checkHandle(this._pointerMain._target);
+                // this._pointerMainIsBlocked = !this._getGestureCapture('swipe') || !this._checkHandle(this._pointerMain._target);
+                this._pointerMainIsBlocked = this.constructor._gestureCaptors.swipe && this.constructor._gestureCaptors.swipe != this || !this._checkHandle(this._pointerMain._target);
+
+                // console.log(this._getGestureCapture('swipe'))
 
                 if (this._pointerMainIsBlocked) return;
 

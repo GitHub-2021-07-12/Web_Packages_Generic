@@ -33,8 +33,8 @@ export class GestureArea extends Component {
         _rectDeltaBounded = null;
         _shifted = false;
         _target = null;
-        _timeStamp = performance.now();
-        _timeStampInitial = this._timeStamp;
+        _timeStamp = 0;
+        _timeStampInitial = 0;
         _velocity = new Vector2d();
 
         _rectDelta = {
@@ -43,9 +43,6 @@ export class GestureArea extends Component {
             right: undefined,
             top: undefined,
         };
-
-
-        rectDelta = null;
 
 
         get rectInitial() {
@@ -157,6 +154,8 @@ export class GestureArea extends Component {
             this._id = event.pointerId;
             this._target = this._component._pointerTarget || event.target;
             this._updatePositions(event);
+            this.updateTimestamp();
+            this._timeStampInitial = this._timeStamp;
             this._positionInnerInitial.setVector(this._positionInner);
             this._positionOuterInitial.setVector(this._positionOuter);
         }
@@ -169,8 +168,8 @@ export class GestureArea extends Component {
         }
 
         update(event) {
-            this._timeStamp = performance.now();
             this._updatePositions(event);
+            this.updateTimestamp();
             this._positionDelta.setVector(this._positionOuter).sub(this._positionOuterInitial);
             this._detectShift();
 
@@ -344,21 +343,30 @@ export class GestureArea extends Component {
             this._rectDelta.right = Math.min(this._rectDelta.right, this._rectDeltaBounded.right);
             this._rectDelta.top = Math.max(this._rectDelta.top, this._rectDeltaBounded.top);
         }
+
+        updateTimestamp() {
+            this._timeStamp = performance.now();
+        }
     };
 
     static _eventHandlerDescriptors = {
         host: {
             pointerdown: function (event) {
-                if (!this.gestures.size || !this.receptive && this.constructor._Pointer._idsCaptured.has(event.pointerId)) return;
+                // if (!this.gestures.size || !this.receptive && this.constructor._Pointer._idsCaptured.has(event.pointerId)) return;
+                if (!this.gestures.size) return;
 
-                if (this._pointerMain && !this.multiPoint) {
+                this._addPointer(event);
+
+                if (!this.dispatchEvent('capture', {originalEvent: event, pointer: this._pointerMain})) {
                     this._deletePointer(this._pointerMain);
+
+                    return;
                 }
 
                 this._eventHandlers.host.pointermove.disabled = false;
-                this._addPointer(event);
+                // this._addPointer(event);
                 this._initPress(this._pointerMain, event);
-                this.dispatchEvent('capture', {originalEvent: event, pointer: this._pointerMain});
+                // this.dispatchEvent('capture', {originalEvent: event, pointer: this._pointerMain});
             },
 
             pointermove: function (event) {
@@ -381,7 +389,7 @@ export class GestureArea extends Component {
                 if (!pointer) return;
 
                 this._eventHandlers.host.pointermove.disabled = !this._pointers.size;
-                pointer.update(event);
+                pointer.updateTimestamp();
 
                 this._detectTap(pointer, event);
                 this._detectSwipeStop(pointer, event);
@@ -403,10 +411,11 @@ export class GestureArea extends Component {
 
     static _fieldDescriptors = {
         deferredMagnetism: false,
+        gestureCapturing: false,
         invertedX: false,
         invertedY: false,
         multiPoint: false,
-        receptive: false,
+        // receptive: false,
         shiftJumping: false,
         staticEnvironment: false,
         vertical: false,
@@ -534,6 +543,13 @@ export class GestureArea extends Component {
         },
     };
 
+    static _gestureCaptors = {
+        flick: null,
+        press: null,
+        swipe: null,
+        tap: null,
+    };
+
 
     static checkIntersection(rect1, rect2) {
         return !(rect1.bottom <= rect2.top || rect1.left >= rect2.right || rect1.right <= rect2.left || rect1.top >= rect2.bottom);
@@ -560,9 +576,13 @@ export class GestureArea extends Component {
 
 
     _addPointer(pointerEvent) {
+        if (this._pointerMain && !this.multiPoint) {
+            this._deletePointer(this._pointerMain);
+        }
+
         this._pointerMain = new this.constructor._Pointer(this, pointerEvent);
-        this._pointerMain.capture();
         this._pointers.set(this._pointerMain._id, this._pointerMain);
+        this._pointerMain.capture();
     }
 
     _cancelPress(pointer) {
@@ -592,6 +612,7 @@ export class GestureArea extends Component {
 
     _detectFlick(pointer, originalEvent) {
         if (!this.gestures.has('flick')) return;
+        if (this._getGestureCapture('flick')) return;
 
         if (
             pointer._velocity.length < this.flickVelocityMin
@@ -608,7 +629,9 @@ export class GestureArea extends Component {
 
     _detectSwipe(pointer, originalEvent) {
         if (!this.gestures.has('swipe')) return;
-        if (!pointer._shifted) return;
+        // if (!pointer._shifted || this._getGestureCapture('swipe')) return;
+        // if (!pointer._shifted || !this._getGestureCapture('swipe')) return;
+        if (!pointer._shifted || this.constructor._gestureCaptors.swipe && this.constructor._gestureCaptors.swipe != this) return;
 
         if (!pointer._GestureArea_swiped) {
             pointer._GestureArea_swiped = true;
@@ -647,6 +670,14 @@ export class GestureArea extends Component {
         return result;
     }
 
+    _getGestureCapture(gesture) {
+        let component = this.constructor._gestureCaptors[gesture];
+
+        // return !!component && component != this;
+        // return !component || component == this;
+        return component == this;
+    }
+
     _init() {
         this._eventHandlers.host.pointermove.disabled = true;
     }
@@ -656,6 +687,14 @@ export class GestureArea extends Component {
 
         pointer._GestureArea_detectPress = this._detectPress.bind(this, pointer, originalEvent);
         Executor.queueTask(pointer._GestureArea_detectPress, this.pressDuration);
+    }
+
+    _setGestureCapture(gesture, capture) {
+        let gestureCaptors = this.constructor._gestureCaptors;
+
+        if (capture && gestureCaptors[gesture] || !this.gestureCapturing) return;
+
+        gestureCaptors[gesture] = capture ? this : null;
     }
 
     _updateMagnetAreasActive() {

@@ -878,16 +878,13 @@ export class Component extends HTMLElement {
         return parseFloat(cssPropValue);
     }
 
-    static getDomPath(element, root) {
+    static getDomPath(node, root = null) {
         let path = [];
-        let aim = element;
 
-        while (aim && aim != root) {
-            path.push(aim);
-            aim = aim.parentElement;
+        while (node && node != root) {
+            path.push(node);
+            node = node.parentNode;
         }
-
-        path.reverse();
 
         return path;
     }

@@ -9,7 +9,7 @@ export class Resizable extends GestureArea {
 
     static _eventHandlerDescriptors = {
         host: {
-            capture: function () {
+            capture: function (event) {
                 this._pointerMainIsBlocked = !this._pointerMain;
 
                 if (this._pointerMainIsBlocked) return;
@@ -17,13 +17,22 @@ export class Resizable extends GestureArea {
                 this._defineEdgeTarget(this._pointerMain._target);
                 this._pointerMainIsBlocked ||= !this._edgeTargetNames;
 
-                if (this._pointerMainIsBlocked) {
-                    this._pointerMain.release();
+                if (!this._pointerMainIsBlocked) {
+                    // this._pointerMain.release();
+                    // event.preventDefault();
+                    this._setGestureCapture('swipe', true);
+                    // this.constructor._gestureCaptors.swipe = this;
                 }
             },
 
+            releaseMain: function () {
+                this._setGestureCapture('swipe', false);
+            },
+
             swipeMain: function (event) {
-                if (this._pointerMainIsBlocked) return;
+                // if (this._pointerMainIsBlocked) return;
+                // if (!this._getGestureCapture('swipe')) return;
+                if (this.constructor._gestureCaptors.swipe != this) return;
 
                 let positionDelta = this._pointerMain._positionDeltaModified;
                 let rectDelta = {
@@ -80,7 +89,12 @@ export class Resizable extends GestureArea {
             },
 
             swipeStartMain: function (event) {
-                if (this._pointerMainIsBlocked) return;
+                // if (this._pointerMainIsBlocked) {
+                //     this._pointerMain.block();
+                // }
+
+                // if (this._pointerMainIsBlocked) return;
+                if (this.constructor._gestureCaptors.swipe != this) return;
 
                 this._heightInitial = this.constructor.getHeight(this.target, true);
                 this._leftInitial = this.constructor.getLeft(this.target);
@@ -99,7 +113,8 @@ export class Resizable extends GestureArea {
             },
 
             swipeStopMain: function (event) {
-                if (this._pointerMainIsBlocked) return;
+                // if (this._pointerMainIsBlocked) return;
+                if (this.constructor._gestureCaptors.swipe != this) return;
 
                 if (this.deferredMagnetism) {
                     this._updateSize(true);

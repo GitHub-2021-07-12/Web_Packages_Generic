@@ -7,7 +7,7 @@ import {Vector2d} from '/Packages/Generic/Js/Vector2d/Vector2d.js';
 
 export class GestureArea extends Component {
     static _Pointer = class {
-        static _idsCaptured = new Set();
+        static _exclusiveCaptors = new Map();
 
 
         static pointsCountMax = 4;
@@ -140,13 +140,27 @@ export class GestureArea extends Component {
         }
 
 
-        capture() {
-            let idsCaptured = this.constructor._idsCaptured;
+        _captured = false;
 
-            if (!this._target || idsCaptured.has(this._id)) return;
+        capture(exclusive = false) {
+            let exclusiveCaptors = this.constructor._exclusiveCaptors;
+
+            if (exclusive && !exclusiveCaptors.has(this._id)) {
+                if (this._component.exclusiveCapture) {
+                    exclusiveCaptors.set(this._id, this._component);
+                }
+                else {
+                    this._captured = true;
+                }
+            }
 
             this._target.setPointerCapture(this._id);
-            idsCaptured.add(this._id);
+        }
+
+        checkCapture() {
+            let exclusiveCaptor = this.constructor._exclusiveCaptors.get(this._id);
+
+            return exclusiveCaptor ? exclusiveCaptor == this._component : this._captured;
         }
 
         constructor(component, event) {
@@ -161,10 +175,9 @@ export class GestureArea extends Component {
         }
 
         release() {
-            if (!this._target) return;
-
+            this._captured = false;
             this._target.releasePointerCapture(this._id);
-            this.constructor._idsCaptured.delete(this._id);
+            this.constructor._exclusiveCaptors.delete(this._id);
         }
 
         update(event) {
@@ -352,7 +365,6 @@ export class GestureArea extends Component {
     static _eventHandlerDescriptors = {
         host: {
             pointerdown: function (event) {
-                // if (!this.gestures.size || !this.receptive && this.constructor._Pointer._idsCaptured.has(event.pointerId)) return;
                 if (!this.gestures.size) return;
 
                 this._addPointer(event);
@@ -364,9 +376,7 @@ export class GestureArea extends Component {
                 }
 
                 this._eventHandlers.host.pointermove.disabled = false;
-                // this._addPointer(event);
                 this._initPress(this._pointerMain, event);
-                // this.dispatchEvent('capture', {originalEvent: event, pointer: this._pointerMain});
             },
 
             pointermove: function (event) {
@@ -411,11 +421,10 @@ export class GestureArea extends Component {
 
     static _fieldDescriptors = {
         deferredMagnetism: false,
-        gestureCapturing: false,
+        exclusiveCapture: false,
         invertedX: false,
         invertedY: false,
         multiPoint: false,
-        // receptive: false,
         shiftJumping: false,
         staticEnvironment: false,
         vertical: false,
@@ -543,13 +552,6 @@ export class GestureArea extends Component {
         },
     };
 
-    static _gestureCaptors = {
-        flick: null,
-        press: null,
-        swipe: null,
-        tap: null,
-    };
-
 
     static checkIntersection(rect1, rect2) {
         return !(rect1.bottom <= rect2.top || rect1.left >= rect2.right || rect1.right <= rect2.left || rect1.top >= rect2.bottom);
@@ -612,7 +614,6 @@ export class GestureArea extends Component {
 
     _detectFlick(pointer, originalEvent) {
         if (!this.gestures.has('flick')) return;
-        if (this._getGestureCapture('flick')) return;
 
         if (
             pointer._velocity.length < this.flickVelocityMin
@@ -628,10 +629,7 @@ export class GestureArea extends Component {
     }
 
     _detectSwipe(pointer, originalEvent) {
-        if (!this.gestures.has('swipe')) return;
-        // if (!pointer._shifted || this._getGestureCapture('swipe')) return;
-        // if (!pointer._shifted || !this._getGestureCapture('swipe')) return;
-        if (!pointer._shifted || this.constructor._gestureCaptors.swipe && this.constructor._gestureCaptors.swipe != this) return;
+        if (!pointer._shifted || !this.gestures.has('swipe')) return;
 
         if (!pointer._GestureArea_swiped) {
             pointer._GestureArea_swiped = true;
@@ -648,8 +646,7 @@ export class GestureArea extends Component {
     }
 
     _detectTap(pointer, originalEvent) {
-        if (!this.gestures.has('tap')) return;
-        if (pointer._shifted || pointer._timeStamp - pointer._timeStampInitial > this.tapDuration) return;
+        if (pointer._shifted || pointer._timeStamp - pointer._timeStampInitial > this.tapDuration || !this.gestures.has('tap')) return;
 
         this._updateTapsCount(pointer);
         this.dispatchEvent('tap', {originalEvent, pointer, tapsCount: this._tapsCount});
@@ -670,14 +667,6 @@ export class GestureArea extends Component {
         return result;
     }
 
-    _getGestureCapture(gesture) {
-        let component = this.constructor._gestureCaptors[gesture];
-
-        // return !!component && component != this;
-        // return !component || component == this;
-        return component == this;
-    }
-
     _init() {
         this._eventHandlers.host.pointermove.disabled = true;
     }
@@ -687,14 +676,6 @@ export class GestureArea extends Component {
 
         pointer._GestureArea_detectPress = this._detectPress.bind(this, pointer, originalEvent);
         Executor.queueTask(pointer._GestureArea_detectPress, this.pressDuration);
-    }
-
-    _setGestureCapture(gesture, capture) {
-        let gestureCaptors = this.constructor._gestureCaptors;
-
-        if (capture && gestureCaptors[gesture] || !this.gestureCapturing) return;
-
-        gestureCaptors[gesture] = capture ? this : null;
     }
 
     _updateMagnetAreasActive() {

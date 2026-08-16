@@ -10,29 +10,17 @@ export class Resizable extends GestureArea {
     static _eventHandlerDescriptors = {
         host: {
             capture: function (event) {
-                this._pointerMainIsBlocked = !this._pointerMain;
-
-                if (this._pointerMainIsBlocked) return;
+                if (event.target != this) return;
 
                 this._defineEdgeTarget(this._pointerMain._target);
-                this._pointerMainIsBlocked ||= !this._edgeTargetNames;
 
-                if (!this._pointerMainIsBlocked) {
-                    // this._pointerMain.release();
-                    // event.preventDefault();
-                    this._setGestureCapture('swipe', true);
-                    // this.constructor._gestureCaptors.swipe = this;
+                if (this._edgeTargetNames) {
+                    this._pointerMain.capture(true);
                 }
             },
 
-            releaseMain: function () {
-                this._setGestureCapture('swipe', false);
-            },
-
             swipeMain: function (event) {
-                // if (this._pointerMainIsBlocked) return;
-                // if (!this._getGestureCapture('swipe')) return;
-                if (this.constructor._gestureCaptors.swipe != this) return;
+                if (event.target != this || !this._pointerMain.checkCapture()) return;
 
                 let positionDelta = this._pointerMain._positionDeltaModified;
                 let rectDelta = {
@@ -89,12 +77,7 @@ export class Resizable extends GestureArea {
             },
 
             swipeStartMain: function (event) {
-                // if (this._pointerMainIsBlocked) {
-                //     this._pointerMain.block();
-                // }
-
-                // if (this._pointerMainIsBlocked) return;
-                if (this.constructor._gestureCaptors.swipe != this) return;
+                if (event.target != this || !this._pointerMain.checkCapture()) return;
 
                 this._heightInitial = this.constructor.getHeight(this.target, true);
                 this._leftInitial = this.constructor.getLeft(this.target);
@@ -113,8 +96,7 @@ export class Resizable extends GestureArea {
             },
 
             swipeStopMain: function (event) {
-                // if (this._pointerMainIsBlocked) return;
-                if (this.constructor._gestureCaptors.swipe != this) return;
+                if (event.target != this || !this._pointerMain.checkCapture()) return;
 
                 if (this.deferredMagnetism) {
                     this._updateSize(true);
@@ -125,7 +107,7 @@ export class Resizable extends GestureArea {
             },
 
             tap: function (event) {
-                if (this._pointerMainIsBlocked || !this.resettable || event.detail.tapsCount < 2) return;
+                if (!this.resettable || event.detail.tapsCount < 2 || !this._pointerMain.checkCapture()) return;
 
                 if (this._edgeTargetNames.has('edgeBottom')) {
                     this.resetHeight();
@@ -190,7 +172,6 @@ export class Resizable extends GestureArea {
     _edgeTargetNames = null;
     _heightInitial = 0;
     _leftInitial = 0;
-    _pointerMainIsBlocked = false;
     _topInitial = 0;
     _widthInitial = 0;
 

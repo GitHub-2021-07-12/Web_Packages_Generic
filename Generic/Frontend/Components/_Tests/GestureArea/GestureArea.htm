@@ -31,7 +31,7 @@
                 /* --GestureArea_axis: x; */
                 --GestureArea_bound: url('#{:root}');
                 --Draggable_dropAreas: url('#{x-resizable:not(:active)}');
-                /* --GestureArea_deferredMagnetism: true; */
+                --GestureArea_deferredMagnetism: true;
                 /* --GestureArea_gestures: swipe; */
                 --GestureArea_magnetAreas: url('#{x-draggable:not(:active)}');
                 /* --GestureArea_magnetAreas: url('#{x-resizable:not(:active)}'); */
@@ -65,16 +65,16 @@
             }
 
             x-resizable {
-                /* --Component_eventsWithoutPropagation: swipeMain swipeStartMain swipeStopMain; */
+                /* --Component_eventsWithoutPropagation: capture swipeMain swipeStartMain swipeStopMain; */
                 /* --Component_eventsWithoutPropagation: pointerdown swipeMain; */
-                --GestureArea_deferredMagnetism: true;
-                --GestureArea_bound: url('#{:root}');
-                --GestureArea_gestureCapturing: true;
-                --GestureArea_magnetAreas: url('#{x-draggable:not(:active)}');
-                /* --GestureArea_magnetAreas: url('#{x-resizable:not(:active)}'); */
                 /* --GestureArea_magnetAreas: url('#{x-resizable}'); */
-                --GestureArea_magnetism: 10;
+                /* --GestureArea_magnetAreas: url('#{x-resizable:not(:active)}'); */
                 /* --Resizable_keepProportions: true; */
+                --GestureArea_bound: url('#{:root}');
+                --GestureArea_deferredMagnetism: true;
+                --GestureArea_exclusiveCapture: true;
+                --GestureArea_magnetAreas: url('#{x-draggable:not(:active)}');
+                --GestureArea_magnetism: 10;
                 --Resizable_resettable: true;
                 --Resizable_target: url('#{x-draggable}');
 

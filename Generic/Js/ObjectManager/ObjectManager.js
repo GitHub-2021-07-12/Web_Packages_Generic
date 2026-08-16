@@ -25,11 +25,15 @@ export class ObjectManager {
     static extendObject(object, prototype) {
         if (object?.constructor != Object || prototype?.constructor != Object) return object;
 
+        let objectExtended = {...prototype};
+
         for (let key of Object.keys(object)) {
-            object[key] = this.extendObject(object[key], prototype[key]);
+            // object[key] = this.extendObject(object[key], prototype[key]);
+            objectExtended[key] = this.extendObject(object[key], prototype[key]);
         }
 
-        return {...prototype, ...object};
+        // return {...prototype, ...object};
+        return objectExtended;
     }
 
     static extendProps(object, prototype = null, ...propNames) {

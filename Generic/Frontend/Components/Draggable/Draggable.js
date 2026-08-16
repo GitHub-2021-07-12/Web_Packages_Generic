@@ -7,7 +7,7 @@ export class Draggable extends GestureArea {
     static _eventHandlerDescriptors = {
         host: {
             swipeMain: function (event) {
-                if (this._pointerMainIsBlocked) return;
+                if (event.target != this || !this._pointerMain.checkCapture()) return;
 
                 let positionDelta = this._pointerMain._positionDeltaModified;
                 this._detectDropAreaTarget();
@@ -24,15 +24,13 @@ export class Draggable extends GestureArea {
             },
 
             swipeStartMain: function (event) {
-                // this._pointerMainIsBlocked = !this._pointerMain || !this._checkHandle(this._pointerMain._target);
-                // this._pointerMainIsBlocked = event.detail.pointer != this._pointerMain || !this._checkHandle(this._pointerMain._target);
-                // this._pointerMainIsBlocked = this._getGestureCapture('swipe') || !this._checkHandle(this._pointerMain._target);
-                // this._pointerMainIsBlocked = !this._getGestureCapture('swipe') || !this._checkHandle(this._pointerMain._target);
-                this._pointerMainIsBlocked = this.constructor._gestureCaptors.swipe && this.constructor._gestureCaptors.swipe != this || !this._checkHandle(this._pointerMain._target);
+                if (event.target != this) return;
 
-                // console.log(this._getGestureCapture('swipe'))
+                if (this._checkHandle(this._pointerMain._target)) {
+                    this._pointerMain.capture(true);
+                }
 
-                if (this._pointerMainIsBlocked) return;
+                if (!this._pointerMain.checkCapture()) return;
 
                 this._dragging = true;
                 this._pointerMain.rectInitial = this.constructor.getDomRect(this.target, true);
@@ -49,7 +47,7 @@ export class Draggable extends GestureArea {
             },
 
             swipeStopMain: function (event) {
-                if (this._pointerMainIsBlocked) return;
+                if (event.target != this || !this._pointerMain.checkCapture()) return;
 
                 if (this.deferredMagnetism) {
                     this._pointerMain.updatePositionDeltaModified();
@@ -134,7 +132,6 @@ export class Draggable extends GestureArea {
 
     _dropAreaDomRects = new Map();
     _dropAreaTargetPrev = null;
-    _pointerMainIsBlocked = false;
     _positionInitial = new Vector2d();
 
 

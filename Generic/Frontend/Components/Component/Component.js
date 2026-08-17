@@ -15,14 +15,15 @@ export class Component extends HTMLElement {
     static _dom = null;
     static _domSubtrees = {};
     static _fieldNamesByExternals = {};
+    static _fieldsDeferred = [];
     static _html = '';
     static _htmlUrl = '';
     static _httpClient = null;
     static _idAttribute = 'id';
+    static _interpolationArgs = {};
     static _interpolationKey = this.name;
     static _interpolationRegExp = /{{\s*(?<key>.*?)\s*:\s*(?<value>.*?)\s*}}/g;
-    static _interpolationArgs = {};
-    static _propsExtended = ['_eventHandlerDescriptors', '_fieldDescriptors', '_fieldNamesByExternals', '_shadowOpts'];
+    static _propsExtended = ['_eventHandlerDescriptors', '_fieldDescriptors', '_fieldNamesByExternals', '_fieldsDeferred', '_shadowOpts'];
     static _rootTag = 'slot';
     static _styleSheet = null;
     static _styleSheetDescriptors = {};
@@ -487,7 +488,7 @@ export class Component extends HTMLElement {
         }
 
         refresh(simple = false) {
-            if (simple && this._isDefault) return;
+            // if (simple && this._isDefault) return;
 
             this._update(simple ? this._valueSimple : this._value);
         }
@@ -1168,7 +1169,7 @@ export class Component extends HTMLElement {
 
         this._autoRefreshIsBlocked = true;
         this._init();
-        this.refreshFields();
+        this._refreshFields();
         this._autoRefreshIsBlocked = false;
         this._refreshAuto();
     }
@@ -1205,6 +1206,16 @@ export class Component extends HTMLElement {
         if (!this.autoRefresh || this._autoRefreshIsBlocked) return;
 
         this.refresh(...args);
+    }
+
+    _refreshFields() {
+        let fieldsDeferred = new Set(this.constructor._fieldsDeferred);
+
+        for (let fieldName of Object.keys(this._fields)) {
+            if (fieldsDeferred.has(fieldName)) continue;
+
+            this.refreshField(fieldName);
+        }
     }
 
     _releaseDomSubtree(domSubtreeKey) {
@@ -1286,16 +1297,6 @@ export class Component extends HTMLElement {
 
     refreshField(fieldName, simple = false) {
         this._fields[fieldName]?.refresh(simple);
-    }
-
-    refreshFields(fieldNames = null, simple = false) {
-        if (!fieldNames?.length) {
-            fieldNames = Object.keys(this._fields);
-        }
-
-        for (let fieldName of fieldNames) {
-            this.refreshField(fieldName, simple);
-        }
     }
 
     resetField(fieldName) {

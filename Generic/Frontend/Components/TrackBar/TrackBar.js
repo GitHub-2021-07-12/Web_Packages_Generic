@@ -10,12 +10,13 @@ export class TrackBar extends GestureArea {
 
     static _eventHandlerDescriptors = {
         host: {
-            capture: function () {
-                this._pointerMainIsBlocked = this.mode == 'normal' && this._pointerMain?._target != this._elements.puck;
+            capture: function (event) {
+                // event.preventDefault();
 
-                if (this._pointerMainIsBlocked) return;
+                if (this.mode == 'normal' && this._pointerMain?._target != this._elements.puck) return;
 
                 this._active = true;
+                // this._pointerMain.capture();
 
                 if (this.mode == 'precise') {
                     this._defineValue();
@@ -63,13 +64,13 @@ export class TrackBar extends GestureArea {
             },
 
             releaseMain: function () {
-                if (this._pointerMainIsBlocked) return;
+                if (!this._pointerMain.checkCapture()) return;
 
                 this._active = false;
             },
 
             swipeMain: function () {
-                if (this._pointerMainIsBlocked) return;
+                if (!this._pointerMain.checkCapture()) return;
 
                 this._defineValue();
             },
@@ -152,7 +153,6 @@ export class TrackBar extends GestureArea {
 
 
     _freeSpaceLength = 0;
-    _pointerMainIsBlocked = false;
     _puck_positionShift = 0;
     _valueCaptured = 0;
     _valueStep = 0;

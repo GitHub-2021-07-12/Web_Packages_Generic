@@ -338,6 +338,7 @@
                             bbb: 0,
                         },
                     },
+                    c: [0, 1],
                 };
                 let object = {
                     a: {
@@ -349,11 +350,12 @@
                             bbb1: 1,
                         },
                     },
+                    c: [2],
                 };
                 // generic.js.ObjectManager.extendProps(object, protototype, 'a', 'b');
                 let o = js.ObjectManager.extendObject(object, protototype);
 
-                console.dir(object, o)
+                // console.dir(object, o)
             }
 
         </script>

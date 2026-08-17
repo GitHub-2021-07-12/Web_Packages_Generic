@@ -23,16 +23,26 @@ export class ObjectManager {
     }
 
     static extendObject(object, prototype) {
-        if (object?.constructor != Object || prototype?.constructor != Object) return object;
+        let objectConstructor = object?.constructor;
 
-        let objectExtended = {...prototype};
+        if (
+            objectConstructor != prototype?.constructor
+            || objectConstructor != Array && objectConstructor != Object
+        ) return object;
 
-        for (let key of Object.keys(object)) {
-            // object[key] = this.extendObject(object[key], prototype[key]);
-            objectExtended[key] = this.extendObject(object[key], prototype[key]);
+        let objectExtended = null;
+
+        if (objectConstructor == Array) {
+            objectExtended = [...prototype, ...object];
+        }
+        else {
+            objectExtended = {...prototype};
+
+            for (let key of Object.keys(object)) {
+                objectExtended[key] = this.extendObject(object[key], prototype[key]);
+            }
         }
 
-        // return {...prototype, ...object};
         return objectExtended;
     }
 

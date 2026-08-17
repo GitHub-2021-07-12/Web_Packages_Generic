@@ -4,6 +4,8 @@ import {Vector2d} from '/Packages/Generic/Js/Vector2d/Vector2d.js';
 
 
 export class Draggable extends GestureArea {
+    static _fieldsDeferred = ['dropAreas'];
+
     static _eventHandlerDescriptors = {
         host: {
             swipeMain: function (event) {
@@ -27,7 +29,7 @@ export class Draggable extends GestureArea {
                 if (event.target != this) return;
 
                 if (this._checkHandle(this._pointerMain._target)) {
-                    this._pointerMain.capture(true);
+                    this._pointerMain.capture();
                 }
 
                 if (!this._pointerMain.checkCapture()) return;

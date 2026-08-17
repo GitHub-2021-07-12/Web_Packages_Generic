@@ -6,6 +6,8 @@ import {Vector2d} from '/Packages/Generic/Js/Vector2d/Vector2d.js';
 
 
 export class GestureArea extends Component {
+    static _fieldsDeferred = ['magnetAreas'];
+
     static _Pointer = class {
         static _exclusiveCaptors = new Map();
 
@@ -16,6 +18,7 @@ export class GestureArea extends Component {
         __rectInitial = null;
 
 
+        _captured = false;
         _component = null;
         _id = 0;
         _magnetAreasBottom = new Set();
@@ -140,9 +143,7 @@ export class GestureArea extends Component {
         }
 
 
-        _captured = false;
-
-        capture(exclusive = false) {
+        capture(exclusive = true) {
             let exclusiveCaptors = this.constructor._exclusiveCaptors;
 
             if (exclusive && !exclusiveCaptors.has(this._id)) {
@@ -369,6 +370,8 @@ export class GestureArea extends Component {
 
                 this._addPointer(event);
 
+                console.log(this)
+
                 if (!this.dispatchEvent('capture', {originalEvent: event, pointer: this._pointerMain})) {
                     this._deletePointer(this._pointerMain);
 
@@ -584,7 +587,7 @@ export class GestureArea extends Component {
 
         this._pointerMain = new this.constructor._Pointer(this, pointerEvent);
         this._pointers.set(this._pointerMain._id, this._pointerMain);
-        this._pointerMain.capture();
+        this._pointerMain.capture(false);
     }
 
     _cancelPress(pointer) {

@@ -11,10 +11,10 @@ export class TrackBar extends GestureArea {
     static _eventHandlerDescriptors = {
         host: {
             capture: function () {
-                if (this.mode == 'normal' && this._pointerMain?._target != this._elements.puck) return;
+                if (this.mode == 'normal' && this._pointer?._target != this._elements.puck) return;
 
                 this._active = true;
-                this._pointerMain.capture();
+                this._pointer.capture();
 
                 if (this.mode == 'precise') {
                     this._defineValue();
@@ -61,14 +61,14 @@ export class TrackBar extends GestureArea {
                 this._active = false;
             },
 
-            releaseMain: function () {
-                if (!this._pointerMain.checkCapture()) return;
+            release: function () {
+                if (!this._pointer.checkCapture()) return;
 
                 this._active = false;
             },
 
-            swipeMain: function () {
-                if (!this._pointerMain.checkCapture()) return;
+            swipe: function () {
+                if (!this._pointer.checkCapture()) return;
 
                 this._defineValue();
             },
@@ -161,11 +161,11 @@ export class TrackBar extends GestureArea {
         let value = undefined;
 
         if (this.mode == 'precise') {
-            let pointerPosition = this._pointerMain._positionInnerInitial.x + this._pointerMain._positionDelta.x + this._puck_positionShift;
+            let pointerPosition = this._pointer._positionInnerInitial.x + this._pointer._positionDelta.x + this._puck_positionShift;
             value = this.range[0] + rangeLength * pointerPosition / this._freeSpaceLength;
         }
         else {
-            value = this._valueCaptured + rangeLength * this._pointerMain._positionDelta.x / this._freeSpaceLength;
+            value = this._valueCaptured + rangeLength * this._pointer._positionDelta.x / this._freeSpaceLength;
         }
 
         if (this.discrete) {

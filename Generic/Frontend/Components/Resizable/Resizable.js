@@ -12,17 +12,17 @@ export class Resizable extends GestureArea {
             capture: function (event) {
                 if (event.target != this) return;
 
-                this._defineEdgeTarget(this._pointerMain._target);
+                this._defineEdgeTarget(this._pointer._target);
 
                 if (!this._edgeTargetNames) return;
 
-                this._pointerMain.capture();
+                this._pointer.capture();
             },
 
-            swipeMain: function (event) {
-                if (event.target != this || !this._pointerMain.checkCapture()) return;
+            swipe: function (event) {
+                if (event.target != this || !this._pointer.checkCapture()) return;
 
-                let positionDelta = this._pointerMain._positionDeltaModified;
+                let positionDelta = this._pointer._positionDeltaModified;
                 let rectDelta = {
                     bottom: this._edgeTargetNames.has('edgeBottom') ? positionDelta.y : undefined,
                     left: this._edgeTargetNames.has('edgeLeft') ? positionDelta.x : undefined,
@@ -65,9 +65,9 @@ export class Resizable extends GestureArea {
                     }
                 }
 
-                this._pointerMain.updateRectDelta(rectDelta);
+                this._pointer.updateRectDelta(rectDelta);
                 this._updateSize();
-                this._pointerMain.updateMagnetVector();
+                this._pointer.updateMagnetVector();
 
                 if (!this.deferredMagnetism) {
                     this._updateSize(true);
@@ -76,8 +76,8 @@ export class Resizable extends GestureArea {
                 this.dispatchEvent('resize', event.detail);
             },
 
-            swipeStartMain: function (event) {
-                if (event.target != this || !this._pointerMain.checkCapture()) return;
+            swipeStart: function (event) {
+                if (event.target != this || !this._pointer.checkCapture()) return;
 
                 this._heightInitial = this.constructor.getHeight(this.target, true);
                 this._leftInitial = this.constructor.getLeft(this.target);
@@ -85,29 +85,29 @@ export class Resizable extends GestureArea {
                 this._topInitial = this.constructor.getTop(this.target);
                 this._widthInitial = this.constructor.getWidth(this.target, true);
                 this._aspectRatio = this._widthInitial / this._heightInitial;
-                this._pointerMain.rectInitial = this.constructor.getDomRect(this.target, true);
+                this._pointer.rectInitial = this.constructor.getDomRect(this.target, true);
 
-                if (this.magnetism && !this.staticEnvironment) {
+                if (this.magnetism) {
                     this.refreshField('magnetAreas', true);
-                    this._defineMagnetAreaRects();
                 }
 
                 this.dispatchEvent('resizeStart', {...event.detail, targetNames: this._edgeTargetNames});
             },
 
-            swipeStopMain: function (event) {
-                if (event.target != this || !this._pointerMain.checkCapture()) return;
+            swipeStop: function (event) {
+                if (event.target != this || !this._pointer.checkCapture()) return;
 
                 if (this.deferredMagnetism) {
                     this._updateSize(true);
                 }
 
                 this._resizing = false;
+                this.releaseField('magnetAreas');
                 this.dispatchEvent('resizeStop', event.detail);
             },
 
             tap: function (event) {
-                if (!this.resettable || event.detail.tapsCount < 2 || !this._pointerMain.checkCapture()) return;
+                if (!this.resettable || event.detail.tapsCount < 2 || !this._pointer.checkCapture()) return;
 
                 if (this._edgeTargetNames.has('edgeBottom')) {
                     this.resetHeight();
@@ -224,11 +224,11 @@ export class Resizable extends GestureArea {
     }
 
     _updateSize(withMagnetism = false) {
-        let rectDelta = this._pointerMain._rectDelta;
+        let rectDelta = this._pointer._rectDelta;
 
         if (withMagnetism) {
-            let magnetVector = this._pointerMain._magnetVector;
-            this._pointerMain.updateRectDelta({
+            let magnetVector = this._pointer._magnetVector;
+            this._pointer.updateRectDelta({
                 bottom: rectDelta.bottom + magnetVector.y,
                 left: rectDelta.left + magnetVector.x,
                 right: rectDelta.right + magnetVector.x,
@@ -256,7 +256,7 @@ export class Resizable extends GestureArea {
         if (!withMagnetism) {
             let heightDelta = heightReal - height;
             let widthDelta = widthReal - width;
-            this._pointerMain.updateRectDelta({
+            this._pointer.updateRectDelta({
                 bottom: rectDelta.bottom + heightDelta,
                 left: rectDelta.left - widthDelta,
                 right: rectDelta.right + widthDelta,

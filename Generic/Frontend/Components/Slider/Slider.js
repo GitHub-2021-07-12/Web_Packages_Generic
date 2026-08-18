@@ -40,31 +40,31 @@ export class Slider extends GestureArea {
 
                 if (this.children.length < 2) return;
 
-                this._pointerMain.capture();
+                this._pointer.capture();
 
-                if (!this._pointerMain.checkCapture()) return;
+                if (!this._pointer.checkCapture()) return;
 
                 this._flipProgressExcess = this._animationManager.progress * -this._flipDirection;
             },
 
-            flickMain: function (event) {
-                if (event.target != this || !this._pointerMain.checkCapture()) return;
+            flick: function (event) {
+                if (event.target != this || !this._pointer.checkCapture()) return;
 
-                this._pointerMain._Slider_flicked = true;
-                let velocityAbs = Math.abs(this._pointerMain._velocity.x);
+                this._pointer._Slider_flicked = true;
+                let velocityAbs = Math.abs(this._pointer._velocity.x);
 
                 if (!this._flickDirection && velocityAbs < this.flipVelocityThreshold) return;
 
-                let flickDirection = Math.sign(this._pointerMain._velocity.x);
+                let flickDirection = Math.sign(this._pointer._velocity.x);
                 this._flickVelocity = velocityAbs + (flickDirection == this._flickDirection ? this._flickVelocity : 0);
                 this._flickDirection = flickDirection;
             },
 
-            releaseMain: function (event) {
-                if (event.target != this || !this._pointerMain.checkCapture()) return;
+            release: function (event) {
+                if (event.target != this || !this._pointer.checkCapture()) return;
 
                 if (this._frameNextIndex != undefined) {
-                    if (this._flickDirection && this._pointerMain._Slider_flicked) {
+                    if (this._flickDirection && this._pointer._Slider_flicked) {
                         this.index =
                             this._flickDirection == this._flipDirection
                                 ? this._frameCurrentIndex - (this._animationManager.direction < 0 ? this._flipDirection : 0)
@@ -72,7 +72,7 @@ export class Slider extends GestureArea {
                         ;
                     }
                     else {
-                        let swipeDirection = Math.sign(this._pointerMain._positionDelta.x);
+                        let swipeDirection = Math.sign(this._pointer._positionDelta.x);
                         this.index =
                             (this._flickDirection ? this._flipDirection == swipeDirection : this._animationManager.progress < this.flipProgressThreshold)
                                 ? this._frameCurrentIndex
@@ -92,10 +92,10 @@ export class Slider extends GestureArea {
                 this._animationManager.start(true);
             },
 
-            swipeMain: function (event) {
-                if (event.target != this || !this._pointerMain.checkCapture()) return;
+            swipe: function (event) {
+                if (event.target != this || !this._pointer.checkCapture()) return;
 
-                let flipProgress = -this._pointerMain._positionDelta.x / this._sizeInline - this._flipProgressExcess;
+                let flipProgress = -this._pointer._positionDelta.x / this._sizeInline - this._flipProgressExcess;
                 let frameNextUpdate = false;
 
                 if (!this.looped) {

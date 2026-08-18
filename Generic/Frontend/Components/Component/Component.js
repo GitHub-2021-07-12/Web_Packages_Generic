@@ -488,9 +488,11 @@ export class Component extends HTMLElement {
         }
 
         refresh(simple = false) {
-            // if (simple && this._isDefault) return;
-
             this._update(simple ? this._valueSimple : this._value);
+        }
+
+        release() {
+            this._value = this._valueSimple;
         }
 
         reset(withEvent = true) {
@@ -1297,6 +1299,10 @@ export class Component extends HTMLElement {
 
     refreshField(fieldName, simple = false) {
         this._fields[fieldName]?.refresh(simple);
+    }
+
+    releaseField(fieldName) {
+        this._fields[fieldName]?.release();
     }
 
     resetField(fieldName) {

@@ -65,8 +65,8 @@
             }
 
             x-resizable {
-                /* --Component_eventsWithoutPropagation: capture swipeMain swipeStartMain swipeStopMain; */
-                /* --Component_eventsWithoutPropagation: pointerdown swipeMain; */
+                /* --Component_eventsWithoutPropagation: capture swipe swipeStart swipeStop; */
+                /* --Component_eventsWithoutPropagation: pointerdown swipe; */
                 /* --GestureArea_magnetAreas: url('#{x-resizable}'); */
                 /* --GestureArea_magnetAreas: url('#{x-resizable:not(:active)}'); */
                 /* --Resizable_keepProportions: true; */
@@ -85,6 +85,22 @@
 
                 &[_Draggable_dropAreaTarget] {
                     border: #0f0 solid 2px;
+                }
+
+                [_Draggable_magnetEdges~='bottom'] & {
+                    border-bottom: #f0f solid 2px;
+                }
+
+                [_Draggable_magnetEdges~='left'] & {
+                    border-left: #f0f solid 2px;
+                }
+
+                [_Draggable_magnetEdges~='right'] & {
+                    border-right: #f0f solid 2px;
+                }
+
+                [_Draggable_magnetEdges~='top'] & {
+                    border-top: #f0f solid 2px;
                 }
 
                 &[_resizing] {

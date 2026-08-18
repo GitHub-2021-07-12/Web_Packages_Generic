@@ -4,63 +4,64 @@ import {Vector2d} from '/Packages/Generic/Js/Vector2d/Vector2d.js';
 
 
 export class Draggable extends GestureArea {
-    static _fieldsDeferred = ['dropAreas'];
-
     static _eventHandlerDescriptors = {
         host: {
-            swipeMain: function (event) {
-                if (event.target != this || !this._pointerMain.checkCapture()) return;
+            swipe: function (event) {
+                if (event.target != this || !this._pointer.checkCapture()) return;
 
-                let positionDelta = this._pointerMain._positionDeltaModified;
+                let positionDelta = this._pointer._positionDeltaModified;
                 this._detectDropAreaTarget();
-                this._pointerMain.updatePositionDeltaModified();
-                this._pointerMain.updateRectDelta({
+                this._pointer.updatePositionDeltaModified();
+                this._pointer.updateRectDelta({
                     bottom: positionDelta.y,
                     left: positionDelta.x,
                     right: positionDelta.x,
                     top: positionDelta.y,
                 });
-                this._pointerMain.updateMagnetVector();
+                this._pointer.updateMagnetVector();
+                this._updateEdgesActive();
                 this._updatePosition(!this.deferredMagnetism);
                 this.dispatchEvent('drag', event.detail);
             },
 
-            swipeStartMain: function (event) {
-                if (event.target != this || !this._checkHandle(this._pointerMain._target)) return;
+            swipeStart: function (event) {
+                if (event.target != this || !this._checkHandle(this._pointer._target)) return;
 
-                this._pointerMain.capture();
+                this._pointer.capture();
 
-                if (!this._pointerMain.checkCapture()) return;
+                if (!this._pointer.checkCapture()) return;
 
                 this._dragging = true;
-                this._pointerMain.rectInitial = this.constructor.getDomRect(this.target, true);
+                this._pointer.rectInitial = this.constructor.getDomRect(this.target, true);
                 this._positionInitial.set(this.constructor.getLeft(this.target), this.constructor.getTop(this.target));
 
-                if (this.magnetism && !this.staticEnvironment) {
+                if (this.magnetism) {
                     this.refreshField('dropAreas', true);
                     this.refreshField('magnetAreas', true);
-                    this._defineDropAreaDomRects();
-                    this._defineMagnetAreaRects();
                 }
 
                 this.dispatchEvent('dragStart', event.detail);
             },
 
-            swipeStopMain: function (event) {
-                if (event.target != this || !this._pointerMain.checkCapture()) return;
+            swipeStop: function (event) {
+                if (event.target != this || !this._pointer.checkCapture()) return;
 
                 if (this.deferredMagnetism) {
-                    this._pointerMain.updatePositionDeltaModified();
+                    this._pointer.updatePositionDeltaModified();
                     this._updatePosition(true);
                 }
 
                 this._dragging = false;
-                this.dispatchEvent('dragStop', event.detail);
-                this._dropAreaTarget = null;
+                this._updateEdgesActive(true);
+                this.releaseField('dropAreas');
+                this.releaseField('magnetAreas');
 
                 if (this.springy) {
                     this._position = this._positionInitial;
                 }
+
+                this.dispatchEvent('dragStop', event.detail);
+                this._dropAreaTarget = null;
             },
         },
     };
@@ -74,8 +75,6 @@ export class Draggable extends GestureArea {
 
         dropAreas: class Field extends super._fieldDescriptors.magnetAreas {
             _updateAfter() {
-                if (!this._component.staticEnvironment || !this.magnetism) return;
-
                 this._component._defineDropAreaDomRects();
             }
         },
@@ -163,7 +162,7 @@ export class Draggable extends GestureArea {
     }
 
     _defineDropAreaDomRects() {
-        if (!this.dropAreas || !this.wideDrop) return;
+        if (!this.wideDrop || this.dropAreas?.constructor != Set) return;
 
         this._dropAreaDomRects.clear();
 
@@ -173,7 +172,7 @@ export class Draggable extends GestureArea {
     }
 
     _detectDropAreaTarget() {
-        if (!this.dropAreas) return;
+        if (this.dropAreas?.constructor != Set) return;
 
         if (this.wideDrop) {
             let domRect = this.constructor.getDomRect(this, true);
@@ -192,7 +191,11 @@ export class Draggable extends GestureArea {
             this._dropAreaTarget = dropAreaTarget;
         }
         else {
-            let nodes = document.elementsFromPoint(this._pointerMain._positionOuter.x, this._pointerMain._positionOuter.y);
+            let positionOuter = this._pointer._positionOuter;
+            let nodes = document.elementsFromPoint(
+                positionOuter.x - document.scrollingElement.scrollLeft,
+                positionOuter.y - document.scrollingElement.scrollTop,
+            );
             this._dropAreaTarget = nodes.find((node) => this.dropAreas.has(node));
         }
 
@@ -201,11 +204,39 @@ export class Draggable extends GestureArea {
         }
     }
 
+    _updateEdgesActive(resetOnly = false) {
+        this.target.removeAttribute('_Draggable_magnetEdges');
+
+        if (resetOnly) return;
+
+        let edgeNames = [];
+
+        if (this._magnetAreasActiveBottom.size) {
+            edgeNames.push('top');
+        }
+
+        if (this._magnetAreasActiveLeft.size) {
+            edgeNames.push('right');
+        }
+
+        if (this._magnetAreasActiveRight.size) {
+            edgeNames.push('left');
+        }
+
+        if (this._magnetAreasActiveTop.size) {
+            edgeNames.push('bottom');
+        }
+
+        if (edgeNames.length) {
+            this.target.setAttribute('_Draggable_magnetEdges', edgeNames.join(' '));
+        }
+    }
+
     _updatePosition(withMagnetism = false) {
-        let positionDelta = this._pointerMain._positionDeltaModified;
+        let positionDelta = this._pointer._positionDeltaModified;
 
         if (withMagnetism) {
-            this._pointerMain.updatePositionDeltaModified(positionDelta.clone().sum(this._pointerMain._magnetVector));
+            this._pointer.updatePositionDeltaModified(positionDelta.clone().sum(this._pointer._magnetVector));
         }
 
         this.constructor.setLeft(this.target, this._positionInitial.x + positionDelta.x);

@@ -6,8 +6,6 @@ import {Vector2d} from '/Packages/Generic/Js/Vector2d/Vector2d.js';
 
 
 export class GestureArea extends Component {
-    static _fieldsDeferred = ['magnetAreas'];
-
     static _Pointer = class {
         static _exclusiveCaptors = new Map();
         static _idsCaptured = new Set();
@@ -376,14 +374,14 @@ export class GestureArea extends Component {
 
                 this._addPointer(event);
 
-                if (!this.dispatchEvent('capture', {originalEvent: event, pointer: this._pointerMain})) {
-                    this._deletePointer(this._pointerMain);
+                if (!this.dispatchEvent('capture', {originalEvent: event, pointer: this._pointer})) {
+                    this._deletePointer(this._pointer);
 
                     return;
                 }
 
                 this._eventHandlers.host.pointermove.disabled = false;
-                this._initPress(this._pointerMain, event);
+                this._initPress(this._pointer, event);
             },
 
             pointermove: function (event) {
@@ -411,11 +409,11 @@ export class GestureArea extends Component {
                 this._detectTap(pointer, event);
                 this._detectSwipeStop(pointer, event);
                 this._detectFlick(pointer, event);
-                this._dispatchEventDouble('releaseMain', 'release', pointer, event);
+                this._dispatchEvent('release', 'releaseExtra', pointer, event);
 
                 this._deletePointer(pointer);
                 this._cancelPress(pointer);
-                this._updateMagnetAreasActive();
+                this._updateMagnetAreasActive(true);
             },
         },
 
@@ -433,7 +431,6 @@ export class GestureArea extends Component {
         invertedY: false,
         multiPoint: false,
         shiftJumping: false,
-        staticEnvironment: false,
         vertical: false,
 
         axis: {
@@ -482,13 +479,17 @@ export class GestureArea extends Component {
             default: '',
 
             updateAfter() {
-                if (!this._component.staticEnvironment || !this.magnetism) return;
-
                 this._component._defineMagnetAreaRects();
             },
 
             updateBefore(value) {
                 if (value?.constructor == String) {
+                    if (!this._component._pointer) {
+                        this._valueExtra = undefined;
+
+                        return;
+                    }
+
                     let rootNode = this._component.getRootNode(this._component);
 
                     try {
@@ -576,7 +577,7 @@ export class GestureArea extends Component {
     _magnetAreasActiveLeft = new Set();
     _magnetAreasActiveRight = new Set();
     _magnetAreasActiveTop = new Set();
-    _pointerMain = null;
+    _pointer = null;
     _pointerTarget = null;
     _pointers = new Map();
     _tapFirstPosition = new Vector2d();
@@ -585,13 +586,13 @@ export class GestureArea extends Component {
 
 
     _addPointer(pointerEvent) {
-        if (this._pointerMain && !this.multiPoint) {
-            this._deletePointer(this._pointerMain);
+        if (this._pointer && !this.multiPoint) {
+            this._deletePointer(this._pointer);
         }
 
-        this._pointerMain = new this.constructor._Pointer(this, pointerEvent);
-        this._pointers.set(this._pointerMain._id, this._pointerMain);
-        this._pointerMain.capture(false);
+        this._pointer = new this.constructor._Pointer(this, pointerEvent);
+        this._pointers.set(this._pointer._id, this._pointer);
+        this._pointer.capture(false);
     }
 
     _cancelPress(pointer) {
@@ -601,7 +602,7 @@ export class GestureArea extends Component {
     }
 
     _defineMagnetAreaRects() {
-        if (!this.magnetAreas || !this.magnetism) return;
+        if (!this.magnetism || this.magnetAreas?.constructor != Set) return;
 
         this._magnetAreaRects.clear();
 
@@ -614,8 +615,8 @@ export class GestureArea extends Component {
         pointer.release();
         this._pointers.delete(pointer._id);
 
-        if (pointer == this._pointerMain) {
-            this._pointerMain = null;
+        if (pointer == this._pointer) {
+            this._pointer = null;
         }
     }
 
@@ -627,7 +628,7 @@ export class GestureArea extends Component {
             || pointer._points.at(-1).timeStamp - pointer._timeStampInitial > this.flickDurationMax
         ) return;
 
-        this._dispatchEventDouble('flickMain', 'flick', pointer, originalEvent);
+        this._dispatchEvent('flick', 'flickExtra', pointer, originalEvent);
     }
 
     _detectPress(pointer, originalEvent) {
@@ -640,16 +641,16 @@ export class GestureArea extends Component {
 
         if (!pointer._GestureArea_swiped) {
             pointer._GestureArea_swiped = true;
-            this._dispatchEventDouble('swipeStartMain', 'swipeStart', pointer, originalEvent);
+            this._dispatchEvent('swipeStart', 'swipeStartExtra', pointer, originalEvent);
         }
 
-        this._dispatchEventDouble('swipeMain', 'swipe', pointer, originalEvent);
+        this._dispatchEvent('swipe', 'swipeExtra', pointer, originalEvent);
     }
 
     _detectSwipeStop(pointer, originalEvent) {
         if (!pointer._shifted) return;
 
-        this._dispatchEventDouble('swipeStopMain', 'swipeStop', pointer, originalEvent);
+        this._dispatchEvent('swipeStop', 'swipeStopExtra', pointer, originalEvent);
     }
 
     _detectTap(pointer, originalEvent) {
@@ -659,19 +660,13 @@ export class GestureArea extends Component {
         this.dispatchEvent('tap', {originalEvent, pointer, tapsCount: this._tapsCount});
     }
 
-    _dispatchEventDouble(eventMainName, eventName, pointer, originalEvent) {
-        let eventDetail = {originalEvent, pointer};
-        let result = false;
-
-        if (pointer == this._pointerMain) {
-            result = this.dispatchEvent(eventMainName, eventDetail);
+    _dispatchEvent(eventName, eventExtraName, pointer, originalEvent) {
+        if (pointer == this._pointer) {
+            this.dispatchEvent(eventName, {originalEvent, pointer});
         }
-
-        if (this.multiPoint) {
-            result &&= this.dispatchEvent(eventName, eventDetail);
+        else if (this.multiPoint) {
+            this.dispatchEvent(eventExtraName, {originalEvent, pointer});
         }
-
-        return result;
     }
 
     _init() {
@@ -685,7 +680,7 @@ export class GestureArea extends Component {
         Executor.queueTask(pointer._GestureArea_detectPress, this.pressDuration);
     }
 
-    _updateMagnetAreasActive() {
+    _updateMagnetAreasActive(resetOnly = false) {
         if (!this.magnetAreas || !this.magnetism) return;
 
         for (let magnetArea of this._magnetAreasActive) {
@@ -697,6 +692,8 @@ export class GestureArea extends Component {
         this._magnetAreasActiveLeft.clear();
         this._magnetAreasActiveRight.clear();
         this._magnetAreasActiveTop.clear();
+
+        if (resetOnly) return;
 
         for (let pointer of this._pointers.values()) {
             for (let magnetArea of pointer._magnetAreasBottom) {

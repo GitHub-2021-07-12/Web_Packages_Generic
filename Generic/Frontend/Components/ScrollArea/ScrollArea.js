@@ -39,14 +39,14 @@ export class ScrollArea extends GestureArea {
             },
 
             scrollBarX: {
-                swipeMain: function () {
+                swipe: function () {
                     this.scrollX = this._scrollWidth * this._elements.scrollBarX.value;
                     this._renderer.stop();
                 },
             },
 
             scrollBarY: {
-                swipeMain: function () {
+                swipe: function () {
                     this.scrollY = this._scrollHeight * this._elements.scrollBarY.value;
                     this._renderer.stop();
                 },
@@ -57,15 +57,15 @@ export class ScrollArea extends GestureArea {
             capture: function () {
                 this._renderer.stop();
 
-                if (this._checkSnag(this._pointerMain._target)) return;
+                if (this._checkSnag(this._pointer._target)) return;
 
-                this._pointerMain.capture();
+                this._pointer.capture();
             },
 
-            flickMain: function () {
-                if (this._pointerMain._velocity.length < this.velocityMin || !this._pointerMain.checkCapture()) return;
+            flick: function () {
+                if (this._pointer._velocity.length < this.velocityMin || !this._pointer.checkCapture()) return;
 
-                this._velocity.setVector(this._pointerMain._velocity).invert().toRangeLength(-this.velocityMax, this.velocityMax);
+                this._velocity.setVector(this._pointer._velocity).invert().toRangeLength(-this.velocityMax, this.velocityMax);
                 this._acceleration.setVector(this._velocity).setLength(this.acceleration);
                 this._jerk.setVector(this._velocity).setLength(this.jerk);
 
@@ -73,22 +73,22 @@ export class ScrollArea extends GestureArea {
                 this._renderer.start();
             },
 
-            swipeMain: function () {
-                if (!this._pointerMain.checkCapture()) return;
+            swipe: function () {
+                if (!this._pointer.checkCapture()) return;
 
-                this.scrollX = this._scrollInitial.x - this._pointerMain._positionDelta.x;
-                this.scrollY = this._scrollInitial.y - this._pointerMain._positionDelta.y;
+                this.scrollX = this._scrollInitial.x - this._pointer._positionDelta.x;
+                this.scrollY = this._scrollInitial.y - this._pointer._positionDelta.y;
             },
 
-            swipeStartMain: function () {
-                if (!this._pointerMain.checkCapture()) return;
+            swipeStart: function () {
+                if (!this._pointer.checkCapture()) return;
 
                 this._swiping = true;
                 this._scrollInitial.set(this.scrollX, this.scrollY);
             },
 
-            swipeStopMain: function () {
-                if (!this._pointerMain.checkCapture()) return;
+            swipeStop: function () {
+                if (!this._pointer.checkCapture()) return;
 
                 this._swiping = false;
             },

@@ -26,11 +26,9 @@ export class Draggable extends GestureArea {
             },
 
             swipeStartMain: function (event) {
-                if (event.target != this) return;
+                if (event.target != this || !this._checkHandle(this._pointerMain._target)) return;
 
-                if (this._checkHandle(this._pointerMain._target)) {
-                    this._pointerMain.capture();
-                }
+                this._pointerMain.capture();
 
                 if (!this._pointerMain.checkCapture()) return;
 

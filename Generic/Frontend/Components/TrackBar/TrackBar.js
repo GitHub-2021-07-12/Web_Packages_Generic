@@ -10,13 +10,11 @@ export class TrackBar extends GestureArea {
 
     static _eventHandlerDescriptors = {
         host: {
-            capture: function (event) {
-                // event.preventDefault();
-
+            capture: function () {
                 if (this.mode == 'normal' && this._pointerMain?._target != this._elements.puck) return;
 
                 this._active = true;
-                // this._pointerMain.capture();
+                this._pointerMain.capture();
 
                 if (this.mode == 'precise') {
                     this._defineValue();

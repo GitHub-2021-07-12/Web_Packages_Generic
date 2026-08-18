@@ -10,6 +10,7 @@ export class GestureArea extends Component {
 
     static _Pointer = class {
         static _exclusiveCaptors = new Map();
+        static _idsCaptured = new Set();
 
 
         static pointsCountMax = 4;
@@ -145,6 +146,7 @@ export class GestureArea extends Component {
 
         capture(exclusive = true) {
             let exclusiveCaptors = this.constructor._exclusiveCaptors;
+            let idsCaptured = this.constructor._idsCaptured;
 
             if (exclusive && !exclusiveCaptors.has(this._id)) {
                 if (this._component.exclusiveCapture) {
@@ -155,7 +157,10 @@ export class GestureArea extends Component {
                 }
             }
 
+            if (idsCaptured.has(this._id)) return;
+
             this._target.setPointerCapture(this._id);
+            idsCaptured.add(this._id);
         }
 
         checkCapture() {
@@ -179,6 +184,7 @@ export class GestureArea extends Component {
             this._captured = false;
             this._target.releasePointerCapture(this._id);
             this.constructor._exclusiveCaptors.delete(this._id);
+            this.constructor._idsCaptured.delete(this._id);
         }
 
         update(event) {
@@ -369,8 +375,6 @@ export class GestureArea extends Component {
                 if (!this.gestures.size) return;
 
                 this._addPointer(event);
-
-                console.log(this)
 
                 if (!this.dispatchEvent('capture', {originalEvent: event, pointer: this._pointerMain})) {
                     this._deletePointer(this._pointerMain);

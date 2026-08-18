@@ -161,7 +161,6 @@
     }
 
     x-resizable {
-        /* --Component_eventsWithoutPropagation: flickMain swipeMain swipeStartMain swipeStopMain; */
         --Resizable_edge_width: var(--gap);
 
 

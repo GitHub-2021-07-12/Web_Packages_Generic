@@ -1,7 +1,6 @@
 @layer {
     :host {
         --Component_displayInner: grid !important;
-        --GestureArea_gestures: swipe !important;
 
         block-size: 16px;
         grid: initial !important;

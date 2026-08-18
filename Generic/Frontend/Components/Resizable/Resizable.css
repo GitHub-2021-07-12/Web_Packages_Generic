@@ -1,7 +1,6 @@
 @layer {
     :host {
         --Component_displayInner: grid !important;
-        /* --GestureArea_gestures: swipe tap !important; */
         --Resizable_cornerSize: var(--Resizable_edgeWidth);
         --Resizable_edgeWidth: 8px;
 

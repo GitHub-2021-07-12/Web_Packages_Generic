@@ -14,9 +14,9 @@ export class Resizable extends GestureArea {
 
                 this._defineEdgeTarget(this._pointerMain._target);
 
-                if (this._edgeTargetNames) {
-                    this._pointerMain.capture();
-                }
+                if (!this._edgeTargetNames) return;
+
+                this._pointerMain.capture();
             },
 
             swipeMain: function (event) {

@@ -36,16 +36,19 @@ export class Slider extends GestureArea {
 
         host: {
             capture: function () {
-                this._pointerMainIsBlocked = this.children.length < 2;
                 this._animationManager.stop(true);
 
-                if (this._pointerMainIsBlocked) return;
+                if (this.children.length < 2) return;
+
+                this._pointerMain.capture();
+
+                if (!this._pointerMain.checkCapture()) return;
 
                 this._flipProgressExcess = this._animationManager.progress * -this._flipDirection;
             },
 
-            flickMain: function () {
-                if (this._pointerMainIsBlocked) return;
+            flickMain: function (event) {
+                if (event.target != this || !this._pointerMain.checkCapture()) return;
 
                 this._pointerMain._Slider_flicked = true;
                 let velocityAbs = Math.abs(this._pointerMain._velocity.x);
@@ -57,8 +60,8 @@ export class Slider extends GestureArea {
                 this._flickDirection = flickDirection;
             },
 
-            releaseMain: function () {
-                if (this._pointerMainIsBlocked) return;
+            releaseMain: function (event) {
+                if (event.target != this || !this._pointerMain.checkCapture()) return;
 
                 if (this._frameNextIndex != undefined) {
                     if (this._flickDirection && this._pointerMain._Slider_flicked) {
@@ -89,8 +92,8 @@ export class Slider extends GestureArea {
                 this._animationManager.start(true);
             },
 
-            swipeMain: function () {
-                if (this._pointerMainIsBlocked) return;
+            swipeMain: function (event) {
+                if (event.target != this || !this._pointerMain.checkCapture()) return;
 
                 let flipProgress = -this._pointerMain._positionDelta.x / this._sizeInline - this._flipProgressExcess;
                 let frameNextUpdate = false;
@@ -245,7 +248,6 @@ export class Slider extends GestureArea {
     _flipProgressExcess = 0;
     _flipProgressRange = [];
     _mutationObserver = new MutationObserver(this._mutationObserver_callback.bind(this));
-    _pointerMainIsBlocked = false;
     _resizeObserver = new ResizeObserver(this._resizeObserver_callback.bind(this));
     _sizeInline = 0;
 

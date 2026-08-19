@@ -19,7 +19,6 @@ export class Draggable extends GestureArea {
                     top: positionDelta.y,
                 });
                 this._pointer.updateMagnetVector();
-                this._updateEdgesActive();
                 this._updatePosition(!this.deferredMagnetism);
                 this.dispatchEvent('drag', event.detail);
             },
@@ -52,7 +51,6 @@ export class Draggable extends GestureArea {
                 }
 
                 this._dragging = false;
-                this._updateEdgesActive(true);
                 this.releaseField('dropAreas');
                 this.releaseField('magnetAreas');
 
@@ -204,26 +202,27 @@ export class Draggable extends GestureArea {
         }
     }
 
-    _updateEdgesActive(resetOnly = false) {
+    _updateMagnetAreasActive(resetOnly = false) {
+        super._updateMagnetAreasActive(resetOnly);
         this.target.removeAttribute('_Draggable_magnetEdges');
 
         if (resetOnly) return;
 
         let edgeNames = [];
 
-        if (this._magnetAreasActiveBottom.size) {
+        if (this._magnetAreasTopBottom.size || this._magnetAreasTopTop.size) {
             edgeNames.push('top');
         }
 
-        if (this._magnetAreasActiveLeft.size) {
+        if (this._magnetAreasRightLeft.size || this._magnetAreasRightRight.size) {
             edgeNames.push('right');
         }
 
-        if (this._magnetAreasActiveRight.size) {
+        if (this._magnetAreasLeftLeft.size || this._magnetAreasLeftRight.size) {
             edgeNames.push('left');
         }
 
-        if (this._magnetAreasActiveTop.size) {
+        if (this._magnetAreasBottomBottom.size || this._magnetAreasBottomTop.size) {
             edgeNames.push('bottom');
         }
 

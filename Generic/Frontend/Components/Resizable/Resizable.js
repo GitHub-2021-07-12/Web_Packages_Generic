@@ -223,6 +223,35 @@ export class Resizable extends GestureArea {
         }
     }
 
+    _updateMagnetAreasActive(resetOnly = false) {
+        super._updateMagnetAreasActive(resetOnly);
+        this.target.removeAttribute('_Resizable_magnetEdges');
+
+        if (resetOnly) return;
+
+        let edgeNames = [];
+
+        if (this._magnetAreasTopBottom.size || this._magnetAreasTopTop.size) {
+            edgeNames.push('top');
+        }
+
+        if (this._magnetAreasRightLeft.size || this._magnetAreasRightRight.size) {
+            edgeNames.push('right');
+        }
+
+        if (this._magnetAreasLeftLeft.size || this._magnetAreasLeftRight.size) {
+            edgeNames.push('left');
+        }
+
+        if (this._magnetAreasBottomBottom.size || this._magnetAreasBottomTop.size) {
+            edgeNames.push('bottom');
+        }
+
+        if (edgeNames.length) {
+            this.target.setAttribute('_Resizable_magnetEdges', edgeNames.join(' '));
+        }
+    }
+
     _updateSize(withMagnetism = false) {
         let rectDelta = this._pointer._rectDelta;
 
@@ -242,16 +271,10 @@ export class Resizable extends GestureArea {
         this.constructor.setWidth(this.target, width, true);
         let heightReal = this.constructor.getHeight(this.target, true);
         let widthReal = this.constructor.getWidth(this.target, true);
-
-        if (Number.isFinite(rectDelta.left)) {
-            let left = this._leftInitial + this._widthInitial - widthReal;
-            this.constructor.setLeft(this.target, left);
-        }
-
-        if (Number.isFinite(rectDelta.top)) {
-            let top = this._topInitial + this._heightInitial - heightReal;
-            this.constructor.setTop(this.target, top);
-        }
+        let left = this._leftInitial + (Number.isFinite(rectDelta.left) ? this._widthInitial - widthReal : 0);
+        let right = this._topInitial + (Number.isFinite(rectDelta.top) ? this._heightInitial - heightReal : 0);
+        this.constructor.setLeft(this.target, left);
+        this.constructor.setTop(this.target, right);
 
         if (!withMagnetism) {
             let heightDelta = heightReal - height;

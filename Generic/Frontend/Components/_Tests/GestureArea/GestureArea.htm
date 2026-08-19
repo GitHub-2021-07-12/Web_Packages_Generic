@@ -87,6 +87,26 @@
                     border: #0f0 solid 2px;
                 }
 
+                [_Resizable_magnetEdges~='bottom'] & {
+                    border-bottom: #f0f solid 2px;
+                }
+
+                [_Resizable_magnetEdges~='left'] & {
+                    border-left: #f0f solid 2px;
+                }
+
+                [_Resizable_magnetEdges~='right'] & {
+                    border-right: #f0f solid 2px;
+                }
+
+                [_Resizable_magnetEdges~='top'] & {
+                    border-top: #f0f solid 2px;
+                }
+
+                &[_resizing] {
+                    background: #00f4;
+                }
+
                 [_Draggable_magnetEdges~='bottom'] & {
                     border-bottom: #f0f solid 2px;
                 }
@@ -101,10 +121,6 @@
 
                 [_Draggable_magnetEdges~='top'] & {
                     border-top: #f0f solid 2px;
-                }
-
-                &[_resizing] {
-                    background: #00f4;
                 }
 
                 [_dragging] & {
@@ -152,7 +168,7 @@
     </head>
 
     <body>
-        <x-repeater interpolationKey='repeater' model='1e2' target_='x-repeater'>
+        <x-repeater interpolationKey='repeater' model='1e3' target_='x-repeater'>
             <template Repeater_delegate>
                 <!-- <x-draggable style='--index: {{repeater: index}};'> -->
                 <!-- <x-draggable -->

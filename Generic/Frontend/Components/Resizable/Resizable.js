@@ -135,28 +135,6 @@ export class Resizable extends GestureArea {
         frozen: false,
         keepProportions: false,
         resettable: false,
-
-        target: {
-            default: '',
-
-            updateBefore(value) {
-                if (value instanceof Node) {
-                    this._valueExtra = value;
-                }
-                else {
-                    let selector = value + '';
-
-                    try {
-                        this._valueExtra = this._component.closest(selector) || this._component.querySelector(selector);
-                    }
-                    catch {
-                        this._valueExtra = null;
-                    }
-
-                    this._valueExtra ||= this._component;
-                }
-            },
-        },
     };
 
 
@@ -220,35 +198,6 @@ export class Resizable extends GestureArea {
 
                 break;
             }
-        }
-    }
-
-    _updateMagnetAreasActive(resetOnly = false) {
-        super._updateMagnetAreasActive(resetOnly);
-        this.target.removeAttribute('_Resizable_magnetEdges');
-
-        if (resetOnly) return;
-
-        let edgeNames = [];
-
-        if (this._magnetAreasTopBottom.size || this._magnetAreasTopTop.size) {
-            edgeNames.push('top');
-        }
-
-        if (this._magnetAreasRightLeft.size || this._magnetAreasRightRight.size) {
-            edgeNames.push('right');
-        }
-
-        if (this._magnetAreasLeftLeft.size || this._magnetAreasLeftRight.size) {
-            edgeNames.push('left');
-        }
-
-        if (this._magnetAreasBottomBottom.size || this._magnetAreasBottomTop.size) {
-            edgeNames.push('bottom');
-        }
-
-        if (edgeNames.length) {
-            this.target.setAttribute('_Resizable_magnetEdges', edgeNames.join(' '));
         }
     }
 

@@ -76,8 +76,8 @@
                 --GestureArea_magnetAreas: url('#{x-draggable:not(:active)}');
                 --GestureArea_magnetism: 10;
                 --Resizable_resettable: true;
-                --Resizable_target: url('#{x-draggable}');
-
+                /* --Resizable_target: url('#{x-draggable}'); */
+                --GestureArea_target: url('#{x-draggable}');
 
                 background: #0f04;
                 border: #000 solid 1px;
@@ -87,64 +87,84 @@
                     border: #0f0 solid 2px;
                 }
 
-                [_Resizable_magnetEdges~='bottom'] & {
-                    border-bottom: #f0f solid 2px;
-                }
-
-                [_Resizable_magnetEdges~='left'] & {
-                    border-left: #f0f solid 2px;
-                }
-
-                [_Resizable_magnetEdges~='right'] & {
-                    border-right: #f0f solid 2px;
-                }
-
-                [_Resizable_magnetEdges~='top'] & {
-                    border-top: #f0f solid 2px;
-                }
-
                 &[_resizing] {
                     background: #00f4;
                 }
 
-                [_Draggable_magnetEdges~='bottom'] & {
-                    border-bottom: #f0f solid 2px;
-                }
-
-                [_Draggable_magnetEdges~='left'] & {
-                    border-left: #f0f solid 2px;
-                }
-
-                [_Draggable_magnetEdges~='right'] & {
-                    border-right: #f0f solid 2px;
-                }
-
-                [_Draggable_magnetEdges~='top'] & {
-                    border-top: #f0f solid 2px;
-                }
-
-                [_dragging] & {
-                    background: #f004;
-                }
-
-                [_GestureArea_magnetEdges] & {
+                [_GestureArea_magnetEdges]:not(:active) & {
                     background: #0ff4;
                 }
 
+                /* [_GestureArea_magnetEdges~='bottom'] & { */
+                /*     border-bottom: red solid 2px; */
+                /* } */
+
+                /* [_GestureArea_magnetEdges~='left'] & { */
+                /*     border-left: red solid 2px; */
+                /* } */
+
+                /* [_GestureArea_magnetEdges~='right'] & { */
+                /*     border-right: red solid 2px; */
+                /* } */
+
+                /* [_GestureArea_magnetEdges~='top'] & { */
+                /*     border-top: red solid 2px; */
+                /* } */
+
                 [_GestureArea_magnetEdges~='bottom'] & {
                     border-bottom: red solid 2px;
+
+
+                    &:active {
+                        border-bottom-color: #f0f;
+                    }
                 }
 
                 [_GestureArea_magnetEdges~='left'] & {
                     border-left: red solid 2px;
+
+
+                    &:active {
+                        border-left-color: #f0f;
+                    }
                 }
 
                 [_GestureArea_magnetEdges~='right'] & {
                     border-right: red solid 2px;
+
+
+                    &:active {
+                        border-right-color: #f0f;
+                    }
                 }
 
                 [_GestureArea_magnetEdges~='top'] & {
                     border-top: red solid 2px;
+
+
+                    &:active {
+                        border-top-color: #f0f;
+                    }
+                }
+
+                /* [_Resizable_magnetEdges~='bottom'] & { */
+                /*     border-bottom: #f0f solid 2px; */
+                /* } */
+
+                /* [_Resizable_magnetEdges~='left'] & { */
+                /*     border-left: #f0f solid 2px; */
+                /* } */
+
+                /* [_Resizable_magnetEdges~='right'] & { */
+                /*     border-right: #f0f solid 2px; */
+                /* } */
+
+                /* [_Resizable_magnetEdges~='top'] & { */
+                /*     border-top: #f0f solid 2px; */
+                /* } */
+
+                [_dragging] & {
+                    background: #f004;
                 }
 
 
@@ -163,12 +183,12 @@
             await Component._defined;
 
 
-            document.body.addEventListener('tap', (event) => console.log(event.target));
+            // document.body.addEventListener('tap', (event) => console.log(event.target));
         </script>
     </head>
 
     <body>
-        <x-repeater interpolationKey='repeater' model='1e3' target_='x-repeater'>
+        <x-repeater interpolationKey='repeater' model='1e2'>
             <template Repeater_delegate>
                 <!-- <x-draggable style='--index: {{repeater: index}};'> -->
                 <!-- <x-draggable -->

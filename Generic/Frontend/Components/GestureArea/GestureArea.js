@@ -448,6 +448,7 @@ export class GestureArea extends Component {
 
                 this._eventHandlers.host.pointermove.disabled = !this._pointers.size;
                 pointer.updateTimestamp();
+                this._updateMagnetAreasActive(true);
 
                 this._detectTap(pointer, event);
                 this._detectSwipeStop(pointer, event);
@@ -456,7 +457,6 @@ export class GestureArea extends Component {
 
                 this._deletePointer(pointer);
                 this._cancelPress(pointer);
-                this._updateMagnetAreasActive(true);
             },
         },
 
@@ -601,6 +601,28 @@ export class GestureArea extends Component {
             default: 200,
             range: [0, Infinity],
         },
+
+        target: {
+            default: '',
+
+            updateBefore(value) {
+                if (value instanceof Node) {
+                    this._valueExtra = value;
+                }
+                else {
+                    let selector = value + '';
+
+                    try {
+                        this._valueExtra = this._component.closest(selector) || this._component.querySelector(selector);
+                    }
+                    catch {
+                        this._valueExtra = null;
+                    }
+
+                    this._valueExtra ||= this._component;
+                }
+            },
+        },
     };
 
 
@@ -728,7 +750,7 @@ export class GestureArea extends Component {
     }
 
     _updateMagnetAreasActive(resetOnly = false) {
-        if (!this.magnetAreas || !this.magnetism) return;
+        if (!this.magnetAreas || !this.magnetism || !this._pointer.checkCapture()) return;
 
         for (let magnetArea of this._magnetAreasActive) {
             magnetArea.removeAttribute('_GestureArea_magnetEdges');
@@ -743,6 +765,7 @@ export class GestureArea extends Component {
         this._magnetAreasRightRight.clear();
         this._magnetAreasTopBottom.clear();
         this._magnetAreasTopTop.clear();
+        this.target.removeAttribute('_GestureArea_magnetEdges');
 
         if (resetOnly) return;
 
@@ -786,6 +809,28 @@ export class GestureArea extends Component {
                 this._magnetAreasActive.add(magnetArea);
                 this._magnetAreasTopTop.add(magnetArea);
             }
+        }
+
+        let edgeNames = [];
+
+        if (this._magnetAreasTopBottom.size || this._magnetAreasTopTop.size) {
+            edgeNames.push('top');
+        }
+
+        if (this._magnetAreasRightLeft.size || this._magnetAreasRightRight.size) {
+            edgeNames.push('right');
+        }
+
+        if (this._magnetAreasLeftLeft.size || this._magnetAreasLeftRight.size) {
+            edgeNames.push('left');
+        }
+
+        if (this._magnetAreasBottomBottom.size || this._magnetAreasBottomTop.size) {
+            edgeNames.push('bottom');
+        }
+
+        if (edgeNames.length) {
+            this.target.setAttribute('_GestureArea_magnetEdges', edgeNames.join(' '));
         }
 
         for (let magnetArea of this._magnetAreasActive) {

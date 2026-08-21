@@ -76,8 +76,8 @@ export class ScrollArea extends GestureArea {
             swipe: function () {
                 if (!this._pointer.checkCapture()) return;
 
-                this.scrollX = this._scrollInitial.x - this._pointer._positionDelta.x;
-                this.scrollY = this._scrollInitial.y - this._pointer._positionDelta.y;
+                this.scrollX = this._scrollInitial.x - this._pointer._positionDeltaModified.x;
+                this.scrollY = this._scrollInitial.y - this._pointer._positionDeltaModified.y;
             },
 
             swipeStart: function () {

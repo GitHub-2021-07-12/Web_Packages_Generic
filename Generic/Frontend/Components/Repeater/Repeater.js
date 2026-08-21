@@ -78,6 +78,7 @@ export class Repeater extends Component {
                 }
 
                 item.Repeater_manager.applyData();
+                item.Repeater_manager.applyIndex();
             },
         },
     };

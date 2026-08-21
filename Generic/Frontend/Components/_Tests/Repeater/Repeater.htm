@@ -18,6 +18,10 @@
             }
 
 
+            [_Repeater_excluded] {
+                opacity: 0.2;
+            }
+
             [_Repeater_item] {
                 border: #000 solid 1px;
                 display: inline-block;
@@ -45,6 +49,22 @@
 
 
             let repeaters = document.querySelectorAll('x-repeater');
+            repeaters[0].Manager = class extends Repeater.Manager {
+                applyData() {
+                    this._elements.value.textContent = this._modelItem.data.value;
+                }
+
+                applyIndex() {
+                    this._elements.index.textContent = this._modelItem.index;
+                }
+
+                init() {
+                    this.applyData();
+                    this.applyIndex();
+                }
+            };
+            repeaters[0].model.filterRegExp = /1/;
+            repeaters[0].refresh();
             repeaters[1].Manager = repeaters[0].Manager;
             // repeaters[1].delegate = repeaters[0].delegate;
             repeaters[1].model = repeaters[0].model;
@@ -57,49 +77,46 @@
             <template Repeater_delegate>
                 <div class='delegate1'>
                     <span Repeater_element='index'></span> - <span Repeater_element='value'></span>
+                    <div>{{repeater1: index}} - {{repeater1: data.value}}</div>
                 </div>
 
-                <div class='delegate2'>
-                    <div>{{repeater2: index}} - {{repeater2: data.value}}</div>
-                    <span Repeater_element='index'></span> - <span Repeater_element='value'></span>
-                </div>
+                <!-- <div class='delegate2'> -->
+                <!--     <div>{{repeater2: index}} - {{repeater2: data.value}}</div> -->
+                <!--     <span Repeater_element='index'></span> - <span Repeater_element='value'></span> -->
+                <!-- </div> -->
 
 
-                <script>
-                    class Manager extends Repeater.Manager {
-                        static selectDelegate(modelItem) {
-                            return modelItem.index % 2;
-                        }
+                <!-- <script> -->
+                <!--     class Manager extends Repeater.Manager { -->
+                <!--         // static selectDelegate(modelItem) { -->
+                <!--         //     return modelItem.index % 2; -->
+                <!--         // } -->
 
 
-                        applyData() {
-                            this._elements.value.textContent = this._modelItem.data.value;
-                        }
+                <!--         applyData() { -->
+                <!--             this._elements.value.textContent = this._modelItem.data.value; -->
+                <!--         } -->
 
-                        applyIndex() {
-                            this._elements.index.textContent = this._modelItem.index;
-                        }
+                <!--         applyIndex() { -->
+                <!--             this._elements.index.textContent = this._modelItem.index; -->
+                <!--         } -->
 
-                        init() {
-                            this.applyData();
-                            this.applyIndex();
-                        }
-                    }
-                </script>
+                <!--         init() { -->
+                <!--             this.applyData(); -->
+                <!--             this.applyIndex(); -->
+                <!--         } -->
+                <!--     } -->
+                <!-- </script> -->
             </template>
         </x-repeater>
 
         <x-repeater interpolationKey='repeater2' model='5'>
             <template Repeater_delegate>
                 <div class='delegate2'>
-                    <div>{{repeater2: index}} - {{repeater2: data.value}}</div>
                     <span Repeater_element='index'></span> - <span Repeater_element='value'></span>
+                    <div>{{repeater2: index}} - {{repeater2: data.value}}</div>
                 </div>
             </template>
-
-            <!-- <script> -->
-
-            <!-- </script> -->
         </x-repeater>
     </body>
 </html>

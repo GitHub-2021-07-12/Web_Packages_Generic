@@ -72,7 +72,7 @@ export class Slider extends GestureArea {
                         ;
                     }
                     else {
-                        let swipeDirection = Math.sign(this._pointer._positionDelta.x);
+                        let swipeDirection = Math.sign(this._pointer._positionDeltaModified.x);
                         this.index =
                             (this._flickDirection ? this._flipDirection == swipeDirection : this._animationManager.progress < this.flipProgressThreshold)
                                 ? this._frameCurrentIndex
@@ -95,7 +95,7 @@ export class Slider extends GestureArea {
             swipe: function (event) {
                 if (event.target != this || !this._pointer.checkCapture()) return;
 
-                let flipProgress = -this._pointer._positionDelta.x / this._sizeInline - this._flipProgressExcess;
+                let flipProgress = -this._pointer._positionDeltaModified.x / this._sizeInline - this._flipProgressExcess;
                 let frameNextUpdate = false;
 
                 if (!this.looped) {

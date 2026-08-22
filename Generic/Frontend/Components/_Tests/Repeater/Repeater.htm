@@ -38,6 +38,10 @@
             .delegate2 {
                 background: #00f4;
             }
+
+            .delegate3 {
+                background: #f004;
+            }
         </style>
 
         <script type='module'>
@@ -50,17 +54,18 @@
 
             let repeaters = document.querySelectorAll('x-repeater');
             repeaters[0].Manager = class extends Repeater.Manager {
+                _init() {
+                    this.applyData();
+                    this.applyIndex();
+                }
+
+
                 applyData() {
                     this._elements.value.textContent = this._modelItem.data.value;
                 }
 
                 applyIndex() {
                     this._elements.index.textContent = this._modelItem.index;
-                }
-
-                init() {
-                    this.applyData();
-                    this.applyIndex();
                 }
             };
             repeaters[0].model.filterRegExp = /1/;
@@ -79,11 +84,6 @@
                     <span Repeater_element='index'></span> - <span Repeater_element='value'></span>
                     <div>{{repeater1: index}} - {{repeater1: data.value}}</div>
                 </div>
-
-                <!-- <div class='delegate2'> -->
-                <!--     <div>{{repeater2: index}} - {{repeater2: data.value}}</div> -->
-                <!--     <span Repeater_element='index'></span> - <span Repeater_element='value'></span> -->
-                <!-- </div> -->
 
 
                 <!-- <script> -->
@@ -116,6 +116,21 @@
                     <span Repeater_element='index'></span> - <span Repeater_element='value'></span>
                     <div>{{repeater2: index}} - {{repeater2: data.value}}</div>
                 </div>
+            </template>
+        </x-repeater>
+
+        <x-repeater interpolationKey='repeater3''>
+            <template Repeater_delegate>
+                <div class='delegate3'>
+                    <div>index: {{repeater3: index}}</div>
+                    <div>value: {{repeater3: data.value}}</div>
+                </div>
+            </template>
+
+            <template Repeater_model>
+                <script>
+                    [1, 2, 3]
+                </script>
             </template>
         </x-repeater>
     </body>

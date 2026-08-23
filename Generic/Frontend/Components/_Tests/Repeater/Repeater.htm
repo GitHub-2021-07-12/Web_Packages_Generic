@@ -22,7 +22,7 @@
                 opacity: 0.2;
             }
 
-            [_Repeater_item] {
+            [Repeater_item] {
                 border: #000 solid 1px;
                 display: inline-block;
                 margin: 10px;
@@ -53,7 +53,7 @@
 
 
             let repeaters = document.querySelectorAll('x-repeater');
-            repeaters[0].Manager = class extends Repeater.Manager {
+            repeaters[0].ItemManager = class ItemManager extends Repeater.ItemManager {
                 _init() {
                     this.applyData();
                     this.applyIndex();
@@ -61,6 +61,8 @@
 
 
                 applyData() {
+                    console.log(this)
+
                     this._elements.value.textContent = this._modelItem.data.value;
                 }
 
@@ -68,70 +70,50 @@
                     this._elements.index.textContent = this._modelItem.index;
                 }
             };
-            repeaters[0].model.filterRegExp = /1/;
-            repeaters[0].refresh();
-            repeaters[1].Manager = repeaters[0].Manager;
-            // repeaters[1].delegate = repeaters[0].delegate;
-            repeaters[1].model = repeaters[0].model;
+            // repeaters[0].model.filterRegExp = /1/;
+            // // repeaters[0].refresh();
+            // repeaters[1].ItemManager = repeaters[0].ItemManager;
+            // repeaters[1].model = repeaters[0].model;
 
         </script>
     </head>
 
     <body>
-        <x-repeater interpolationKey='repeater1' model='5'>
-            <template Repeater_delegate>
-                <div class='delegate1'>
-                    <span Repeater_element='index'></span> - <span Repeater_element='value'></span>
-                    <div>{{repeater1: index}} - {{repeater1: data.value}}</div>
-                </div>
-
-
-                <!-- <script> -->
-                <!--     class Manager extends Repeater.Manager { -->
-                <!--         // static selectDelegate(modelItem) { -->
-                <!--         //     return modelItem.index % 2; -->
-                <!--         // } -->
-
-
-                <!--         applyData() { -->
-                <!--             this._elements.value.textContent = this._modelItem.data.value; -->
-                <!--         } -->
-
-                <!--         applyIndex() { -->
-                <!--             this._elements.index.textContent = this._modelItem.index; -->
-                <!--         } -->
-
-                <!--         init() { -->
-                <!--             this.applyData(); -->
-                <!--             this.applyIndex(); -->
-                <!--         } -->
-                <!--     } -->
-                <!-- </script> -->
-            </template>
-        </x-repeater>
-
-        <x-repeater interpolationKey='repeater2' model='5'>
-            <template Repeater_delegate>
-                <div class='delegate2'>
-                    <span Repeater_element='index'></span> - <span Repeater_element='value'></span>
-                    <div>{{repeater2: index}} - {{repeater2: data.value}}</div>
+        <x-repeater model='5'>
+            <template>
+                <div Repeater_item class='delegate1'>
+                    <span Repeater_element='index'></span>: <span Repeater_element='value'></span>
                 </div>
             </template>
         </x-repeater>
 
-        <x-repeater interpolationKey='repeater3''>
-            <template Repeater_delegate>
-                <div class='delegate3'>
-                    <div>index: {{repeater3: index}}</div>
-                    <div>value: {{repeater3: data.value}}</div>
-                </div>
-            </template>
+        <x-repeater interpolationKey='repeater2'><template>
+            <div Repeater_item class='delegate2'>
+                <div>{{repeater2: index}}: {{repeater2: data.value}}</div>
+                <span Repeater_element='index'></span>: <span Repeater_element='value'></span>
+            </div>
 
-            <template Repeater_model>
-                <script>
-                    [1, 2, 3]
-                </script>
-            </template>
-        </x-repeater>
+            <script Repeater_ItemManager>
+                class ItemManager extends Repeater.ItemManager {
+                    _init() {
+                        this.applyData();
+                        this.applyIndex();
+                    }
+
+
+                    applyData() {
+                        this._elements.value.textContent = this._modelItem.data.value;
+                    }
+
+                    applyIndex() {
+                        this._elements.index.textContent = this._modelItem.index;
+                    }
+                }
+            </script>
+
+            <script Repeater_model>
+                [1, 2, 3]
+            </script>
+        </template></x-repeater>
     </body>
 </html>

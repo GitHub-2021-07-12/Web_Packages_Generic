@@ -12,15 +12,16 @@ export class Repeater extends Component {
             add: function (event) {
                 if (!this._condition) return;
 
-                let itemRelative = this.target.children[event.detail.index];
+                let itemRelative = this._items.get(event.detail.itemRelative);
 
-                // for (let modelItem of event.detail.items) {
-                //     let item = this._createItem(modelItem);
-                //     itemRelative ? itemRelative.before(item) : this.target.append(item);
-                // }
-                let items = this._createItems(event.detail.items);
-                itemRelative ? itemRelative.before(...items) : this.target.append(...items);
-                this._applyIndexes();
+                if (itemRelative && this.interpolationKey) {
+                    this._defineItems();
+                }
+                else {
+                    let items = this._createItems(event.detail.items);
+                    itemRelative ? itemRelative.before(...items) : this.target.append(...items);
+                    this._applyIndexes();
+                }
             },
 
             clear: function () {
@@ -28,18 +29,17 @@ export class Repeater extends Component {
             },
 
             delete: function (event) {
-                if (this._modelPropsInterpolated.has('index')) {
+                if (this.interpolationKey) {
                     this._defineItems();
-
-                    return;
                 }
+                else {
+                    for (let modelItem of event.detail.items) {
+                        this._items.get(modelItem).remove();
+                        this._items.delete(modelItem);
+                    }
 
-                for (let modelItem of event.detail.items) {
-                    this._items.get(modelItem).remove();
-                    this._items.delete(modelItem);
+                    this._applyIndexes();
                 }
-
-                this._applyIndexes();
             },
 
             filter: function () {
@@ -49,32 +49,28 @@ export class Repeater extends Component {
             },
 
             order: function () {
-                if (this._modelPropsInterpolated.has('index')) {
+                if (this.interpolationKey) {
                     this._defineItems();
-
-                    return;
                 }
-
-                let items = this.model._items.map((modelItem) => this._items.get(modelItem));
-                this.target.textContent = '';
-                this.target.append(...items);
-                this._applyIndexes();
+                else {
+                    let items = this.model._items.map((modelItem) => this._items.get(modelItem));
+                    this.target.textContent = '';
+                    this.target.append(...items);
+                    this._applyIndexes();
+                }
             },
 
             update: function (event) {
                 if (!this._condition) return;
 
                 let item = this._items.get(event.detail.item);
-                let propsUpdated = new Set([...Object.keys(event.detail.dataPrev)]);
 
-                if (this._modelPropsInterpolated.intersection(propsUpdated).size) {
-                    let itemPrev = item;
-                    item = this._createItem(event.detail.item);
-                    itemPrev.replaceWith(item);
+                if (this.interpolationKey) {
+                    item.replaceWith(this._createItem(event.detail.item));
                 }
                 else {
-                    item.Repeater_manager.applyData();
-                    item.Repeater_manager.applyIndex();
+                    item.Repeater_itemManager.applyData();
+                    item.Repeater_itemManager.applyIndex();
                 }
             },
         },
@@ -85,21 +81,6 @@ export class Repeater extends Component {
             default: '',
 
             updateAfter() {
-                this._component._modelPropsInterpolated.clear();
-
-                if (this._value && this._component.delegate) {
-                    let interpolations = this._component.delegate.outerHTML.matchAll(this._component.constructor._interpolationRegExp);
-
-                    for (let interpolation of interpolations) {
-                        let propName = interpolation.groups.value;
-                        let propNameProcessed = propName.replace('data.', '');
-
-                        if (propName == propNameProcessed) continue;
-
-                        this._component._modelPropsInterpolated.add(propNameProcessed);
-                    }
-                }
-
                 this._component._refreshAuto();
             },
         },
@@ -107,10 +88,6 @@ export class Repeater extends Component {
         model: {
             default: 0,
             range: [0, Infinity],
-
-            getInitialValue() {
-                return this._component.querySelector('[Repeater_model]') || undefined;
-            },
 
             updateAfter() {
                 this._component._refreshAuto();
@@ -123,18 +100,6 @@ export class Repeater extends Component {
                         let modelItems = value;
                         this._valueExtra = new Model();
                         this._valueExtra.add(modelItems);
-
-                        break;
-                    }
-                    case HTMLTemplateElement: {
-                        let modelTemplate = value;
-                        let jsExpression = modelTemplate.content.querySelector('script')?.text;
-                        let modelItems = Executor.executeExpression(jsExpression);
-                        this._valueExtra = new Model();
-
-                        if (modelItems) {
-                            this._valueExtra.add(modelItems);
-                        }
 
                         break;
                     }
@@ -196,7 +161,7 @@ export class Repeater extends Component {
     };
 
 
-    static Manager = class {
+    static ItemManager = class {
         static _eventHandlerDescriptors = {
             elements: {},
             item: {},
@@ -255,15 +220,12 @@ export class Repeater extends Component {
     }
 
 
+    __ItemManager = null;
     __delegate = null;
 
 
     _itemTemplate = document.createElement('template');
     _items = new Map();
-    _modelPropsInterpolated = new Set();
-
-
-    Manager = this.constructor.Manager;
 
 
     get _condition() {
@@ -271,27 +233,26 @@ export class Repeater extends Component {
     }
 
 
+    get ItemManager() {
+        return this.__ItemManager;
+    }
+    set ItemManager(ItemManager) {
+        this.__ItemManager = ItemManager || this.constructor.ItemManager;
+        this._refreshAuto();
+    }
+
     get delegate() {
         return this.__delegate;
     }
     set delegate(delegate) {
-        if (delegate instanceof HTMLTemplateElement) {
-            this.__delegate = delegate.content.firstElementChild;
-
-            let jsExpression = delegate.content.querySelector('script')?.text;
-            this.Manager = jsExpression ? Executor.executeExpression(jsExpression, {Repeater: this.constructor}) : this.Manager;
-        }
-        else {
-            this.__delegate = delegate;
-        }
-
+        this.__delegate = delegate || null;
         this._refreshAuto();
     }
 
 
     _applyIndexes() {
         for (let item of this._items.values()) {
-            item.Repeater_manager.applyIndex();
+            item.Repeater_itemManager.applyIndex();
         }
     }
 
@@ -313,9 +274,7 @@ export class Repeater extends Component {
             item = this.delegate.cloneNode(true);
         }
 
-        item.Repeater_manager = new this.Manager(item, this.model, modelItem);
-        item.setAttribute('_Repeater_item', '');
-        this.constructor.setAttribute(item, '_Repeater_excluded', modelItem.excluded ? '' : null);
+        item.Repeater_itemManager = new this.ItemManager(item, this.model, modelItem);
         this._items.set(modelItem, item);
 
         return item;
@@ -327,8 +286,7 @@ export class Repeater extends Component {
         let items = [];
 
         for (let modelItem of modelItems) {
-            let item = this._createItem(modelItem);
-            items.push(item);
+            items.push(this._createItem(modelItem));
         }
 
         return items;
@@ -339,22 +297,29 @@ export class Repeater extends Component {
 
         if (!this._condition) return;
 
-        // for (let modelItem of this.model._items) {
-        //     this._createItem(modelItem);
-        //     // let item = this._createItem(modelItem);
-        //     // this.target.append(item);
-        // }
-
         this._createItems();
         this.target.append(...this._items.values());
     }
 
     _init() {
-        this.delegate = this.querySelector('[Repeater_delegate]');
+        let templateContent = this.querySelector('template')?.content;
+
+        if (!templateContent) return;
+
+        this.ItemManager = Executor.executeExpression(templateContent.querySelector('script[Repeater_ItemManager]')?.text, {Repeater: this.constructor});
+        this.delegate = templateContent.querySelector('[Repeater_item]');
+        this.model = Executor.executeExpression(templateContent.querySelector('script[Repeater_model]')?.text) || this.model;
     }
 
 
     refresh() {
         this._defineItems();
+
+        // if (this.interpolationKey || !this._items.size) {
+        //     this._defineItems();
+        // }
+        // else {
+        //     this._applyIndexes();
+        // }
     }
 }

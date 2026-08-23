@@ -18,12 +18,6 @@ export class Model extends EventTarget {
     sortProp = this.constructor.propDefault;
 
 
-    _defineIndexes(indexFirst = 0) {
-        for (let i = indexFirst; i < this._items.length; i++) {
-            this._items[i].index = i;
-        }
-    }
-
     _filterCallback(item) {
         return this.filterRegExp && this.filterProp ? this.filterRegExp.test(item.data[this.filterProp]) : true;
     }
@@ -33,6 +27,12 @@ export class Model extends EventTarget {
         let value2 = item2.data[this.sortProp];
 
         return value1 > value2 ? this.sortOrder : (value1 < value2 ? -this.sortOrder : !value1);
+    }
+
+    _updateIndexes(indexFirst = 0) {
+        for (let i = indexFirst; i < this._items.length; i++) {
+            this._items[i].index = i;
+        }
     }
 
 
@@ -59,9 +59,10 @@ export class Model extends EventTarget {
         }
 
         index = Common.toRange(index, 0, this._items.length);
+        let itemRelative = this._items[index];
         this._items.splice(index, 0, ...items);
-        this._defineIndexes(index);
-        EventManager.dispatchEvent(this, 'add', {index, items});
+        this._updateIndexes(index);
+        EventManager.dispatchEvent(this, 'add', {index, itemRelative, items});
     }
 
     clear() {
@@ -90,7 +91,7 @@ export class Model extends EventTarget {
         if (!items.length) return;
 
         this._items = this._items.flat();
-        this._defineIndexes();
+        this._updateIndexes();
         EventManager.dispatchEvent(this, 'delete', {items});
     }
 
@@ -101,7 +102,7 @@ export class Model extends EventTarget {
         index = Common.toRange(index, 0, this._items.length - count);
 
         let items = this._items.splice(index, count);
-        this._defineIndexes(index);
+        this._updateIndexes(index);
         EventManager.dispatchEvent(this, 'delete', {items});
     }
 
@@ -131,15 +132,15 @@ export class Model extends EventTarget {
 
         let items = this._items.splice(indexFrom, count);
         this._items.splice(indexTo, 0, ...items);
-        this._defineIndexes(Math.min(indexFrom, indexTo));
+        this._updateIndexes(Math.min(indexFrom, indexTo));
         EventManager.dispatchEvent(this, 'order');
     }
 
     sort(callback = this._sortCallbackBinded) {
-        if (!this._items.length || callback == this._sortCallbackBinded && (!this.sortOrder || !this.sortProp)) return;
+        if (!this._items.length || callback == this._sortCallbackBinded && !(this.sortOrder && this.sortProp)) return;
 
         this._items.sort(callback);
-        this._defineIndexes();
+        this._updateIndexes();
         EventManager.dispatchEvent(this, 'order');
     }
 

@@ -25,7 +25,7 @@ export class Select extends Repeater {
 
             scrollArea: {
                 tap: function (event) {
-                    let modelItem = event.detail.pointer._target.Repeater_manager?._modelItem;
+                    let modelItem = event.detail.pointer._target.Repeater_itemManager?._modelItem;
 
                     if (!modelItem || modelItem.excluded) return;
 
@@ -166,7 +166,7 @@ export class Select extends Repeater {
     };
 
 
-    static Manager = class Manager extends super.Manager {
+    static ItemManager = class ItemManager extends super.ItemManager {
         applyData() {
             Select.setAttribute(this._item, '_Select_highlighted', this._modelItem.data.highlighted ? '' : null);
         }
@@ -202,7 +202,6 @@ export class Select extends Repeater {
         this.model.update(this._indexHighlighted, {highlighted: false});
         this._indexHighlighted = this._indexesFiltered[this._indexFilteredHighlightedIndex] ?? this._indexFilteredHighlightedIndex;
         this.model.update(this._indexHighlighted, {highlighted: true});
-
         this._elements.scrollArea.scrollToElement(this._items.get(this.model._items[this._indexHighlighted]), {block: 'center', container: 'nearest'});
     }
 

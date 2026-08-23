@@ -315,7 +315,7 @@
         }
 
 
-        [_Repeater_item] {
+        [Repeater_item] {
             border-radius: var(--rounding);
             padding-inline: var(--gapSmall);
 

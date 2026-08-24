@@ -25,7 +25,7 @@ export class Select extends Repeater {
 
             scrollArea: {
                 tap: function (event) {
-                    let modelItem = event.detail.pointer._target.Repeater_manager?._modelItem;
+                    let modelItem = event.detail.pointer._target.Repeater_itemManager?._modelItem;
 
                     if (!modelItem || modelItem.excluded) return;
 
@@ -49,7 +49,7 @@ export class Select extends Repeater {
             domSubtree: function (event) {
                 if (event.detail.key != 'popup') return;
 
-                this.delegate ||= this._shadow.querySelector('[Repeater_delegate]');
+                this.delegate ||= this._shadow.querySelector('template').content.firstElementChild;
             },
 
             field: function (event) {
@@ -112,10 +112,6 @@ export class Select extends Repeater {
         _open: {
             default: false,
 
-            process(value) {
-                return value && !!this._component.model._items.length;
-            },
-
             updateAfter() {
                 if (this._value) {
                     if (this._valuePrev) return;
@@ -127,6 +123,10 @@ export class Select extends Repeater {
                 else if (this._valuePrev) {
                     this._elements.popup.open = false;
                 }
+            },
+
+            updateBefore() {
+                this._valueSimple &&= !!this._component.model._items.length;
             },
         },
 
@@ -151,12 +151,12 @@ export class Select extends Repeater {
             default: -1,
             range: [-1, Infinity],
 
-            process(value) {
-                return Math.min(value, this._component.model._items.length - 1);
-            },
-
             updateAfter() {
                 this._elements.textField.value = this._component.model._items[this._value]?.data[this._component.valueProp] ?? '';
+            },
+
+            updateBefore() {
+                this._valueSimple = Math.min(this._valueSimple, this._component.model._items.length - 1);
             },
         },
     };
@@ -166,7 +166,7 @@ export class Select extends Repeater {
     };
 
 
-    static Manager = class Manager extends super.Manager {
+    static ItemManager = class ItemManager extends super.ItemManager {
         applyData() {
             Select.setAttribute(this._item, '_Select_highlighted', this._modelItem.data.highlighted ? '' : null);
         }
@@ -202,7 +202,6 @@ export class Select extends Repeater {
         this.model.update(this._indexHighlighted, {highlighted: false});
         this._indexHighlighted = this._indexesFiltered[this._indexFilteredHighlightedIndex] ?? this._indexFilteredHighlightedIndex;
         this.model.update(this._indexHighlighted, {highlighted: true});
-
         this._elements.scrollArea.scrollToElement(this._items.get(this.model._items[this._indexHighlighted]), {block: 'center', container: 'nearest'});
     }
 

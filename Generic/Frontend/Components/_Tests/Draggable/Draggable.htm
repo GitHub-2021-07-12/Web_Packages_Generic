@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+
+
+<html>
+    <head>
+        <meta charset='utf-8' content='user-scalable=no, width=720' name='viewport'>
+        <title>Test</title>
+
+        <link href='/Packages/Generic/Frontend/Themes/Main/Main.css' rel='stylesheet'>
+
+        <style>
+            body {
+                box-sizing: border-box;
+                display: grid;
+                gap: 10px;
+                grid-template: 400px auto / auto;
+                padding: 10px;
+                user-select: none;
+            }
+
+            x-draggable {
+                --Component_displayInner: grid;
+                /* --Component_eventsWithoutPropagation: pointerdown; */
+                --Component_eventsWithoutPropagation: swipeMain;
+                /* --Draggable_axis: y; */
+                /* --Draggable_radius: 100px; */
+                /* --Draggable_step: 10px; */
+                --GestureArea_dynamicEnvironment: true;
+                /* --GestureArea_jumping: true; */
+                --GestureArea_magnetAreas: url('#{x-draggable:not([_dragging]), .dropArea:not(:active)}');
+                --GestureArea_magnetism: 20;
+                /* --GestureArea_shift: 8; */
+                /* --GestureArea_swipeFactor: 2; */
+
+                background: #0f04;
+                border: #000 solid 1px;
+                /* border-radius: 100%; */
+                height: 100px;
+                /* margin: 10px; */
+                place-items: center;
+                position: relative;
+                width: 100px;
+
+
+                &[_dragging] {
+                    z-index: 1;
+                }
+            }
+
+
+            .dropArea {
+                background: #ff04;
+                border: #000 solid 1px;
+                /* border-radius: 100%; */
+                height: 200px;
+                /* margin: 10px; */
+                padding: 10px;
+                /* pointer-events: none; */
+                width: 200px;
+            }
+
+            .handle {
+                background: #00f4;
+            }
+
+            .root {
+                border: #000 solid 1px;
+                display: grid;
+                gap: 10px;
+                grid-auto-flow: column;
+                padding: 10px;
+                place-content: start;
+            }
+
+
+            [_Draggable_dropAreaTarget] {
+                border-color: #f00;
+            }
+
+            [_GestureArea_magnetAreaActive] {
+                background: #f004;
+            }
+        </style>
+
+        <script type='module'>
+            import * as generic from '/Packages/Generic/Generic.js';
+
+
+            await generic.frontend.components.Draggable._defined;
+            let Component = generic.frontend.components.Component;
+
+
+            {
+                let root = document.querySelector('#root');
+
+                generic.frontend.units.EventManager.createEventHandlers({
+                    eventTarget: document.body,
+
+                    eventHandlerDescriptors: {
+                        drag: function (event) {
+                            // console.log(event.detail.pointer._magnetVector)
+                        },
+
+                        // dragStop: function (event) {
+                        //     let draggable = event.target;
+
+                        //     console.log(event)
+                        // },
+
+                        // drop: function (event) {
+                        dragStop: function (event) {
+                            let draggable = event.target;
+
+                            if (!draggable._dropAreaTarget || draggable._dropAreaTarget == draggable.parentElement) return;
+                            // if (draggable._dropAreaTarget == draggable.parentElement) return;
+
+                            draggable.reset();
+                            (draggable._dropAreaTarget || root).append(draggable);
+                        },
+
+                        dropAreaTarget: function (event) {
+                            let draggable = event.target;
+
+                            console.log(draggable._dropAreaTarget)
+                            // console.log(event)
+                        },
+                    },
+                });
+            }
+        </script>
+    </head>
+
+    <body>
+        <div class='root'>
+            <x-draggable class='dropArea'></x-draggable>
+            <x-draggable class='dropArea'></x-draggable>
+            <x-draggable class='dropArea' axis='y' receptive>
+                <x-draggable axis='x' dropAreas='.dropArea, .root' wideDrop></x-draggable>
+            </x-draggable>
+        </div>
+
+        <div id='root' class='root'>
+            <x-draggable dropAreas='.dropArea, .root' wideDrop>1</x-draggable>
+            <x-draggable dropAreas='.dropArea' wideDrop>2</x-draggable>
+            <x-draggable dropAreas='x-draggable:not(:active), .dropArea, .root'>3</x-draggable>
+            <x-draggable dropAreas='.dropArea' magnetAreas='x-draggable:not(:active), .dropArea' wideDrop>4</x-draggable>
+
+            <x-draggable bound='#root' deferredMagnetism dropAreas='.dropArea' jumping_ handle='.handle' shift='10' step_='10'>
+                <div class='handle'>Handle</div>
+            </x-draggable>
+        </div>
+    </body>
+</html>

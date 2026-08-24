@@ -8,6 +8,7 @@
             id='scrollArea'
 
             part='scrollArea'
+            tabIndex='-1'
 
             exportParts='
                 display,
@@ -19,8 +20,8 @@
             <slot></slot>
         </x-scrollArea>
 
-        <template Repeater_delegate>
-            <div>{{repeater: data.value}}</div>
+        <template>
+            <div Repeater_item>{{repeater: data.value}}</div>
         </template>
     </x-popup>
 </div>

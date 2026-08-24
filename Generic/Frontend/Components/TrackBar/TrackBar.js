@@ -10,16 +10,14 @@ export class TrackBar extends GestureArea {
 
     static _eventHandlerDescriptors = {
         host: {
-            capture: function (event) {
-                let pointer = event.detail.pointer;
-                pointer._TrackBar_blocked ??= this.mode == 'normal' && pointer._target != this._elements.puck;
-
-                if (pointer._TrackBar_blocked) return;
+            capture: function () {
+                if (this.mode == 'normal' && this._pointer?._target != this._elements.puck) return;
 
                 this._active = true;
+                this._pointer.capture();
 
                 if (this.mode == 'precise') {
-                    this._value_define(pointer);
+                    this._defineValue();
                 }
                 else {
                     this._valueCaptured = this.value;
@@ -63,16 +61,16 @@ export class TrackBar extends GestureArea {
                 this._active = false;
             },
 
-            releaseMain: function () {
+            release: function () {
+                if (!this._pointer.checkCapture()) return;
+
                 this._active = false;
             },
 
-            swipeMain: function (event) {
-                let pointer = event.detail.pointer;
+            swipe: function () {
+                if (!this._pointer.checkCapture()) return;
 
-                if (pointer._TrackBar_blocked) return;
-
-                this._value_define(pointer);
+                this._defineValue();
             },
         },
     };
@@ -109,19 +107,17 @@ export class TrackBar extends GestureArea {
         range: {
             default: [0, 0],
 
-            process(value) {
-                value[0] = Math.round(value[0]);
-                value[1] = Math.round(value[1]);
-
-                if (!Common.inRangeStrict(value[1] - value[0], 0, this._component._freeSpaceLength)) {
-                    value = undefined;
-                }
-
-                return value;
-            },
-
             updateAfter() {
                 this._component.refreshField('value');
+            },
+
+            updateBefore() {
+                this._valueSimple[0] = Math.round(this._valueSimple[0]);
+                this._valueSimple[1] = Math.round(this._valueSimple[1]);
+
+                if (!Common.inRangeStrict(this._valueSimple[1] - this._valueSimple[0], 0, this._component._freeSpaceLength)) {
+                    this._valueSimple = undefined;
+                }
             },
         },
 
@@ -129,23 +125,21 @@ export class TrackBar extends GestureArea {
             default: 0,
             externalFlag: true,
 
-            process(value) {
+            updateAfter() {
+                this._component._puck_definePosition();
+            },
+
+            updateBefore() {
                 if (this._component.range[0] < this._component.range[1]) {
-                    value = Common.toRange(Math.round(value), ...this._component.range);
+                    this._valueSimple = Common.toRange(Math.round(this._valueSimple), ...this._component.range);
                 }
                 else {
                     if (this._component.discrete) {
-                        value = Math.round(this._component._freeSpaceLength * value) / this._component._freeSpaceLength;
+                        this._valueSimple = Math.round(this._component._freeSpaceLength * this._valueSimple) / this._component._freeSpaceLength;
                     }
 
-                    value = Common.toRange(value, 0, 1);
+                    this._valueSimple = Common.toRange(this._valueSimple, 0, 1);
                 }
-
-                return value;
-            },
-
-            updateAfter() {
-                this._component._puck_position_define();
             },
         },
     };
@@ -162,11 +156,30 @@ export class TrackBar extends GestureArea {
     _valueStep = 0;
 
 
-    _init() {
-        this.defineMetrics();
+    _defineValue() {
+        let rangeLength = (this.range[1] - this.range[0]) || 1;
+        let value = undefined;
+
+        if (this.mode == 'precise') {
+            let pointerPosition = this._pointer._positionInnerInitial.x + this._pointer._positionDeltaModified.x + this._puck_positionShift;
+            value = this.range[0] + rangeLength * pointerPosition / this._freeSpaceLength;
+        }
+        else {
+            value = this._valueCaptured + rangeLength * this._pointer._positionDeltaModified.x / this._freeSpaceLength;
+        }
+
+        if (this.discrete) {
+            value = Math.round(this._freeSpaceLength * value) / this._freeSpaceLength;
+        }
+
+        this.value = value;
     }
 
-    _puck_position_define() {
+    _init() {
+        this.calcMetrics();
+    }
+
+    _puck_definePosition() {
         let rangeLength = this.range[1] - this.range[0];
         let puck_position =
             rangeLength
@@ -181,30 +194,11 @@ export class TrackBar extends GestureArea {
         this._puck_position = puck_position;
     }
 
-    _value_define(pointer) {
-        let rangeLength = (this.range[1] - this.range[0]) || 1;
-        let value = undefined;
 
-        if (this.mode == 'precise') {
-            let pointerPosition = pointer._positionInnerInitial.x + pointer._positionDelta.x + this._puck_positionShift;
-            value = this.range[0] + rangeLength * pointerPosition / this._freeSpaceLength;
-        }
-        else {
-            value = this._valueCaptured + rangeLength * pointer._positionDelta.x / this._freeSpaceLength;
-        }
-
-        if (this.discrete) {
-            value = Math.round(this._freeSpaceLength * value) / this._freeSpaceLength;
-        }
-
-        this.value = value;
-    }
-
-
-    defineMetrics() {
-        let puck_length = this.constructor.getSizeInline(this._elements.puck, true);
+    calcMetrics() {
+        let puck_length = this.constructor.getSize(this._elements.puck, 'inline', true);
         let puck_lengthHalf = puck_length / 2;
-        let track_length = this.constructor.getSizeInline(this._elements.track, true);
+        let track_length = this.constructor.getSize(this._elements.track, 'inline', true);
         this._filler_positionShift =
             this.constructor.getCssPropNumber(this._elements.track, 'border-inline-start-width')
             + this.constructor.getCssPropNumber(this._elements.track, 'margin-inline-start')
@@ -217,7 +211,7 @@ export class TrackBar extends GestureArea {
     }
 
     refresh() {
-        this.defineMetrics();
+        this.calcMetrics();
         this.refreshField('range');
     }
 }

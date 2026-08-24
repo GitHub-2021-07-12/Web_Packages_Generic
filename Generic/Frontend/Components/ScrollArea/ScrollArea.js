@@ -19,10 +19,10 @@ export class ScrollArea extends GestureArea {
             display: {
                 scroll: function () {
                     this._scrolling = true;
-                    this._scrollEdges_define();
+                    this._defineScrollEdges();
                     this._stickyX = this._scrollEdgeXEnd || !this._scrollWidth;
                     this._stickyY = this._scrollEdgeYEnd || !this._scrollHeight;
-                    Executor.queueRendering(this._scrollBars_values_defineBinded);
+                    Executor.queueRendering(this._scrollBars_defineValuesBinded);
                     this.dispatchEvent('scroll');
                 },
 
@@ -39,14 +39,14 @@ export class ScrollArea extends GestureArea {
             },
 
             scrollBarX: {
-                swipeMain: function () {
+                swipe: function () {
                     this.scrollX = this._scrollWidth * this._elements.scrollBarX.value;
                     this._renderer.stop();
                 },
             },
 
             scrollBarY: {
-                swipeMain: function () {
+                swipe: function () {
                     this.scrollY = this._scrollHeight * this._elements.scrollBarY.value;
                     this._renderer.stop();
                 },
@@ -54,43 +54,41 @@ export class ScrollArea extends GestureArea {
         },
 
         host: {
-            capture: function (event) {
-                let pointer = event.detail.pointer;
-                pointer._ScrollArea_blocked ??= pointer._target.constructor == TrackBar || this._snag_check(pointer._target);
+            capture: function () {
                 this._renderer.stop();
+
+                if (this._checkSnag(this._pointer._target)) return;
+
+                this._pointer.capture();
             },
 
-            flickMain: function (event) {
-                let pointer = event.detail.pointer;
+            flick: function () {
+                if (this._pointer._velocity.length < this.velocityMin || !this._pointer.checkCapture()) return;
 
-                if (pointer._ScrollArea_blocked || pointer._velocity.length < this.velocityMin) return;
-
-                this._velocity.setVector(pointer._velocity).invert().length_toRange(-this.velocityMax, this.velocityMax);
-                this._acceleration.setVector(this._velocity).length_set(this.acceleration);
-                this._jerk.setVector(this._velocity).length_set(this.jerk);
+                this._velocity.setVector(this._pointer._velocity).invert().toRangeLength(-this.velocityMax, this.velocityMax);
+                this._acceleration.setVector(this._velocity).setLength(this.acceleration);
+                this._jerk.setVector(this._velocity).setLength(this.jerk);
 
                 this._scrollFractional.set(this.scrollX, this.scrollY);
                 this._renderer.start();
             },
 
-            swipeMain: function (event) {
-                let pointer = event.detail.pointer;
+            swipe: function () {
+                if (!this._pointer.checkCapture()) return;
 
-                if (pointer._ScrollArea_blocked) return;
-
-                this.scrollX = this._scrollInitial.x - pointer._positionDelta.x;
-                this.scrollY = this._scrollInitial.y - pointer._positionDelta.y;
+                this.scrollX = this._scrollInitial.x - this._pointer._positionDeltaModified.x;
+                this.scrollY = this._scrollInitial.y - this._pointer._positionDeltaModified.y;
             },
 
-            swipeStartMain: function (event) {
-                if (event.detail.pointer._ScrollArea_blocked) return;
+            swipeStart: function () {
+                if (!this._pointer.checkCapture()) return;
 
                 this._swiping = true;
                 this._scrollInitial.set(this.scrollX, this.scrollY);
             },
 
-            swipeStopMain: function (event) {
-                if (event.detail.pointer._ScrollArea_blocked) return;
+            swipeStop: function () {
+                if (!this._pointer.checkCapture()) return;
 
                 this._swiping = false;
             },
@@ -118,7 +116,7 @@ export class ScrollArea extends GestureArea {
 
         _scrolling: {
             default: false,
-            flashing: true,
+            flash: true,
         },
 
 
@@ -130,9 +128,17 @@ export class ScrollArea extends GestureArea {
         },
 
         autoRefresh: class Field extends super._fieldDescriptors.autoRefresh {
-            _value_updateAfter() {
-                let methodName = this._value ? 'resizeObserver_addElements' : 'resizeObserver_deleteElements';
-                this._component[methodName](this._component, this._elements.content);
+            _updateAfter() {
+                super._updateAfter();
+
+                if (this._value) {
+                    this._component._mutationObserver.observe(this._component, {childList: true, subtree: true});
+                    this._component._resizeObserver.observe(this._component);
+                }
+                else {
+                    this._component._mutationObserver.disconnect();
+                    this._component._resizeObserver.disconnect();
+                }
             }
         },
 
@@ -156,7 +162,12 @@ export class ScrollArea extends GestureArea {
 
         snag: {
             default: '',
-            extra: true,
+
+            updateBefore(value) {
+                if (!(value instanceof Node)) return;
+
+                this._valueExtra = value;
+            },
         },
 
         velocityMax: {
@@ -178,8 +189,10 @@ export class ScrollArea extends GestureArea {
 
     _acceleration = new Vector2d();
     _jerk = new Vector2d();
-    _resizeObserver = new ResizeObserver(this._resizeObserver_callback.bind(this));
-    _scrollBars_values_defineBinded = this._scrollBars_values_define.bind(this);
+    _observers_callbackBinded = this._observers_callback.bind(this);
+    _mutationObserver = new MutationObserver(this._observers_callbackBinded);
+    _resizeObserver = new ResizeObserver(this._observers_callbackBinded);
+    _scrollBars_defineValuesBinded = this._scrollBars_defineValues.bind(this);
     _scrollFractional = new Vector2d();
     _scrollInitial = new Vector2d();
     _scrollSaved = new Vector2d();
@@ -188,8 +201,8 @@ export class ScrollArea extends GestureArea {
     _velocity = new Vector2d();
 
     _renderer = new Renderer().init({
+        getRenderCondition: this._renderer_getRenderCondition.bind(this),
         render: this._renderer_render.bind(this),
-        renderCondition_get: this._renderer_renderCondition_get.bind(this),
     });
 
 
@@ -198,7 +211,7 @@ export class ScrollArea extends GestureArea {
     }
     set scrollX(scrollX) {
         scrollX = Math.round(scrollX);
-        this._elements.display.scrollLeft = Math.min(scrollX, this._scrollWidth);
+        this._elements.display.scrollLeft = Math.min(scrollX, Number.MAX_SAFE_INTEGER);
     }
 
     get scrollY() {
@@ -206,13 +219,44 @@ export class ScrollArea extends GestureArea {
     }
     set scrollY(scrollY) {
         scrollY = Math.round(scrollY);
-        this._elements.display.scrollTop = Math.min(scrollY, this._scrollHeight);
+        this._elements.display.scrollTop = Math.min(scrollY, Number.MAX_SAFE_INTEGER);
     }
 
 
+    _checkSnag(target) {
+        let snag = null;
+
+        try {
+            snag = this.snag instanceof Node ? this.snag : target.closest(this.snag);
+        }
+        catch {
+            return false;
+        }
+
+        return this.contains(snag) && snag.contains(target);
+    }
+
+    _defineScrollEdges() {
+        this._scrollEdgeXEnd = this._scrollWidth && this._scrollWidth - this.scrollX <= this.scrollEdgeSize;
+        this._scrollEdgeXStart = this._scrollWidth && this.scrollX <= this.scrollEdgeSize;
+        this._scrollEdgeYEnd = this._scrollHeight && this._scrollHeight - this.scrollY <= this.scrollEdgeSize;
+        this._scrollEdgeYStart = this._scrollHeight && this.scrollY <= this.scrollEdgeSize;
+    }
+
     _init() {
-        this.scrollX = 0;
-        this.scrollY = 0;
+        this.resetScroll();
+    }
+
+    _observers_callback() {
+        this._refreshAuto();
+    }
+
+    _renderer_getRenderCondition() {
+        return (
+            this._velocity.length >= this.velocityMin
+            && (Common.inRange(this.scrollX, 0, this._scrollWidth) || Common.inRange(this.scrollY, 0, this._scrollHeight))
+            && (this._acceleration.isZero() || this._velocity.getCos(this._acceleration) > 0)
+        );
     }
 
     _renderer_render() {
@@ -224,53 +268,7 @@ export class ScrollArea extends GestureArea {
         this._velocity.sub(this._acceleration);
     }
 
-    _renderer_renderCondition_get() {
-        return (
-            this._velocity.length >= this.velocityMin
-            && (Common.inRange(this.scrollX, 0, this._scrollWidth) || Common.inRange(this.scrollY, 0, this._scrollHeight))
-            && (this._acceleration.isZero() || this._velocity.getCos(this._acceleration) > 0)
-        );
-    }
-
-    _resizeObserver_callback(entries) {
-        this._refreshAuto();
-        this.dispatchEvent('resize', {entries});
-    }
-
-    _scrollEdges_define() {
-        this._scrollEdgeXEnd = this._scrollWidth && this._scrollWidth - this.scrollX <= this.scrollEdgeSize;
-        this._scrollEdgeXStart = this._scrollWidth && this.scrollX <= this.scrollEdgeSize;
-        this._scrollEdgeYEnd = this._scrollHeight && this._scrollHeight - this.scrollY <= this.scrollEdgeSize;
-        this._scrollEdgeYStart = this._scrollHeight && this.scrollY <= this.scrollEdgeSize;
-    }
-
-    _scrollBars_refresh() {
-        this._scrollWidth = this._elements.display.scrollWidth - this._elements.display.clientWidth;
-        this._scrollHeight = this._elements.display.scrollHeight - this._elements.display.clientHeight;
-        this._scrollWidth = this._elements.display.scrollWidth - this._elements.display.clientWidth;
-
-        if (this._scrollWidth) {
-            let scrollBarX_length = this._elements.scrollBarX.getSizeInline();
-            this._puckX_length = Math.round(this._elements.display.clientWidth / this._elements.display.scrollWidth * scrollBarX_length);
-            this._elements.scrollBarX.defineMetrics();
-            this._elements.scrollBarX.refreshField('range');
-        }
-        else {
-            this._puckX_length = null;
-        }
-
-        if (this._scrollHeight) {
-            let scrollBarY_length = this._elements.scrollBarY.getSizeInline();
-            this._puckY_length = Math.round(this._elements.display.clientHeight / this._elements.display.scrollHeight * scrollBarY_length);
-            this._elements.scrollBarY.defineMetrics();
-            this._elements.scrollBarY.refreshField('range');
-        }
-        else {
-            this._puckY_length = null;
-        }
-    }
-
-    _scrollBars_values_define() {
+    _scrollBars_defineValues() {
         if (this._scrollWidth && !this._elements.scrollBarX._active) {
             this._elements.scrollBarX.value = this.scrollX / this._scrollWidth;
         }
@@ -280,23 +278,36 @@ export class ScrollArea extends GestureArea {
         }
     }
 
-    _snag_check(target) {
-        try {
-            let snag = this.snag instanceof Node ? this.snag : target.closest(this.snag);
+    _scrollBars_refresh() {
+        this._scrollHeight = this._elements.display.scrollHeight - this._elements.display.clientHeight;
+        this._scrollWidth = this._elements.display.scrollWidth - this._elements.display.clientWidth;
+        this._scrollHeight = this._elements.display.scrollHeight - this._elements.display.clientHeight;
 
-            return this.contains(snag) && snag.contains(target);
+        if (this._scrollWidth) {
+            let scrollBarX_length = this._elements.scrollBarX.getSize('inline');
+            this._puckX_length = Math.round(this._elements.display.clientWidth / this._elements.display.scrollWidth * scrollBarX_length);
+            this._elements.scrollBarX.calcMetrics();
+            this._elements.scrollBarX.refreshField('range');
         }
-        catch {}
+        else {
+            this._puckX_length = null;
+        }
 
-        return false;
+        if (this._scrollHeight) {
+            let scrollBarY_length = this._elements.scrollBarY.getSize('inline');
+            this._puckY_length = Math.round(this._elements.display.clientHeight / this._elements.display.scrollHeight * scrollBarY_length);
+            this._elements.scrollBarY.calcMetrics();
+            this._elements.scrollBarY.refreshField('range');
+        }
+        else {
+            this._puckY_length = null;
+        }
     }
 
 
     refresh() {
         this._scrollBars_refresh();
-        this.scrollX = this.scrollX;
-        this.scrollY = this.scrollY;
-        this._scrollEdges_define();
+        this._defineScrollEdges();
 
         if (this.sticky) {
             if (this._stickyX) {
@@ -308,7 +319,7 @@ export class ScrollArea extends GestureArea {
             }
         }
 
-        this._scrollBars_values_define();
+        this._scrollBars_defineValues();
     }
 
     resetScroll() {
@@ -321,18 +332,6 @@ export class ScrollArea extends GestureArea {
         this.scrollY = this._scrollSaved.y;
     }
 
-    resizeObserver_addElements(...elements) {
-        for (let element of elements) {
-            this._resizeObserver.observe(element);
-        }
-    }
-
-    resizeObserver_deleteElements(...elements) {
-        for (let element of elements) {
-            this._resizeObserver.unobserve(element);
-        }
-    }
-
     saveScroll() {
         this._scrollSaved.set(this.scrollX, this.scrollY);
     }
@@ -340,9 +339,9 @@ export class ScrollArea extends GestureArea {
     scrollToElement(element, opts = null) {
         element.scrollIntoView(opts);
 
-        Executor.queueRendering(() => {
-            element.scrollIntoView(opts);
-            document.scrollingElement.scrollTop = 0;
-        });
+        // Executor.queueRendering(() => {
+        //     element.scrollIntoView(opts);
+        //     document.scrollingElement.scrollTop = 0;
+        // });
     }
 }

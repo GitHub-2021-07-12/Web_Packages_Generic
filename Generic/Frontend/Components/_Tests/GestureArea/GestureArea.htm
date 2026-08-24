@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+
+
+<html>
+    <head>
+        <meta charset='utf-8' content='user-scalable=no, width=720' name='viewport'>
+        <title>Test</title>
+
+        <link href='/Packages/Generic/Frontend/Themes/Main/Main.css' rel='stylesheet'>
+
+        <style>
+            :root {
+                --size: 100px;
+
+                box-sizing: border-box;
+                height: 100%;
+                padding: 10px;
+                position: relative;
+                user-select: none;
+            }
+
+
+            body {
+                height: initial;
+                position: relative;
+            }
+
+            x-draggable {
+                --Component_displayInner: grid;
+                /* --Draggable_bound: url('#{body}'); */
+                /* --GestureArea_axis: x; */
+                --GestureArea_bound: url('#{:root}');
+                --Draggable_dropAreas: url('#{x-resizable:not(:active)}');
+                --GestureArea_deferredMagnetism: true;
+                /* --GestureArea_gestures: swipe; */
+                --GestureArea_magnetAreas: url('#{x-draggable:not(:active)}');
+                /* --GestureArea_magnetAreas: url('#{x-resizable:not(:active)}'); */
+                --GestureArea_magnetism: 10;
+                /* --GestureArea_receptive: true; */
+                /* --GestureArea_radius: 100; */
+                /* --GestureArea_shift: 100; */
+                /* --GestureArea_step: 10; */
+                /* --GestureArea_swipeFactor: 2; */
+                /* --GestureArea_shiftJumping: true; */
+
+                /* box-sizing: border-box; */
+                /* background: #f002; */
+                height: var(--size);
+                /* height: fit-content; */
+                /* left: calc(var(--index) * var(--size)); */
+                max-height: 256px;
+                max-width: 256px;
+                /* margin: 5px; */
+                min-height: 64px;
+                min-width: 64px;
+                position: absolute;
+                /* top: calc(var(--index) * var(--size)); */
+                width: var(--size);
+                /* width: fit-content; */
+            }
+
+            x-repeater {
+                --Component_autoRefresh: true;
+                --Component_display: contents;
+            }
+
+            x-resizable {
+                /* --Component_eventsWithoutPropagation: capture swipe swipeStart swipeStop; */
+                /* --Component_eventsWithoutPropagation: pointerdown swipe; */
+                /* --GestureArea_magnetAreas: url('#{x-resizable}'); */
+                /* --GestureArea_magnetAreas: url('#{x-resizable:not(:active)}'); */
+                /* --Resizable_keepProportions: true; */
+                --GestureArea_bound: url('#{:root}');
+                --GestureArea_deferredMagnetism: true;
+                --GestureArea_exclusiveCapture: true;
+                --GestureArea_magnetAreas: url('#{x-draggable:not(:active)}');
+                --GestureArea_magnetism: 10;
+                --Resizable_resettable: true;
+                /* --Resizable_target: url('#{x-draggable}'); */
+                --GestureArea_target: url('#{x-draggable}');
+
+                background: #0f04;
+                border: #000 solid 1px;
+
+
+                &[_Draggable_dropAreaTarget] {
+                    border: #0f0 solid 2px;
+                }
+
+                &[_resizing] {
+                    background: #00f4;
+                }
+
+                [_GestureArea_magnetEdges]:not(:active) & {
+                    background: #0ff4;
+                }
+
+                /* [_GestureArea_magnetEdges~='bottom'] & { */
+                /*     border-bottom: red solid 2px; */
+                /* } */
+
+                /* [_GestureArea_magnetEdges~='left'] & { */
+                /*     border-left: red solid 2px; */
+                /* } */
+
+                /* [_GestureArea_magnetEdges~='right'] & { */
+                /*     border-right: red solid 2px; */
+                /* } */
+
+                /* [_GestureArea_magnetEdges~='top'] & { */
+                /*     border-top: red solid 2px; */
+                /* } */
+
+                [_GestureArea_magnetEdges~='bottom'] & {
+                    border-bottom: red solid 2px;
+
+
+                    &:active {
+                        border-bottom-color: #f0f;
+                    }
+                }
+
+                [_GestureArea_magnetEdges~='left'] & {
+                    border-left: red solid 2px;
+
+
+                    &:active {
+                        border-left-color: #f0f;
+                    }
+                }
+
+                [_GestureArea_magnetEdges~='right'] & {
+                    border-right: red solid 2px;
+
+
+                    &:active {
+                        border-right-color: #f0f;
+                    }
+                }
+
+                [_GestureArea_magnetEdges~='top'] & {
+                    border-top: red solid 2px;
+
+
+                    &:active {
+                        border-top-color: #f0f;
+                    }
+                }
+
+                /* [_Resizable_magnetEdges~='bottom'] & { */
+                /*     border-bottom: #f0f solid 2px; */
+                /* } */
+
+                /* [_Resizable_magnetEdges~='left'] & { */
+                /*     border-left: #f0f solid 2px; */
+                /* } */
+
+                /* [_Resizable_magnetEdges~='right'] & { */
+                /*     border-right: #f0f solid 2px; */
+                /* } */
+
+                /* [_Resizable_magnetEdges~='top'] & { */
+                /*     border-top: #f0f solid 2px; */
+                /* } */
+
+                [_dragging] & {
+                    background: #f004;
+                }
+
+
+                &::part(display) {
+                    display: grid;
+                    place-items: center;
+                }
+            }
+        </style>
+
+        <script type='module'>
+            import * as generic from '/Packages/Generic/Generic.js';
+
+
+            window.Component = generic.frontend.components.Component;
+            await Component._defined;
+
+
+            // document.body.addEventListener('tap', (event) => console.log(event.target));
+        </script>
+    </head>
+
+    <body>
+        <x-repeater interpolationKey='repeater' model='1e2'>
+            <template>
+                <!-- <x-draggable -->
+                <!--     style=' -->
+                <!--         left: {{repeater: Math.round(Math.random() * 2e3)}}px; -->
+                <!--         top: {{repeater: Math.round(Math.random() * 1e3)}}px; -->
+                <!--     ' -->
+                <!-- > -->
+                <x-draggable
+                    Repeater_item
+
+                    style='
+                        left: calc({{repeater: index % 10}} * var(--size));
+                        top: calc({{repeater: index / 10 ^ 0}} * var(--size));
+                    '
+                >
+                    <x-resizable>
+                        {{repeater: data.value}}
+                    </x-resizable>
+                </x-draggable>
+            </template>
+        </x-repeater>
+    </body>
+</html>

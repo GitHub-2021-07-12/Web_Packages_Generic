@@ -10,7 +10,7 @@ export class CheckBox extends Component {
         static instances = new Map();
 
 
-        static instance_give(name) {
+        static giveInstance(name) {
             let instance = this.instances.get(name);
 
             if (!instance) {
@@ -21,7 +21,7 @@ export class CheckBox extends Component {
             return instance;
         }
 
-        static instance_revise(name) {
+        static reviseInstance(name) {
             let instance = this.instances.get(name);
 
             if (instance?.checkBoxSuperior || instance?.checkBoxesInferior.size) return;
@@ -43,7 +43,7 @@ export class CheckBox extends Component {
             this._name = name;
         }
 
-        checkBoxSuperior_state_define() {
+        checkBoxSuperior_defineState() {
             if (this._checkBoxSuperior_isBlocked || !this.checkBoxSuperior) return;
 
             let checkBoxesCheckedCount = 0;
@@ -63,7 +63,7 @@ export class CheckBox extends Component {
             this._checkBoxesInferior_areBlocked = false;
         }
 
-        checkBoxesInferior_state_define() {
+        checkBoxesInferior_defineState() {
             if (this._checkBoxesInferior_areBlocked || !this.checkBoxSuperior || !this.checkBoxesInferior.size || this.checkBoxSuperior.state == 'indeterminate') return;
 
             this._checkBoxSuperior_isBlocked = true;
@@ -110,8 +110,8 @@ export class CheckBox extends Component {
                     }
 
                     groupPrev.checkBoxSuperior = null;
-                    groupPrev.checkBoxesInferior_state_define();
-                    Group.instance_revise(groupPrev._name);
+                    groupPrev.checkBoxesInferior_defineState();
+                    Group.reviseInstance(groupPrev._name);
                 }
 
                 if (this._component.state == 'indeterminate') {
@@ -120,14 +120,14 @@ export class CheckBox extends Component {
 
                 if (this._isDefault) return;
 
-                let group = Group.instance_give(this._value);
+                let group = Group.giveInstance(this._value);
 
                 if (group.checkBoxSuperior != this._component) {
                     group.checkBoxSuperior?.resetField(this.constructor._name);
                 }
 
                 group.checkBoxSuperior = this._component;
-                group.checkBoxesInferior_state_define();
+                group.checkBoxesInferior_defineState();
             },
         },
 
@@ -140,15 +140,15 @@ export class CheckBox extends Component {
 
                 if (groupPrev) {
                     groupPrev.checkBoxesInferior.delete(this._component);
-                    groupPrev.checkBoxSuperior_state_define();
-                    Group.instance_revise(groupPrev._name);
+                    groupPrev.checkBoxSuperior_defineState();
+                    Group.reviseInstance(groupPrev._name);
                 }
 
                 if (this._isDefault) return;
 
-                let group = Group.instance_give(this._value);
+                let group = Group.giveInstance(this._value);
                 group.checkBoxesInferior.add(this._component);
-                group.checkBoxSuperior_state_define();
+                group.checkBoxSuperior_defineState();
             },
         },
 
@@ -160,8 +160,8 @@ export class CheckBox extends Component {
                 if (this._value === this._valuePrev) return;
 
                 let groups = this._component.constructor._Group.instances;
-                groups.get(this._component.groupInferior)?.checkBoxesInferior_state_define();
-                groups.get(this._component.groupSuperior)?.checkBoxSuperior_state_define();
+                groups.get(this._component.groupInferior)?.checkBoxesInferior_defineState();
+                groups.get(this._component.groupSuperior)?.checkBoxSuperior_defineState();
             },
         },
     };

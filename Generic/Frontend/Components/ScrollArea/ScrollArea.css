@@ -23,7 +23,9 @@
         --Component_disabled: initial !important;
         --Component_display: none !important;
         --Component_displayOuter: revert !important;
-        --Component_eventsWithoutPropagation: capture swipeMain swipeStartMain swipeStopMain !important;
+        --Component_eventsWithoutPropagation: capture swipe swipeStart swipeStop !important;
+        --GestureArea_exclusiveCapture: true !important;
+        --GestureArea_gestures: swipe !important;
         --GestureArea_vertical: initial !important;
         --TrackBar_range: initial !important;
         --TrackBar_value: initial !important;

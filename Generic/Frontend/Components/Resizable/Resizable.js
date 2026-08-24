@@ -2,168 +2,139 @@ import {Component} from '/Packages/Generic/Frontend/Components/Component/Compone
 import {GestureArea} from '/Packages/Generic/Frontend/Components/GestureArea/GestureArea.js';
 
 
-export class Resizable extends Component {
-    static _components = [GestureArea];
+export class Resizable extends GestureArea {
     static _cssUrl = true;
     static _htmlUrl = true;
     static _url = import.meta.url;
 
     static _eventHandlerDescriptors = {
-        shadow: {
-            swipeMain: function (event) {
-                let keepProportions = this.keepProportions ^ event.detail.originalEvent.shiftKey;
-                let pointer = event.detail.pointer;
-                let targets = null;
+        host: {
+            capture: function (event) {
+                if (event.target != this) return;
 
-                switch (event.target) {
-                    case this._elements.cornerLeftBottom: {
-                        targets = new Set(['cornerLeftBottom', 'edgeBottom', 'edgeLeft']);
-                        this._increaseSize(-pointer._positionDelta.x, pointer._positionDelta.y, true, false, keepProportions);
+                this._defineEdgeTarget(this._pointer._target);
 
-                        break;
+                if (!this._edgeTargetNames) return;
+
+                this._pointer.capture();
+            },
+
+            swipe: function (event) {
+                if (event.target != this || !this._pointer.checkCapture()) return;
+
+                let positionDelta = this._pointer._positionDeltaModified;
+                let rectDelta = {
+                    bottom: this._edgeTargetNames.has('edgeBottom') ? positionDelta.y : undefined,
+                    left: this._edgeTargetNames.has('edgeLeft') ? positionDelta.x : undefined,
+                    right: this._edgeTargetNames.has('edgeRight') ? positionDelta.x : undefined,
+                    top: this._edgeTargetNames.has('edgeTop') ? positionDelta.y : undefined,
+                };
+
+                if (this.keepProportions ^ event.detail.originalEvent.shiftKey) {
+                    if (!Number.isFinite(rectDelta.bottom) && !Number.isFinite(rectDelta.right)) {
+                        if (!Number.isFinite(rectDelta.top) || rectDelta.left < rectDelta.top * this._aspectRatio) {
+                            rectDelta.top = rectDelta.left / this._aspectRatio;
+                        }
+                        else {
+                            rectDelta.left = rectDelta.top * this._aspectRatio;
+                        }
                     }
-                    case this._elements.cornerLeftTop: {
-                        targets = new Set(['cornerLeftTop', 'edgeLeft', 'edgeTop']);
-                        this._increaseSize(-pointer._positionDelta.x, -pointer._positionDelta.y, true, true, keepProportions);
-
-                        break;
+                    else if (!Number.isFinite(rectDelta.left) && !Number.isFinite(rectDelta.top)) {
+                        if (!Number.isFinite(rectDelta.bottom) || rectDelta.right > rectDelta.bottom * this._aspectRatio) {
+                            rectDelta.bottom = rectDelta.right / this._aspectRatio;
+                        }
+                        else {
+                            rectDelta.right = rectDelta.bottom * this._aspectRatio;
+                        }
                     }
-                    case this._elements.cornerRightBottom: {
-                        targets = new Set(['cornerRightBottom', 'edgeBottom', 'edgeRight']);
-                        this._increaseSize(pointer._positionDelta.x, pointer._positionDelta.y, false, false, keepProportions);
-
-                        break;
+                    else if (Number.isFinite(rectDelta.left)) {
+                        if (rectDelta.left < -rectDelta.bottom * this._aspectRatio) {
+                            rectDelta.bottom = -rectDelta.left / this._aspectRatio;
+                        }
+                        else {
+                            rectDelta.left = -rectDelta.bottom * this._aspectRatio;
+                        }
                     }
-                    case this._elements.cornerRightTop: {
-                        targets = new Set(['cornerRightTop', 'edgeRight', 'edgeTop']);
-                        this._increaseSize(pointer._positionDelta.x, -pointer._positionDelta.y, false, true, keepProportions);
-
-                        break;
-                    }
-                    case this._elements.edgeBottom: {
-                        targets = new Set(['edgeBottom']);
-                        this._increaseSize(NaN, pointer._positionDelta.y, false, false, keepProportions);
-
-                        break;
-                    }
-                    case this._elements.edgeLeft: {
-                        targets = new Set(['edgeLeft']);
-                        this._increaseSize(-pointer._positionDelta.x, NaN, true, true, keepProportions);
-
-                        break;
-                    }
-                    case this._elements.edgeRight: {
-                        targets = new Set(['edgeRight']);
-                        this._increaseSize(pointer._positionDelta.x, NaN, false, false, keepProportions);
-
-                        break;
-                    }
-                    case this._elements.edgeTop: {
-                        targets = new Set(['edgeTop']);
-                        this._increaseSize(NaN, -pointer._positionDelta.y, true, true, keepProportions);
-
-                        break;
+                    else if (Number.isFinite(rectDelta.right)) {
+                        if (rectDelta.right > -rectDelta.top * this._aspectRatio) {
+                            rectDelta.top = -rectDelta.right / this._aspectRatio;
+                        }
+                        else {
+                            rectDelta.right = -rectDelta.top * this._aspectRatio;
+                        }
                     }
                 }
 
-                this.dispatchEvent('resize', {targets});
+                this._pointer.updateRectDelta(rectDelta);
+                this._updateSize();
+                this._pointer.updateMagnetVector();
+
+                if (!this.deferredMagnetism) {
+                    this._updateSize(true);
+                }
+
+                this.dispatchEvent('resize', event.detail);
             },
 
-            swipeStartMain: function () {
-                this._defineMetrics();
+            swipeStart: function (event) {
+                if (event.target != this || !this._pointer.checkCapture()) return;
+
+                this._heightInitial = this.constructor.getHeight(this.target, true);
+                this._leftInitial = this.constructor.getLeft(this.target);
+                this._resizing = true;
+                this._topInitial = this.constructor.getTop(this.target);
+                this._widthInitial = this.constructor.getWidth(this.target, true);
+                this._aspectRatio = this._widthInitial / this._heightInitial;
+                this._pointer.rectInitial = this.constructor.getDomRect(this.target, true);
+
+                if (this.magnetism) {
+                    this.refreshField('magnetAreas', true);
+                }
+
+                this.dispatchEvent('resizeStart', {...event.detail, targetNames: this._edgeTargetNames});
+            },
+
+            swipeStop: function (event) {
+                if (event.target != this || !this._pointer.checkCapture()) return;
+
+                if (this.deferredMagnetism) {
+                    this._updateSize(true);
+                }
+
+                this._resizing = false;
+                this.releaseField('magnetAreas');
+                this.dispatchEvent('resizeStop', event.detail);
             },
 
             tap: function (event) {
-                if (!this.resettable || event.detail.tapsCount < 2) return;
+                if (!this.resettable || event.detail.tapsCount < 2 || !this._pointer.checkCapture()) return;
 
-                let targets = null;
-
-                switch (event.target) {
-                    case this._elements.cornerLeftBottom: {
-                        targets = new Set(['cornerLeftBottom', 'edgeBottom', 'edgeLeft']);
-                        this.resetWidth(true);
-                        this.resetHeight();
-
-                        break;
-                    }
-                    case this._elements.cornerLeftTop: {
-                        targets = new Set(['cornerLeftTop', 'edgeLeft', 'edgeTop']);
-                        this.resetWidth(true);
-                        this.resetHeight(true);
-
-                        break;
-                    }
-                    case this._elements.cornerRightBottom: {
-                        targets = new Set(['cornerRightBottom', 'edgeBottom', 'edgeRight']);
-                        this.resetWidth();
-                        this.resetHeight();
-
-                        break;
-                    }
-                    case this._elements.cornerRightTop: {
-                        targets = new Set(['cornerRightTop', 'edgeRight', 'edgeTop']);
-                        this.resetWidth();
-                        this.resetHeight(true);
-
-                        break;
-                    }
-                    case this._elements.edgeBottom: {
-                        targets = new Set(['edgeBottom']);
-                        this.resetHeight();
-
-                        break;
-                    }
-                    case this._elements.edgeLeft: {
-                        targets = new Set(['edgeLeft']);
-                        this.resetWidth(true);
-
-                        break;
-                    }
-                    case this._elements.edgeRight: {
-                        targets = new Set(['edgeRight']);
-                        this.resetWidth();
-
-                        break;
-                    }
-                    case this._elements.edgeTop: {
-                        targets = new Set(['edgeTop']);
-                        this.resetHeight(true);
-
-                        break;
-                    }
+                if (this._edgeTargetNames.has('edgeBottom')) {
+                    this.resetHeight();
+                }
+                else if (this._edgeTargetNames.has('edgeTop')) {
+                    this.resetHeight(true);
                 }
 
-                this.dispatchEvent('reset', {targets});
+                if (this._edgeTargetNames.has('edgeLeft')) {
+                    this.resetWidth(true);
+                }
+                else if (this._edgeTargetNames.has('edgeRight')) {
+                    this.resetWidth();
+                }
+
+                this.dispatchEvent('reset', {targetNames: this._edgeTargetNames});
             },
         },
     };
 
     static _fieldDescriptors = {
-        fixed: false,
+        _resizing: false,
+
+
+        frozen: false,
         keepProportions: false,
         resettable: false,
-
-        target: {
-            default: '',
-            extra: true,
-
-            process(value) {
-                if (!(value instanceof Node)) {
-                    let selector = value + '';
-
-                    try {
-                        value = this._component.closest(selector) || this._component.querySelector(selector);
-                    }
-                    catch {
-                        value = null;
-                    }
-
-                    value ||= this._component;
-                }
-
-                return value;
-            },
-        },
     };
 
 
@@ -171,65 +142,107 @@ export class Resizable extends Component {
         this.init();
     }
 
+    connectedCallback() {
+        this._build();
+    }
 
     _aspectRatio = 0;
+    _edgeTargetNames = null;
     _heightInitial = 0;
     _leftInitial = 0;
     _topInitial = 0;
     _widthInitial = 0;
 
 
-    _defineMetrics() {
-        this._heightInitial = this.constructor.getHeight(this.target, true);
-        this._leftInitial = this.constructor.getLeft(this.target);
-        this._topInitial = this.constructor.getTop(this.target);
-        this._widthInitial = this.constructor.getWidth(this.target, true);
-        this._aspectRatio = this._widthInitial / this._heightInitial;
-    }
+    _defineEdgeTarget(eventTarget) {
+        this._edgeTargetNames = null;
 
-    _increaseSize(widthIncrement, heightIncrement, withLeft, withTop, keepProportions) {
-        if (keepProportions) {
-            let heightIncrementIsFinite = Number.isFinite(heightIncrement);
-            let widthIncrementIsFinite = Number.isFinite(widthIncrement);
+        switch (eventTarget) {
+            case this._elements.cornerLeftBottom: {
+                this._edgeTargetNames = new Set(['cornerLeftBottom', 'edgeBottom', 'edgeLeft']);
 
-            if (heightIncrementIsFinite && widthIncrementIsFinite) {
-                if (heightIncrement > widthIncrement / this._aspectRatio) {
-                    widthIncrement = heightIncrement * this._aspectRatio;
-                }
-                else {
-                    heightIncrement = widthIncrement / this._aspectRatio;
-                }
+                break;
             }
-            else if (heightIncrementIsFinite) {
-                widthIncrement = heightIncrement * this._aspectRatio;
+            case this._elements.cornerLeftTop: {
+                this._edgeTargetNames = new Set(['cornerLeftTop', 'edgeLeft', 'edgeTop']);
+
+                break;
             }
-            else if (widthIncrementIsFinite) {
-                heightIncrement = widthIncrement / this._aspectRatio;
+            case this._elements.cornerRightBottom: {
+                this._edgeTargetNames = new Set(['cornerRightBottom', 'edgeBottom', 'edgeRight']);
+
+                break;
+            }
+            case this._elements.cornerRightTop: {
+                this._edgeTargetNames = new Set(['cornerRightTop', 'edgeRight', 'edgeTop']);
+
+                break;
+            }
+            case this._elements.edgeBottom: {
+                this._edgeTargetNames = new Set(['edgeBottom']);
+
+                break;
+            }
+            case this._elements.edgeLeft: {
+                this._edgeTargetNames = new Set(['edgeLeft']);
+
+                break;
+            }
+            case this._elements.edgeRight: {
+                this._edgeTargetNames = new Set(['edgeRight']);
+
+                break;
+            }
+            case this._elements.edgeTop: {
+                this._edgeTargetNames = new Set(['edgeTop']);
+
+                break;
             }
         }
+    }
 
-        let height = this._heightInitial + (heightIncrement || 0);
-        let width = this._widthInitial + (widthIncrement || 0);
+    _updateSize(withMagnetism = false) {
+        let rectDelta = this._pointer._rectDelta;
+
+        if (withMagnetism) {
+            let magnetVector = this._pointer._magnetVector;
+            this._pointer.updateRectDelta({
+                bottom: rectDelta.bottom + magnetVector.y,
+                left: rectDelta.left + magnetVector.x,
+                right: rectDelta.right + magnetVector.x,
+                top: rectDelta.top + magnetVector.y,
+            });
+        }
+
+        let height = this._heightInitial + (rectDelta.bottom || 0) - (rectDelta.top || 0);
+        let width = this._widthInitial + (rectDelta.right || 0) - (rectDelta.left || 0);
         this.constructor.setHeight(this.target, height, true);
         this.constructor.setWidth(this.target, width, true);
+        let heightReal = this.constructor.getHeight(this.target, true);
+        let widthReal = this.constructor.getWidth(this.target, true);
+        let left = this._leftInitial + (Number.isFinite(rectDelta.left) ? this._widthInitial - widthReal : 0);
+        let right = this._topInitial + (Number.isFinite(rectDelta.top) ? this._heightInitial - heightReal : 0);
+        this.constructor.setLeft(this.target, left);
+        this.constructor.setTop(this.target, right);
 
-        if (withLeft) {
-            let left = this._leftInitial + this._widthInitial - this.constructor.getWidth(this.target, true);
-            this.constructor.setLeft(this.target, left);
-        }
-
-        if (withTop) {
-            let top = this._topInitial + this._heightInitial - this.constructor.getHeight(this.target, true);
-            this.constructor.setTop(this.target, top);
+        if (!withMagnetism) {
+            let heightDelta = heightReal - height;
+            let widthDelta = widthReal - width;
+            this._pointer.updateRectDelta({
+                bottom: rectDelta.bottom + heightDelta,
+                left: rectDelta.left - widthDelta,
+                right: rectDelta.right + widthDelta,
+                top: rectDelta.top - heightDelta,
+            });
         }
     }
 
 
-    resetHeight(withTop = false) {
-        if (withTop) {
+    resetHeight(fromTop = false) {
+        if (fromTop) {
             let height = this.constructor.getHeight(this.target, true);
             this.constructor.setHeight(this.target, null);
-            let top = this.constructor.getTop(this.target) - this.constructor.getHeight(this.target, true) + height;
+            let top = this.constructor.getTop(this.target) + height - this.constructor.getHeight(this.target, true);
             this.constructor.setTop(this.target, top);
         }
         else {
@@ -237,11 +250,11 @@ export class Resizable extends Component {
         }
     }
 
-    resetWidth(withLeft = false) {
-        if (withLeft) {
+    resetWidth(fromLeft = false) {
+        if (fromLeft) {
             let width = this.constructor.getWidth(this.target, true);
             this.constructor.setWidth(this.target, null);
-            let left = this.constructor.getLeft(this.target) - this.constructor.getWidth(this.target, true) + width;
+            let left = this.constructor.getLeft(this.target) + width - this.constructor.getWidth(this.target, true);
             this.constructor.setLeft(this.target, left);
         }
         else {

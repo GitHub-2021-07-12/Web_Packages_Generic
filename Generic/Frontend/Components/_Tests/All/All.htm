@@ -26,12 +26,14 @@
             }
 
             x-draggable {
+                --GestureArea_dynamicEnvironment: true;
+                --GestureArea_magnetAreas: url('#{x-draggable}');
+                --GestureArea_magnetism: 10;
                 --GestureArea_magnetism: 10px;
-                --GestureArea_shift: 10px;
+                --GestureArea_shift: 110px;
                 /* --GestureArea_swipeFactor: 0.5; */
 
                 anchor-name: --anchor;
-                background: var(--colorLightDim);
                 left: 500px;
                 position: relative;
                 width: fit-content;
@@ -43,15 +45,47 @@
             }
 
             x-popup {
+                /* --Popup_open: true; */
+
                 background: var(--colorGreenDim);
                 color: var(--colorLight);
+                /* opacity: 0; */
                 position: fixed;
                 position-area: end;
+                /* transition: opacity 2s; */
+                /* transition: allow-discrete 2s; */
+                /* transition-property: display, opacity; */
                 width: 300px;
+
+
+                &[open] {
+                    /* opacity: 1; */
+                }
+
+                /* [_dragging] + & { */
+                :active + & {
+                    --Popup_open: true;
+                }
 
 
                 &::part(face) {
                     position-anchor: --anchor;
+
+                    opacity: 0;
+                    /* transition: opacity 2s; */
+                    transition: allow-discrete 2s;
+                    transition-property: display, opacity;
+                }
+                &[open]::part(face) {
+                    --Component_displayInner: grid;
+
+                    /* display: grid; */
+                    opacity: 1;
+
+
+                    @starting-style {
+                        opacity: 0;
+                    }
                 }
             }
 
@@ -62,15 +96,24 @@
             x-resizable {
                 /* --Resizable_disabled: true; */
                 /* --Resizable_a: false; */
+                --GestureArea_dynamicEnvironment: true;
+                --GestureArea_magnetAreas: url('#{x-draggable}');
+                --GestureArea_magnetism: 10;
+                /* --Resizable_deferredMagnetism: true; */
                 --Resizable_resettable: true;
 
-                background: var(--colorLightDim);
+                /* background: var(--colorLightDim); */
+                background: #00f2;
                 height: 200px;
+                /* min-width: min-content; */
                 position: relative;
+                /* position: absolute; */
                 width: 300px;
+                /* width: 100px; */
 
 
                 &::part(display) {
+                    display: grid;
                     overflow: auto;
                 }
             }
@@ -78,11 +121,19 @@
             x-scrollArea {
                 --Component_autoRefresh: true;
                 /* --Component_disabled: true; */
+                --Component_flashDuration: 1s;
                 --GestureArea_gestures: flick swipe;
 
-                background: var(--colorLightDim);
-                height: 100%;
-                width: 100%;
+                /* background: var(--colorLightDim); */
+                /* height: 100%; */
+                /* width: 100%; */
+                /* height: 200px; */
+                /* width: 100px; */
+
+
+                &[_scrolling] {
+                    background: #afa;
+                }
 
 
                 &::part(display) {
@@ -144,13 +195,34 @@
             }
 
             x-textArea {
+                --Component_autoRefresh: true;
                 --TextInput_placeholder: url('#{TextArea}');
+
+                max-height: 200px;
+                min-height: 100px;
             }
 
             x-trackBar {
+                --GestureArea_invertedX: true;
+                /* --GestureArea_invertedY: true; */
+                /* --GestureArea_vertical: true; */
+
+                direction: rtl;
                 margin: 10px;
+                padding: 10px;
             }
 
+
+            .container {
+                border: #000 solid 1px;
+                height: 300px;
+                overflow: auto;
+            }
+
+
+            [_GestureArea_magnetAreaActive] {
+                background: #f004 !important;
+            }
 
             [popover] {
                 border: none;
@@ -163,12 +235,16 @@
                     pointer-events: auto !important;
                 }
             }
+
+
+            /* :not(:defined) { */
+            /*     display: none; */
+            /* } */
         </style>
 
         <script type='module'>
             import * as generic from '/Packages/Generic/Generic.js';
-            // import * as frontend from '/Packages/Generic/Frontend/Frontend.js';
-            // import * as js from '/Packages/Generic/Js/Js.js';
+
 
             window.frontend = generic.frontend;
             window.js = generic.js;
@@ -186,67 +262,70 @@
             //     useGlobalStyleSheets: false,
             // });
 
-            await frontend.components.Draggable._defined;
+            frontend.components.ScrollArea.init({components: [frontend.components.Resizable]});
+
+            // await frontend.components.Resizable._defined;
+            await frontend.components.ScrollArea._defined;
             await frontend.components.Slider._defined;
+
+            // await frontend.components.Resizable.init();
 
             let draggable = document.querySelector('x-draggable');
             let popup = document.querySelector('#popup');
+            let scrollArea = document.querySelector('x-scrollArea');
             let slider = document.querySelector('x-slider');
 
-            draggable.magnetLinesX = [100, 110, 200];
-            draggable.magnetLinesY = [100, 200];
-            draggable.magnetPoints = [[300, 300], [600, 600]];
+            // scrollArea.refresh();
+            scrollArea.scrollY = Infinity;
+            // console.log(scrollArea.getHeight(), scrollArea.scrollY, scrollArea._elements.display.scrollHeight - scrollArea._elements.display.clientHeight)
 
-            draggable.addEventListener('swipeStartMain', () => {
-                popup.open = true;
-            });
-            draggable.addEventListener('swipeMain', (event) => {
-                // console.clear();
-                // console.log(event.detail.pointer._positionOuter, event.detail.pointer._positionInner)
-            });
+            // if (!scrollArea.scrollY) {
+            //     debugger;
+            // }
+
             draggable.addEventListener('press', (event) => {
                 console.log(event.detail.pointer._positionDelta)
             });
 
             // slider.bindElements(draggable);
 
-            slider._animationManager.addElement(
-                draggable,
-                {
-                    // cancel: function () {
-                    //     console.log('cancel')
+            // slider._animationManager.addElement(
+            //     draggable,
+            //     {
+            //         // cancel: function () {
+            //         //     console.log('cancel')
 
-                    //     this.removeAttribute('a');
-                    //     // this.setLeft(slider.index * 200);
-                    //     this.setLeft(slider._frameCurrentIndex * 200);
-                    // },
+            //         //     this.removeAttribute('a');
+            //         //     // this.setLeft(slider.index * 200);
+            //         //     this.setLeft(slider._frameCurrentIndex * 200);
+            //         // },
 
-                    clearing: function () {
-                        // console.log('clearing', slider.index)
+            //         clearing: function () {
+            //             // console.log('clearing', slider.index)
 
-                        this.removeAttribute('a');
-                        this.setLeft(slider.index * 500);
-                    },
+            //             this.removeAttribute('a');
+            //             this.setLeft(slider.index * 500);
+            //         },
 
-                    preparing: function () {
-                        // console.log('preparing', slider._frameCurrentIndex, slider.index, slider._flipDirection)
+            //         preparing: function () {
+            //             // console.log('preparing', slider._frameCurrentIndex, slider.index, slider._flipDirection)
 
-                        // this.setLeft(slider.index * 200);
-                        this.setAttribute('a', slider._flipDirection);
-                        // let left = slider._flipDirection ? slider._frameCurrentIndex + slider._flipDirection : slider.index;
-                        let left = slider.index + slider._flipDirection;
-                        // let left = slider._flipDirection ? slider._frameNextIndex : slider.index;
-                        this.setLeft(left * 500);
-                    },
+            //             // this.setLeft(slider.index * 200);
+            //             this.setAttribute('a', slider._flipDirection);
+            //             // let left = slider._flipDirection ? slider._frameCurrentIndex + slider._flipDirection : slider.index;
+            //             let left = slider.index + slider._flipDirection;
+            //             // let left = slider._flipDirection ? slider._frameNextIndex : slider.index;
+            //             this.setLeft(left * 500);
+            //         },
 
-                    // stop: function () {
-                    //     console.log('stop', slider.index)
+            //         // stop: function () {
+            //         //     console.log('stop', slider.index)
 
-                    //     this.removeAttribute('a');
-                    //     this.setLeft(slider.index * 200);
-                    // },
-                },
-            );
+            //         //     this.removeAttribute('a');
+            //         //     this.setLeft(slider.index * 200);
+            //         // },
+            //     },
+            // );
 
             {
                 let protototype = {
@@ -259,6 +338,7 @@
                             bbb: 0,
                         },
                     },
+                    c: [0, 1],
                 };
                 let object = {
                     a: {
@@ -270,11 +350,12 @@
                             bbb1: 1,
                         },
                     },
+                    c: [2],
                 };
                 // generic.js.ObjectManager.extendProps(object, protototype, 'a', 'b');
                 let o = js.ObjectManager.extendObject(object, protototype);
 
-                // console.dir(o, object)
+                // console.dir(object, o)
             }
 
         </script>
@@ -293,6 +374,12 @@
         <x-radioButton group='group' tabIndex='0'>RadioButton3</x-radioButton>
 
         <x-draggable class='popup'>Draggable</x-draggable>
+        <x-popup id='popup' open_ transient_>
+            <!-- <x-textArea></x-textArea> -->
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer lacinia risus vel mi lacinia ultrices. Curabitur sit amet turpis dapibus, egestas ante et, consectetur odio. Sed vestibulum commodo velit semper varius. Nulla bibendum nec tellus a elementum. Ut pellentesque imperdiet dictum. Sed blandit turpis cursus, luctus augue ac, facilisis felis. Nulla purus urna, sagittis quis mauris et, aliquet porta magna. Donec in orci nulla.
+            <!-- <x-textArea></x-textArea> -->
+        </x-popup>
+
         <x-select index_='1' model='11' tabIndex='-1'></x-select>
         <x-select editable='false' model='11'></x-select>
         <x-textField></x-textField>
@@ -303,14 +390,11 @@
         <x-trackBar mode='progressive' swipeFactor='0.5' tabIndex='0'>TrackBar</x-trackBar>
         <x-trackBar range='0 4' tabIndex='0'></x-trackBar>
 
-        <x-repeater interpolationKey='repeater' model='3'>
-            <template Repeater_delegate>
-                <x-checkBox style='color: {{repeater: data.color}}'>[{{repeater: index}}: {{repeater: data.key}} - {{repeater: data.value}}]</x-checkBox>
-            </template>
+        <x-repeater interpolationKey='repeater' model='3' target_='x-scrollArea'>
+            <template>
+                <x-checkBox Repeater_item groupSuperior='group' style='color: {{repeater: data.color}}' tabIndex='0'>[{{repeater: index}}: {{repeater: data.key}} - {{repeater: data.value}}]</x-checkBox>
 
-            <template Repeater_model>
-                <script>
-                    // ['aaa', 'bbb', 'ccc']
+                <script Repeater_model>
                     [
                         {
                             color: 'red',
@@ -332,22 +416,16 @@
             </template>
         </x-repeater>
 
-        <x-resizable disabled_>
+        <x-resizable>
             <x-scrollArea>
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer lacinia risus vel mi lacinia ultrices. Curabitur sit amet turpis dapibus, egestas ante et, consectetur odio. Sed vestibulum commodo velit semper varius. Nulla bibendum nec tellus a elementum. Ut pellentesque imperdiet dictum. Sed blandit turpis cursus, luctus augue ac, facilisis felis. Nulla purus urna, sagittis quis mauris et, aliquet porta magna. Donec in orci nulla.
             </x-scrollArea>
         </x-resizable>
 
-        <x-slider index='1'>
+        <x-slider elasticThreshold='1' index='1'>
             <div>1</div>
             <div>2</div>
             <div>3</div>
         </x-slider>
-
-        <x-popup id='popup' transient>
-            <!-- <x-textArea></x-textArea> -->
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer lacinia risus vel mi lacinia ultrices. Curabitur sit amet turpis dapibus, egestas ante et, consectetur odio. Sed vestibulum commodo velit semper varius. Nulla bibendum nec tellus a elementum. Ut pellentesque imperdiet dictum. Sed blandit turpis cursus, luctus augue ac, facilisis felis. Nulla purus urna, sagittis quis mauris et, aliquet porta magna. Donec in orci nulla.
-            <!-- <x-textArea></x-textArea> -->
-        </x-popup>
     </body>
 </html>

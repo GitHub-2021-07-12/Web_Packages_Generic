@@ -10,7 +10,7 @@ export class RadioButton extends Component {
         static instances = new Map();
 
 
-        static instance_give(name) {
+        static giveInstance(name) {
             let instance = this.instances.get(name);
 
             if (!instance) {
@@ -21,7 +21,7 @@ export class RadioButton extends Component {
             return instance;
         }
 
-        static instance_revise(name) {
+        static reviseInstance(name) {
             let instance = this.instances.get(name);
 
             if (instance?.radioButtons.size) return;
@@ -103,12 +103,12 @@ export class RadioButton extends Component {
                 if (groupPrev) {
                     groupPrev.radioButtons.delete(this._component);
                     groupPrev.radioButtonChecked = null;
-                    Group.instance_revise(groupPrev._name);
+                    Group.reviseInstance(groupPrev._name);
                 }
 
                 if (this._isDefault) return;
 
-                let group = Group.instance_give(this._value);
+                let group = Group.giveInstance(this._value);
                 group.radioButtons.add(this._component);
                 group.radioButtonChecked = null;
             },

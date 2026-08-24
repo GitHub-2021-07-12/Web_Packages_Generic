@@ -161,7 +161,6 @@
     }
 
     x-resizable {
-        --Component_eventsWithoutPropagation: flickMain swipeMain swipeStartMain swipeStopMain;
         --Resizable_edge_width: var(--gap);
 
 
@@ -316,7 +315,7 @@
         }
 
 
-        [_Repeater_item] {
+        [Repeater_item] {
             border-radius: var(--rounding);
             padding-inline: var(--gapSmall);
 
@@ -508,7 +507,9 @@
 
 
     :not(:defined) {
+        /* content-visibility: hidden; */
         display: none;
+        /* visibility: hidden; */
     }
 
 

@@ -14,15 +14,16 @@ export class Component extends HTMLElement {
     static _defined = null;
     static _dom = null;
     static _domSubtrees = {};
-    static _fieldNames = {};
+    static _fieldNamesByExternals = {};
+    static _fieldsDeferred = [];
     static _html = '';
     static _htmlUrl = '';
     static _httpClient = null;
     static _idAttribute = 'id';
+    static _interpolationArgs = {};
     static _interpolationKey = this.name;
     static _interpolationRegExp = /{{\s*(?<key>.*?)\s*:\s*(?<value>.*?)\s*}}/g;
-    static _interpolations = {};
-    static _propsExtended = ['_eventHandlerDescriptors', '_fieldDescriptors', '_shadowOpts'];
+    static _propsExtended = ['_eventHandlerDescriptors', '_fieldDescriptors', '_fieldNamesByExternals', '_fieldsDeferred', '_shadowOpts'];
     static _rootTag = 'slot';
     static _styleSheet = null;
     static _styleSheetDescriptors = {};
@@ -44,7 +45,6 @@ export class Component extends HTMLElement {
         static _defaultValue = undefined;
         static _enum = null;
         static _externalFlag = undefined;
-        static _extra = false;
         static _flash = false;
         static _name = '';
         static _protected = undefined;
@@ -287,11 +287,9 @@ export class Component extends HTMLElement {
             default: defaultValue = undefined,
             enum: enum_ = undefined,
             externalFlag = undefined,
-            extra = undefined,
             flash = undefined,
             getInitialValue = undefined,
             name,
-            process = undefined,
             range = undefined,
             updateAfter = undefined,
             updateBefore = undefined,
@@ -305,7 +303,6 @@ export class Component extends HTMLElement {
                     _defaultValue: defaultValue,
                     _enum: enum_?.[Symbol.iterator] && new Set(enum_),
                     _externalFlag: externalFlag,
-                    _extra: extra,
                     _flash: flash,
                     _name: name,
                     _range: range,
@@ -315,9 +312,8 @@ export class Component extends HTMLElement {
                 this.prototype,
                 {
                     _getInitialValue: getInitialValue,
-                    _value_process: process,
-                    _value_updateAfter: updateAfter,
-                    _value_updateBefore: updateBefore,
+                    _updateAfter: updateAfter,
+                    _updateBefore: updateBefore,
                 },
             );
 
@@ -325,13 +321,13 @@ export class Component extends HTMLElement {
             this._protected = this._name.startsWith('_');
             this._cssPropName = (this._protected ? `--_${cssPropNamePrefix}` : `--${cssPropNamePrefix}_`) + this._name;
             this._assignConverters();
-            this._cssPropDefaultValue = this._toCssProp(this._defaultValue);
+            this._cssPropDefaultValue = this._toCssProp(this._defaultValue ?? '');
             this._registerCssProp();
         }
 
 
         _attributeIsBlocked = false;
-        _checkItemBinded = this.constructor._defaultValue?.constructor == Array ? this._checkItem.bind(this) : null;
+        _checkItemBinded = this._checkItem.bind(this);
         _component = null;
         _cssPropValue = undefined;
         _elements = null;
@@ -339,17 +335,48 @@ export class Component extends HTMLElement {
         _isDefault = true;
         _resetBinded = this.constructor._flash ? this.reset.bind(this) : null;
         _value = undefined;
-        _valuePrepared = undefined;
+        _valueExtra = undefined;
         _valuePrev = undefined;
+        _valueSimple = undefined;
 
+
+        _check() {
+            let defaultValue = this.constructor._defaultValue;
+            let defaultValueConstructor = defaultValue?.constructor;
+            let valid = false;
+
+            if (defaultValueConstructor && this._valueSimple?.constructor == defaultValueConstructor) {
+                switch (defaultValueConstructor) {
+                    case Array: {
+                        valid =
+                            (!defaultValue.length || this._valueSimple.length == defaultValue.length)
+                            && this._valueSimple.every(this._checkItemBinded)
+                            && !Common.compare(this._valueSimple, defaultValue)
+                        ;
+
+                        break;
+                    }
+                    case Set: {
+                        let subSet = defaultValue.symmetricDifference(this._valueSimple);
+                        valid = subSet.size && subSet.values().every(this._checkItemBinded);
+
+                        break;
+                    }
+                    default: {
+                        valid = !Common.compare(this._valueSimple, defaultValue) && (!this.constructor._enum || this.constructor._enum.has(this._valueSimple));
+                    }
+                }
+            }
+
+            this._isDefault = !valid;
+
+            if (this._isDefault) {
+                this._valueSimple = structuredClone(defaultValue);
+            }
+        }
 
         _checkItem(item) {
-            return (
-                item !== ''
-                && item?.constructor == this.constructor._ItemConstructor
-                && (!this.constructor._enum || this.constructor._enum.has(item))
-                && (!this.constructor._range || Common.inRange(item, ...this.constructor._range))
-            );
+            return item !== '' && item?.constructor == this.constructor._ItemConstructor && (!this.constructor._enum || this.constructor._enum.has(item));
         }
 
         _dispatchEvent() {
@@ -362,132 +389,66 @@ export class Component extends HTMLElement {
             this._component.dispatchEvent(`field.${this.constructor._name}`, eventDetail);
         }
 
-        _getInitialValue() {
-            return undefined;
-        }
-
-        _update(value) {
-            let defaultValue = this.constructor._defaultValue;
-
-            if (value?.constructor == Array && defaultValue?.constructor == Set) {
-                value = new Set(value);
-            }
-
-            this._value_check(value);
-
-            if (this._isDefault) {
-                value = structuredClone(defaultValue);
-            }
-
-            value = this._value_process(value);
-            this._value_check(value);
-            this._valuePrepared = this._isDefault ? structuredClone(defaultValue) : value;
-            this._value_updateBefore();
-
-            if (this._valuePrepared === undefined) return;
-
-            this._value_update();
-            this._value_updateAfter();
-        }
-
-        _value_check(value) {
-            let defaultValue = this.constructor._defaultValue;
-            let defaultConstructor = defaultValue?.constructor;
-            let valid = undefined;
-
-            if (defaultConstructor && value?.constructor == defaultConstructor) {
-                switch (defaultConstructor) {
-                    case Array: {
-                        valid =
-                            (!defaultValue.length || value.length == defaultValue.length)
-                            && value.every(this._checkItemBinded)
-                            && !Common.compare(value, defaultValue)
-                        ;
-
-                        break;
-                    }
-                    case Set: {
-                        let subSet = defaultValue.symmetricDifference(value);
-                        valid = subSet.size;
-
-                        if (!valid) break;
-
-                        for (let item of subSet) {
-                            valid = this._checkItem(item);
-
-                            if (!valid) break;
-                        }
-
-                        break;
-                    }
-                    default: {
-                        valid =
-                            !Common.compare(value, defaultValue)
-                            && (!this.constructor._enum || this.constructor._enum.has(value))
-                            && (!this.constructor._range || Common.inRange(value, ...this.constructor._range))
-                        ;
-                    }
-                }
-            }
-            else {
-                valid = this.constructor._extra && value !== undefined;
-            }
-
-            this._isDefault = !valid;
-        }
-
-        _value_getFromAttribute() {
+        _fromAttribute() {
             return this.constructor._fromAttribute(this._component.getAttribute(this.constructor._attributeName));
         }
 
-        _value_getFromCssProp() {
+        _fromCssProp() {
             this._component.constructor.setCssProp(this._component, this.constructor._cssPropName, null);
 
             return this.constructor._fromCssProp(this._component.constructor.getCssProp(this._component, this.constructor._cssPropName));
         }
 
-        _value_init() {
+        _getInitialValue() {
+            return undefined;
+        }
+
+        _initValue() {
             let value = this._getInitialValue();
 
             if (value === undefined && !this.constructor._protected) {
-                value = this._value_getFromAttribute();
+                value = this._fromAttribute();
             }
 
             this._freeForCss = !this.constructor._flash && !this.constructor._protected && value === undefined;
 
             if (this._freeForCss) {
-                value = this._value_getFromCssProp();
+                value = this._fromCssProp();
             }
 
-            this._valuePrepared = value;
-            this._value_check(value);
-            this._value_update();
+            this._valueSimple = value;
+            this._value = this._valueSimple;
         }
 
-        _value_process(value) {
-            return value;
-        }
+        _update(value) {
+            if (value?.constructor == Array) {
+                if (this.constructor._range) {
+                    value = value.map((item) => Common.toRange(item, ...this.constructor._range));
+                }
 
-        _value_update() {
-            this._valuePrev = this._value;
-            this._value = this._valuePrepared;
-            this._valuePrepared = undefined;
+                if (this.constructor._defaultValue?.constructor == Set) {
+                    value = new Set(value);
+                }
+            }
+            else if (this.constructor._range) {
+                value = Common.toRange(value, ...this.constructor._range);
+            }
 
-            let valueForExternal =
-                this.constructor._externalFlag !== false
-                && this._value?.constructor == this.constructor._defaultValue?.constructor
-                && (!this._isDefault || this.constructor._externalFlag === true || this._value === true)
-                    ? this._value
-                    : undefined
-            ;
+            this._valueExtra = undefined;
+            this._valueSimple = value;
+            this._check();
+            this._updateBefore(value);
 
-            this._attributeIsBlocked = true;
-            this._component.setAttribute(this.constructor._attributeName, this.constructor._toAttribute(valueForExternal));
-            this._attributeIsBlocked = false;
+            if (this._valueSimple === undefined) return;
 
-            let valueForCssProp = !this._freeForCss ? valueForExternal : undefined;
-            this._component.constructor.setCssProp(this._component, this.constructor._cssPropName, this.constructor._toCssProp(valueForCssProp));
-            this._cssPropValue = this._component.constructor.getCssProp(this._component, this.constructor._cssPropName);
+            if (this._valueSimple !== value) {
+                this._check();
+            }
+
+            this._value = this._valueExtra !== undefined ? this._valueExtra : this._valueSimple;
+            this._valueExtra = undefined;
+            this._updateExternals();
+            this._updateAfter();
 
             if (!this.constructor._flash) return;
 
@@ -498,50 +459,78 @@ export class Component extends HTMLElement {
             Executor.queueTask(this._resetBinded, this._component.flashDuration);
         }
 
-        _value_updateAfter() {}
+        _updateAfter() {}
 
-        _value_updateBefore() {}
+        _updateBefore(value) {}
+
+        _updateExternals() {
+            let attributeValue =
+                this.constructor._externalFlag !== false
+                && this._valueSimple?.constructor == this.constructor._defaultValue?.constructor
+                && (!this._isDefault || this.constructor._externalFlag === true || this._valueSimple === true)
+                    ? this._valueSimple
+                    : undefined
+            ;
+            this._attributeIsBlocked = true;
+            this._component.setAttribute(this.constructor._attributeName, this.constructor._toAttribute(attributeValue));
+            this._attributeIsBlocked = false;
+
+            let cssPropValue = !this._freeForCss ? attributeValue : undefined;
+            this._component.constructor.setCssProp(this._component, this.constructor._cssPropName, this.constructor._toCssProp(cssPropValue));
+            this._cssPropValue = this._component.constructor.getCssProp(this._component, this.constructor._cssPropName);
+        }
 
 
         constructor(component) {
             this._component = component;
             this._elements = this._component._elements;
-            this._value_init();
+            this._initValue();
         }
 
-        refresh(withEvent = true) {
-            this._freeForCss ? this.reset(withEvent) : this.set(this._value, withEvent);
+        refresh(simple = false) {
+            this._update(simple ? this._valueSimple : this._value);
+        }
+
+        release() {
+            this._value = this._valueSimple;
         }
 
         reset(withEvent = true) {
+            this._valuePrev = this._value;
+
             if (this.constructor._flash || this.constructor._protected) {
                 this._update(undefined);
             }
             else {
                 this._freeForCss = true;
-                this._update(this._value_getFromCssProp());
+                this._update(this._fromCssProp());
             }
 
             if (withEvent) {
                 this._dispatchEvent();
             }
+
+            this._valuePrev = undefined;
         }
 
         set(value, withEvent = true) {
             if (this.constructor._flash && !this._component.flashDuration) return;
 
             this._freeForCss = false;
+            this._valuePrev = this._value;
             this._update(value);
 
             if (withEvent) {
                 this._dispatchEvent();
             }
+
+            this._valuePrev = undefined;
         }
 
         updateByAttribute() {
             if (this._attributeIsBlocked || this.constructor._protected) return;
 
-            this.set(this._value_getFromAttribute());
+            this.set(this._fromAttribute());
         }
 
         updateByCssProp() {
@@ -558,28 +547,23 @@ export class Component extends HTMLElement {
 
     static _eventHandlerDescriptors = {
         elements: {},
-        elementsSlotted: {},
         host: {},
         shadow: {},
 
         fieldObserver: {
             transitionrun: function (event) {
-                this._fields[event.propertyName.replace(/--\w+?_/, '')].updateByCssProp();
+                this._fields[this.constructor._fieldNamesByExternals[event.propertyName]].updateByCssProp();
             },
         },
     };
 
     static _fieldDescriptors = {
-        autoRefresh: class Field extends this._Field {
-            static _defaultValue = false;
+        autoRefresh: {
+            default: false,
 
-
-            disabled = false;
-
-
-            _value_updateAfter() {
+            updateAfter() {
                 this._component._refreshAuto();
-            }
+            },
         },
 
         disabled: {
@@ -594,7 +578,10 @@ export class Component extends HTMLElement {
             default: new Set(),
 
             updateAfter() {
-                EventManager.applyDefaultAction(this._component, true, ...this._valuePrev);
+                if (this._valuePrev) {
+                    EventManager.applyDefaultAction(this._component, true, ...this._valuePrev);
+                }
+
                 EventManager.applyDefaultAction(this._component, false, ...this._value);
             },
         },
@@ -603,7 +590,10 @@ export class Component extends HTMLElement {
             default: new Set(),
 
             updateAfter() {
-                EventManager.applyPropagation(this._component, true, ...this._valuePrev);
+                if (this._valuePrev) {
+                    EventManager.applyPropagation(this._component, true, ...this._valuePrev);
+                }
+
                 EventManager.applyPropagation(this._component, false, ...this._value);
             },
         },
@@ -623,37 +613,13 @@ export class Component extends HTMLElement {
     static observedAttributes = [];
 
 
-    static async _components_await() {
-        let promises = this._components.map((component) => component._defined);
+    static async _awaitComponents() {
+        let promises = [...this._components].map((component) => component._defined);
         promises.push(Object.getPrototypeOf(this)._defined);
         await Promise.all(promises);
     }
 
-    static _createFieldAccessors() {
-        for (let Field of Object.values(this._fieldDescriptors)) {
-            let {propDescriptor = {}} = ObjectManager.getPropDescriptor(this.prototype, Field._name);
-
-            if (propDescriptor.get && propDescriptor.set) continue;
-
-            propDescriptor = {
-                get: propDescriptor.get,
-                set: propDescriptor.set,
-            };
-            propDescriptor.get ||= Executor.executeExpression(`
-                function () {
-                    return this._fields.${Field._name}._value;
-                }
-            `);
-            propDescriptor.set ||= Executor.executeExpression(`
-                function (value) {
-                    this.setField('${Field._name}', value);
-                }
-            `);
-            Object.defineProperty(this.prototype, Field._name, propDescriptor);
-        }
-    }
-
-    static async _dom_create() {
+    static async _createDom() {
         let css = '';
         let fieldDescriptors = [...Object.values(this._fieldDescriptors)].filter((Field) => !Field._protected);
         let html = '';
@@ -680,13 +646,13 @@ export class Component extends HTMLElement {
         [css, html] = await Promise.all([css, html]);
 
         if (css) {
-            css = this.interpolate(css, this._interpolationKey, this._interpolations);
+            css = this.interpolate(css, this._interpolationKey, this._interpolationArgs);
             await this._styleSheet.replace(css);
         }
 
         if (html) {
             html = html.trim().replace(/\s{2,}/g, ' ');
-            html = this.interpolate(html, this._interpolationKey, this._interpolations);
+            html = this.interpolate(html, this._interpolationKey, this._interpolationArgs);
             root = this.createDom(html);
         }
         else {
@@ -695,7 +661,7 @@ export class Component extends HTMLElement {
         }
 
         this._dom.append(root);
-        this._domSubtrees_extract();
+        this._extractDomSubtrees();
         this._styleSheet.insertRule(`
             @layer {
                 :host {
@@ -725,7 +691,50 @@ export class Component extends HTMLElement {
         `);
     }
 
-    static _domSubtrees_extract() {
+    static _createFieldAccessors() {
+        for (let Field of Object.values(this._fieldDescriptors)) {
+            let {propDescriptor = {}} = ObjectManager.getPropDescriptor(this.prototype, Field._name);
+
+            if (propDescriptor.get && propDescriptor.set) continue;
+
+            propDescriptor = {
+                get: propDescriptor.get,
+                set: propDescriptor.set,
+            };
+            propDescriptor.get ||= Executor.executeExpression(`
+                function () {
+                    return this._fields.${Field._name}._value;
+                }
+            `);
+            propDescriptor.set ||= Executor.executeExpression(`
+                function (value) {
+                    this.setField('${Field._name}', value);
+                }
+            `);
+            Object.defineProperty(this.prototype, Field._name, propDescriptor);
+        }
+    }
+
+    static async _createStyleSheets() {
+        if (!Object.hasOwn(this, '_styleSheetDescriptors')) return;
+
+        this._styleSheets = await this.createStyleSheets(this._styleSheetDescriptors);
+    }
+
+    static async _createStyleSheetsGlobal() {
+        if (!ObjectManager.checkOwnProp(this, '_useGlobalStyleSheets')) return;
+
+        let links = document.querySelectorAll('link[rel="styleSheet"]');
+        let styleSheetDescriptors = {};
+
+        for (let link of links) {
+            styleSheetDescriptors[link.href] = link.href;
+        }
+
+        this._styleSheetsGlobal = await this.createStyleSheets(styleSheetDescriptors);
+    }
+
+    static _extractDomSubtrees() {
         this._domSubtrees = {};
         let domSubtrees = this._dom.querySelectorAll('[Component_subtree]');
 
@@ -739,13 +748,29 @@ export class Component extends HTMLElement {
         }
     }
 
-    static _fieldDescriptors_normalize() {
+    static _mapExternals() {
+        if (!Object.hasOwn(this, '_fieldDescriptors')) return;
+
+        this._fieldNamesByExternals = {};
+        this.observedAttributes = [...this.observedAttributes];
+
+        for (let Field of Object.values(this._fieldDescriptors)) {
+            if (Field._protected) continue;
+
+            let attributeNameLowerCase = Field._attributeName.toLowerCase();
+            this._fieldNamesByExternals[attributeNameLowerCase] = Field._name;
+            this._fieldNamesByExternals[Field._cssPropName] = Field._name;
+            this.observedAttributes.push(attributeNameLowerCase);
+        }
+    }
+
+    static _normalizeFieldDescriptors() {
         if (!Object.hasOwn(this, '_fieldDescriptors')) return;
 
         for (let [fieldName, fieldDescriptor] of Object.entries(this._fieldDescriptors)) {
             let Field = null;
 
-            if (ObjectManager.getPrototypeDepth(fieldDescriptor, this._Field)) {
+            if (ObjectManager.getPrototypeDepth(fieldDescriptor, this._Field) > 0) {
                 Field = fieldDescriptor;
 
                 if (Field._name == fieldName) continue;
@@ -767,40 +792,18 @@ export class Component extends HTMLElement {
         }
     }
 
-    static _observedAttributes_define() {
-        if (!Object.hasOwn(this, '_fieldDescriptors')) return;
 
-        this._fieldNames = {};
-        this.observedAttributes = [];
+    static applyStyleSheets(enabled, ...styleSheetKeys) {
+        if (!Object.hasOwn(this, '_styleSheets')) return;
 
-        for (let Field of Object.values(this._fieldDescriptors)) {
-            if (Field._protected) continue;
+        styleSheetKeys = styleSheetKeys.length ? styleSheetKeys : Object.keys(this._styleSheets);
 
-            let attributeNameLowerCase = Field._attributeName.toLowerCase();
-            this._fieldNames[attributeNameLowerCase] = Field._name;
-            this.observedAttributes.push(attributeNameLowerCase);
+        for (let styleSheetKey of styleSheetKeys) {
+            if (!this._styleSheets[styleSheetKey]) continue;
+
+            this._styleSheets[styleSheetKey].disabled = !enabled;
         }
     }
-
-    static async _styleSheets_create() {
-        if (!Object.hasOwn(this, '_styleSheetDescriptors')) return;
-
-        this._styleSheets = await this.createStyleSheets(this._styleSheetDescriptors);
-    }
-
-    static async _styleSheetsGlobal_create() {
-        if (!ObjectManager.checkOwnProp(this, '_useGlobalStyleSheets')) return;
-
-        let links = document.querySelectorAll('link[rel="styleSheet"]');
-        let styleSheetDescriptors = {};
-
-        for (let link of links) {
-            styleSheetDescriptors[link.href] = link.href;
-        }
-
-        this._styleSheetsGlobal = await this.createStyleSheets(styleSheetDescriptors);
-    }
-
 
     static async awaitResources(elements, urlPropName = '') {
         let locationUrl = location.href.replace(/#.*$/, '');
@@ -811,12 +814,13 @@ export class Component extends HTMLElement {
 
             if (resourceUrl == locationUrl || urlPropName && !resourceUrl) continue;
 
-            let eventHandlers = EventManager.createEventHandlers({
+            EventManager.createEventHandlers({
+                eventTarget: element,
+
                 eventHandlerDescriptors: {
                     error: () => promise.reject(),
                     load: () => promise.fulfill(),
                 },
-                eventTarget: element,
             });
             let promise = new ExternalPromise();
             promises.push(promise);
@@ -871,22 +875,19 @@ export class Component extends HTMLElement {
         return style.getPropertyValue(cssPropName);
     }
 
-    static getCssPropNumber(element, cssPropName) {
-        let cssPropValue = this.getCssProp(element, cssPropName);
+    static getCssPropNumber(element, cssPropName, inline = false) {
+        let cssPropValue = this.getCssProp(element, cssPropName, inline);
 
         return parseFloat(cssPropValue);
     }
 
-    static getDomPath(element, root) {
+    static getDomPath(node, root = null) {
         let path = [];
-        let aim = element;
 
-        while (aim && aim != root) {
-            path.push(aim);
-            aim = aim.parentElement;
+        while (node && node != root) {
+            path.push(node);
+            node = node.parentNode;
         }
-
-        path.reverse();
 
         return path;
     }
@@ -939,65 +940,46 @@ export class Component extends HTMLElement {
     }
 
     static getHeight(element, outer = false) {
-        let boxSizing = this.getCssProp(element, 'box-sizing');
-        let height = this.getCssPropNumber(element, 'height');
-
-        if (outer) {
-            height += this.getCssPropNumber(element, 'margin-bottom') + this.getCssPropNumber(element, 'margin-top');
-        }
-
-        if (outer ? boxSizing != 'border-box' : boxSizing == 'border-box') {
-            let heightExtra =
-                this.getCssPropNumber(element, 'border-bottom-width') + this.getCssPropNumber(element, 'border-top-width')
-                + this.getCssPropNumber(element, 'padding-bottom') + this.getCssPropNumber(element, 'padding-top')
-            ;
-            height += heightExtra * (outer ? 1 : -1);
-        }
-
-        return height;
+        return this.getCssPropNumber(element, 'height') + this.getSizeEdging(element, 'block', outer);
     }
 
-    static getInset(element, insetType) {
-        return this.getCssPropNumber(element, `inset-${insetType}-start`);
-    }
-
-    static getInsetBlock(element) {
-        return this.getInset(element, 'block');
-    }
-
-    static getInsetInline(element) {
-        return this.getInset(element, 'inline');
+    static getInset(element, insetType, fromEnd = false) {
+        return this.getCssPropNumber(element, `inset-${insetType}-${fromEnd ? 'end' : 'start'}`);
     }
 
     static getLeft(element) {
         return this.getCssPropNumber(element, 'left');
     }
 
+    static getRootNode(node) {
+        while (node?.parentNode) {
+            node = node.parentNode;
+        }
+
+        return node;
+    }
+
     static getSize(element, sizeType, outer = false) {
-        let boxSizing = this.getCssProp(element, 'box-sizing');
-        let size = this.getCssPropNumber(element, `${sizeType}-size`);
+        return this.getCssPropNumber(element, `${sizeType}-size`) + this.getSizeEdging(element, sizeType, outer);
+    }
 
-        if (outer) {
-            size += this.getCssPropNumber(element, `margin-${sizeType}-end`) + this.getCssPropNumber(element, `margin-${sizeType}-start`);
+    static getSizeEdging(element, sizeType, sizeIsOuter = false) {
+        let isBorderBox = this.getCssProp(element, 'box-sizing') == 'border-box';
+        let sizeEdging = 0;
+
+        if (sizeIsOuter) {
+            sizeEdging += this.getCssPropNumber(element, `margin-${sizeType}-start`) + this.getCssPropNumber(element, `margin-${sizeType}-end`);
         }
 
-        if (outer ? boxSizing != 'border-box' : boxSizing == 'border-box') {
-            let size_extra =
-                this.getCssPropNumber(element, `border-${sizeType}-end-width`) + this.getCssPropNumber(element, `border-${sizeType}-start-width`)
-                + this.getCssPropNumber(element, `padding-${sizeType}-end`) + this.getCssPropNumber(element, `padding-${sizeType}-start`)
+        if (sizeIsOuter ? !isBorderBox : isBorderBox) {
+            let sizeEdgingInner =
+                this.getCssPropNumber(element, `border-${sizeType}-start-width`) + this.getCssPropNumber(element, `border-${sizeType}-end-width`)
+                + this.getCssPropNumber(element, `padding-${sizeType}-start`) + this.getCssPropNumber(element, `padding-${sizeType}-end`)
             ;
-            size += size_extra * (outer ? 1 : -1);
+            sizeEdging += sizeIsOuter ? sizeEdgingInner : -sizeEdgingInner;
         }
 
-        return size;
-    }
-
-    static getSizeBlock(element, outer = false) {
-        return this.getSize(element, 'block', outer);
-    }
-
-    static getSizeInline(element, outer = false) {
-        return this.getSize(element, 'inline', outer);
+        return sizeEdging;
     }
 
     static getTop(element) {
@@ -1005,33 +987,19 @@ export class Component extends HTMLElement {
     }
 
     static getWidth(element, outer = false) {
-        let boxSizing = this.getCssProp(element, 'box-sizing');
-        let width = this.getCssPropNumber(element, 'width');
-
-        if (outer) {
-            width += this.getCssPropNumber(element, 'margin-left') + this.getCssPropNumber(element, 'margin-right');
-        }
-
-        if (outer ? boxSizing != 'border-box' : boxSizing == 'border-box') {
-            let widthExtra =
-                this.getCssPropNumber(element, 'border-left-width') + this.getCssPropNumber(element, 'border-right-width')
-                + this.getCssPropNumber(element, 'padding-left') + this.getCssPropNumber(element, 'padding-right')
-            ;
-            width += widthExtra * (outer ? 1 : -1);
-        }
-
-        return width;
+        return this.getCssPropNumber(element, 'width') + this.getSizeEdging(element, 'inline', outer);
     }
 
     static async init({
         abstract = false,
+        components = [],
         css = undefined,
         cssUrl = undefined,
         html = undefined,
         htmlUrl = undefined,
         idAttribute = undefined,
+        interpolationArgs = undefined,
         interpolationKey = undefined,
-        interpolations = undefined,
         rootTag = undefined,
         styleSheetDescriptors = undefined,
         tagPrefix = undefined,
@@ -1043,13 +1011,14 @@ export class Component extends HTMLElement {
         ObjectManager.assignProps(
             this,
             {
+                _components: new Set([...this._components, ...components]),
                 _css: css,
                 _cssUrl: cssUrl,
                 _html: html,
                 _htmlUrl: htmlUrl,
                 _idAttribute: idAttribute,
+                _interpolationArgs: interpolationArgs,
                 _interpolationKey: interpolationKey,
-                _interpolations: interpolations,
                 _rootTag: rootTag,
                 _styleSheetDescriptors: styleSheetDescriptors,
                 _tagPrefix: tagPrefix,
@@ -1061,20 +1030,20 @@ export class Component extends HTMLElement {
         if (ObjectManager.checkOwnProp(this, '_defined')) return;
 
         this._defined = new ExternalPromise();
-        this._fieldDescriptors_normalize();
+        this._normalizeFieldDescriptors();
         this._createFieldAccessors();
+        this._mapExternals();
         EventManager.normalizeEventHandlerDescriptors(this._eventHandlerDescriptors);
         ObjectManager.extendProps(this, null, ...this._propsExtended);
 
         await Executor.delay();
 
         this._httpClient = new HttpClient().init({urlBasic: this._url});
-        this._observedAttributes_define();
         await Promise.all([
-            this._components_await(),
-            this._styleSheets_create(),
-            this._styleSheetsGlobal_create(),
-            !abstract && this._dom_create(),
+            this._awaitComponents(),
+            this._createStyleSheets(),
+            this._createStyleSheetsGlobal(),
+            !abstract && this._createDom(),
         ]);
 
         if (!abstract) {
@@ -1086,11 +1055,11 @@ export class Component extends HTMLElement {
         ObjectManager.init(this);
     }
 
-    static interpolate(string, interpolationKey, interpolations) {
+    static interpolate(string, interpolationKey, interpolationArgs) {
         let f = (match, key, value) => {
             if (key != interpolationKey) return match;
 
-            return ObjectManager.queryProp(interpolations, value) ?? '';
+            return Executor.executeExpression(value, interpolationArgs) ?? '';
         };
 
         return string.replace(this._interpolationRegExp, f);
@@ -1107,136 +1076,34 @@ export class Component extends HTMLElement {
     }
 
     static setHeight(element, height, outer = false, important = false) {
-        if (!height && height !== 0) {
-            this.setCssProp(element, 'height', null);
-
-            return;
-        }
-
-        let boxSizing = this.getCssProp(element, 'box-sizing');
-
-        if (outer) {
-            height -= this.getCssPropNumber(element, 'margin-bottom') + this.getCssPropNumber(element, 'margin-top');
-        }
-
-        if (outer ? boxSizing != 'border-box' : boxSizing == 'border-box') {
-            let heightExtra =
-                this.getCssPropNumber(element, 'border-bottom-width') + this.getCssPropNumber(element, 'border-top-width')
-                + this.getCssPropNumber(element, 'padding-bottom') + this.getCssPropNumber(element, 'padding-top')
-            ;
-            height += heightExtra * (outer ? -1 : 1);
-        }
-
-        height = Math.max(height, 0);
-        this.setCssProp(element, 'height', `${height}px`, important);
+        height = height || height === 0 ? Math.max(height - this.getSizeEdging(element, 'block', outer), 0) + 'px' : null;
+        this.setCssProp(element, 'height', height, important);
     }
 
-    static setInset(element, insetType, inset, important = false) {
-        if (!inset && inset !== 0) {
-            this.setCssProp(element, `inset-${insetType}-start`, null);
-
-            return;
-        }
-
-        this.setCssProp(element, `inset-${insetType}-start`, `${inset}px`, important);
-    }
-
-    static setInsetBlock(element, inset, important = false) {
-        this.setInset(element, 'block', inset, important);
-    }
-
-    static setInsetInline(element, inset, important = false) {
-        this.setInset(element, 'inline', inset, important);
+    static setInset(element, insetType, inset, fromEnd = false, important = false) {
+        inset = inset || inset === 0 ? `${inset}px` : null;
+        let insetName = `inset-${insetType}-${fromEnd ? 'end' : 'start'}`;
+        this.setCssProp(element, insetName, inset, important);
     }
 
     static setLeft(element, left, important = false) {
-        if (!left && left !== 0) {
-            this.setCssProp(element, 'left', null);
-
-            return;
-        }
-
-        this.setCssProp(element, 'left', `${left}px`, important);
+        left = left || left === 0 ? `${left}px` : null;
+        this.setCssProp(element, 'left', left, important);
     }
 
     static setSize(element, sizeType, size, outer = false, important = false) {
-        if (!size && size !== 0) {
-            this.setCssProp(element, `${sizeType}-size`, null);
-
-            return;
-        }
-
-        let boxSizing = this.getCssProp(element, `box-sizing`);
-
-        if (outer) {
-            size -= this.getCssPropNumber(element, `margin-${sizeType}-end`) + this.getCssPropNumber(element, `margin-${sizeType}-start`);
-        }
-
-        if (outer ? boxSizing != `border-box` : boxSizing == `border-box`) {
-            let size_extra =
-                this.getCssPropNumber(element, `border-${sizeType}-end-width`) + this.getCssPropNumber(element, `border-${sizeType}-start-width`)
-                + this.getCssPropNumber(element, `padding-${sizeType}-end`) + this.getCssPropNumber(element, `padding-${sizeType}-start`)
-            ;
-            size += size_extra * (outer ? -1 : 1);
-        }
-
-        size = Math.max(size, 0);
-        this.setCssProp(element, `${sizeType}-size`, `${size}px`, important);
-    }
-
-    static setSizeBlock(element, size, outer = false, important = false) {
-        this.setSize(element, 'block', size, outer, important);
-    }
-
-    static setSizeInline(element, size, outer = false, important = false) {
-        this.setSize(element, 'inline', size, outer, important);
+        size = size || size === 0 ? Math.max(size - this.getSizeEdging(element, sizeType, outer), 0) + 'px' : null;
+        this.setCssProp(element, `${sizeType}-size`, size, important);
     }
 
     static setTop(element, top, important = false) {
-        if (!top && top !== 0) {
-            this.setCssProp(element, 'top', null);
-
-            return;
-        }
-
-        this.setCssProp(element, 'top', `${top}px`, important);
+        top = top || top === 0 ? `${top}px` : null;
+        this.setCssProp(element, 'top', top, important);
     }
 
     static setWidth(element, width, outer = false, important = false) {
-        if (!width && width !== 0) {
-            this.setCssProp(element, 'width', null);
-
-            return;
-        }
-
-        let boxSizing = this.getCssProp(element, 'box-sizing');
-
-        if (outer) {
-            width -= this.getCssPropNumber(element, 'margin-left') + this.getCssPropNumber(element, 'margin-right');
-        }
-
-        if (outer ? boxSizing != 'border-box' : boxSizing == 'border-box') {
-            let widthExtra =
-                this.getCssPropNumber(element, 'border-left-width') + this.getCssPropNumber(element, 'border-right-width')
-                + this.getCssPropNumber(element, 'padding-left') + this.getCssPropNumber(element, 'padding-right')
-            ;
-            width += widthExtra * (outer ? -1 : 1);
-        }
-
-        width = Math.max(width, 0);
-        this.setCssProp(element, 'width', `${width}px`, important);
-    }
-
-    static styleSheets_apply(enabled, ...styleSheetKeys) {
-        if (!Object.hasOwn(this, '_styleSheets')) return;
-
-        styleSheetKeys = styleSheetKeys.length ? styleSheetKeys : Object.keys(this._styleSheets);
-
-        for (let styleSheetKey of styleSheetKeys) {
-            if (!this._styleSheets[styleSheetKey]) continue;
-
-            this._styleSheets[styleSheetKey].disabled = !enabled;
-        }
+        width = width || width === 0 ? Math.max(width - this.getSizeEdging(element, 'inline', outer), 0) + 'px' : null;
+        this.setCssProp(element, 'width', width, important);
     }
 
     static wrap(nodes, wrapper) {
@@ -1254,16 +1121,13 @@ export class Component extends HTMLElement {
 
 
     static {
-        this.init({
-            abstract: true,
-            useGlobalStyleSheets: true,
-        });
+        this.init({useGlobalStyleSheets: true});
     }
 
 
+    _autoRefreshIsBlocked = false;
     _domSubtreesReleased = new Set();
     _elements = {};
-    _elementsSlotted = {};
     _eventHandlers = null;
     _face = this;
     _fieldObserver = null;
@@ -1271,48 +1135,62 @@ export class Component extends HTMLElement {
     _shadow = this.attachShadow(this.constructor._shadowOpts);
 
 
+    _applyStyleSheets() {
+        this._shadow.adoptedStyleSheets.push(this.constructor._styleSheet);
+
+        for (let styleSheetGlobal of Object.values(this.constructor._styleSheetsGlobal)) {
+            this._shadow.adoptedStyleSheets.push(styleSheetGlobal);
+        }
+
+        for (let styleSheet of Object.values(this.constructor._styleSheets)) {
+            this._shadow.adoptedStyleSheets.push(styleSheet);
+        }
+    }
+
     _build() {
         if (ObjectManager.isInited(this)) return;
 
-        this._fieldObserver_create();
-        this._styleSheets_apply();
+        this._applyStyleSheets();
+        this._createFieldObserver();
         this._shadow.append(this._fieldObserver, this.constructor._dom.cloneNode(true));
         this._elements = this.constructor.getElements(this._shadow);
-        this._elementsSlotted_define();
         this._eventHandlers = EventManager.createEventHandlers({
             context: this,
             eventHandlerDescriptors: this.constructor._eventHandlerDescriptors,
+            normalize: false,
+
             eventTarget: {
                 elements: this._elements,
-                elementsSlotted: this._elementsSlotted,
                 fieldObserver: this._fieldObserver,
                 host: this,
                 shadow: this._shadow,
             },
-            normalize: false,
         });
-        this._face_define();
-        this._fields_create();
+        this._defineFace();
+        this._createFields();
 
-        this._fields.autoRefresh.disabled = true;
+        this._autoRefreshIsBlocked = true;
         this._init();
-        this.refreshFields();
-        this._fields.autoRefresh.disabled = false;
+        this._refreshFields();
+        this._autoRefreshIsBlocked = false;
         this._refreshAuto();
     }
 
-    _elementsSlotted_define() {
-        this._elementsSlotted = {};
-        let slots = this._shadow.querySelectorAll('slot[name]');
+    _createFieldObserver() {
+        this._fieldObserver = document.createElement('meta');
+        this._fieldObserver.setAttribute('_Component_fieldObserver', '');
+        EventManager.applyPropagation(this._fieldObserver, false, 'transitioncancel', 'transitionend', 'transitionrun', 'transitionstart');
+    }
 
-        for (let slot of slots) {
-            let elements = slot.assignedElements();
-            elements = elements.length ? elements : slot.children;
-            this._elementsSlotted[slot.name] = elements.length > 1 ? elements : elements[0];
+    _createFields() {
+        this._fields = {};
+
+        for (let Field of Object.values(this.constructor._fieldDescriptors)) {
+            this._fields[Field._name] = new Field(this);
         }
     }
 
-    _face_define() {
+    _defineFace() {
         let component = this;
         let face = this._shadow.querySelector('[Component_face]') || component;
 
@@ -1324,26 +1202,22 @@ export class Component extends HTMLElement {
         this._face = face;
     }
 
-    _fields_create() {
-        this._fields = {};
-
-        for (let Field of Object.values(this.constructor._fieldDescriptors)) {
-            this._fields[Field._name] = new Field(this);
-        }
-    }
-
-    _fieldObserver_create() {
-        this._fieldObserver = document.createElement('meta');
-        this._fieldObserver.setAttribute('_Component_fieldObserver', '');
-        EventManager.applyPropagation(this._fieldObserver, false, 'transitioncancel', 'transitionend', 'transitionrun', 'transitionstart');
-    }
-
     _init() {}
 
     _refreshAuto(...args) {
-        if (!this.autoRefresh || this._fields.autoRefresh.disabled) return;
+        if (!this.autoRefresh || this._autoRefreshIsBlocked) return;
 
         this.refresh(...args);
+    }
+
+    _refreshFields() {
+        let fieldsDeferred = new Set(this.constructor._fieldsDeferred);
+
+        for (let fieldName of Object.keys(this._fields)) {
+            if (fieldsDeferred.has(fieldName)) continue;
+
+            this.refreshField(fieldName);
+        }
     }
 
     _releaseDomSubtree(domSubtreeKey) {
@@ -1360,21 +1234,9 @@ export class Component extends HTMLElement {
         this.dispatchEvent('domSubtree', {key: domSubtreeKey});
     }
 
-    _styleSheets_apply() {
-        this._shadow.adoptedStyleSheets.push(this.constructor._styleSheet);
-
-        for (let styleSheetGlobal of Object.values(this.constructor._styleSheetsGlobal)) {
-            this._shadow.adoptedStyleSheets.push(styleSheetGlobal);
-        }
-
-        for (let styleSheet of Object.values(this.constructor._styleSheets)) {
-            this._shadow.adoptedStyleSheets.push(styleSheet);
-        }
-    }
-
 
     attributeChangedCallback(attributeName) {
-        this._fields[this.constructor._fieldNames[attributeName]]?.updateByAttribute();
+        this._fields[this.constructor._fieldNamesByExternals[attributeName]]?.updateByAttribute();
     }
 
     connectedCallback() {
@@ -1393,8 +1255,8 @@ export class Component extends HTMLElement {
         return this.constructor.getCssProp(this._face, cssPropName, inline);
     }
 
-    getCssPropNumber(cssPropName) {
-        return this.constructor.getCssPropNumber(this._face, cssPropName);
+    getCssPropNumber(cssPropName, inline = false) {
+        return this.constructor.getCssPropNumber(this._face, cssPropName, inline);
     }
 
     getDomPath(root) {
@@ -1409,16 +1271,20 @@ export class Component extends HTMLElement {
         return this.constructor.getHeight(this._face, outer);
     }
 
+    getInset(insetType, fromEnd = false) {
+        return this.constructor.getInset(this._face, fromEnd);
+    }
+
     getLeft() {
         return this.constructor.getLeft(this._face);
     }
 
-    getSizeBlock(outer = false) {
-        return this.constructor.getSizeBlock(this._face, outer);
+    getRootNode() {
+        return this.constructor.getRootNode(this);
     }
 
-    getSizeInline(outer = false) {
-        return this.constructor.getSizeInline(this._face, outer);
+    getSize(sizeType, outer = false) {
+        return this.constructor.getSize(this._face, sizeType, outer);
     }
 
     getTop() {
@@ -1431,16 +1297,12 @@ export class Component extends HTMLElement {
 
     refresh() {}
 
-    refreshField(fieldName) {
-        this._fields[fieldName]?.refresh();
+    refreshField(fieldName, simple = false) {
+        this._fields[fieldName]?.refresh(simple);
     }
 
-    refreshFields(...fieldNames) {
-        fieldNames = fieldNames.length ? fieldNames : Object.keys(this._fields);
-
-        for (let fieldName of fieldNames) {
-            this.refreshField(fieldName);
-        }
+    releaseField(fieldName) {
+        this._fields[fieldName]?.release();
     }
 
     resetField(fieldName) {
@@ -1463,16 +1325,16 @@ export class Component extends HTMLElement {
         return this.constructor.setHeight(this._face, height, outer, important);
     }
 
+    setInset(insetType, inset, fromEnd = false, important = false) {
+        return this.constructor.setInset(this._face, insetType, inset, fromEnd, important);
+    }
+
     setLeft(left, important = false) {
         return this.constructor.setLeft(this._face, left, important);
     }
 
-    setSizeBlock(size, outer = false, important = false) {
-        this.constructor.setSizeBlock(this._face, size, outer, important);
-    }
-
-    setSizeInline(size, outer = false, important = false) {
-        this.constructor.setSizeInline(this._face, size, outer, important);
+    setSize(sizeType, size, outer = false, important = false) {
+        this.constructor.setSize(this._face, sizeType, size, outer, important);
     }
 
     setTop(top, important = false) {

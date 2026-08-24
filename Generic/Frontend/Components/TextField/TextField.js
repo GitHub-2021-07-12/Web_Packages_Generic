@@ -44,14 +44,14 @@ export class TextField extends TextInput {
         maskChar: {
             default: '●',
 
-            process(value) {
-                return value ? new RichString(value).slice(0, 1).value : undefined;
-            },
-
             updateAfter() {
                 if (!this._component.masked) return;
 
                 this._component._value = this._component.value;
+            },
+
+            updateBefore() {
+                this._valueSimple = this._valueSimple ? new RichString(this._valueSimple).slice(0, 1).value : undefined;
             },
         },
 
@@ -65,10 +65,9 @@ export class TextField extends TextInput {
 
         regExp: {
             default: '',
-            extra: true,
 
-            process(value) {
-                return new RegExp(value);
+            updateBefore() {
+                this._valueExtra = new RegExp(this._valueSimple);
             },
         },
     };

@@ -35,40 +35,36 @@ export class Slider extends GestureArea {
         },
 
         host: {
-            ...super._eventHandlerDescriptors.host,
-
-            capture: function (event) {
-                let pointer = event.detail.pointer;
-                pointer._Slider_blocked ??= this.children.length < 2;
+            capture: function () {
                 this._animationManager.stop(true);
 
-                if (pointer._Slider_blocked) return;
+                if (this.children.length < 2) return;
+
+                this._pointer.capture();
+
+                if (!this._pointer.checkCapture()) return;
 
                 this._flipProgressExcess = this._animationManager.progress * -this._flipDirection;
             },
 
-            flickMain: function (event) {
-                let pointer = event.detail.pointer;
+            flick: function (event) {
+                if (event.target != this || !this._pointer.checkCapture()) return;
 
-                if (pointer._Slider_blocked) return;
-
-                pointer._Slider_flicked = true;
-                let velocityAbs = Math.abs(pointer._velocity.x);
+                this._pointer._Slider_flicked = true;
+                let velocityAbs = Math.abs(this._pointer._velocity.x);
 
                 if (!this._flickDirection && velocityAbs < this.flipVelocityThreshold) return;
 
-                let flickDirection = Math.sign(pointer._velocity.x);
+                let flickDirection = Math.sign(this._pointer._velocity.x);
                 this._flickVelocity = velocityAbs + (flickDirection == this._flickDirection ? this._flickVelocity : 0);
                 this._flickDirection = flickDirection;
             },
 
-            releaseMain: function (event) {
-                let pointer = event.detail.pointer;
-
-                if (pointer._Slider_blocked) return;
+            release: function (event) {
+                if (event.target != this || !this._pointer.checkCapture()) return;
 
                 if (this._frameNextIndex != undefined) {
-                    if (this._flickDirection && pointer._Slider_flicked) {
+                    if (this._flickDirection && this._pointer._Slider_flicked) {
                         this.index =
                             this._flickDirection == this._flipDirection
                                 ? this._frameCurrentIndex - (this._animationManager.direction < 0 ? this._flipDirection : 0)
@@ -76,13 +72,9 @@ export class Slider extends GestureArea {
                         ;
                     }
                     else {
-                        let swipeDirection = Math.sign(pointer._positionDelta.x);
+                        let swipeDirection = Math.sign(this._pointer._positionDeltaModified.x);
                         this.index =
-                            (
-                                this._flickDirection
-                                    ? this._flipDirection == swipeDirection
-                                    : this._animationManager.progress < this.flipProgressThreshold
-                            )
+                            (this._flickDirection ? this._flipDirection == swipeDirection : this._animationManager.progress < this.flipProgressThreshold)
                                 ? this._frameCurrentIndex
                                 : this._frameNextIndex
                         ;
@@ -100,12 +92,10 @@ export class Slider extends GestureArea {
                 this._animationManager.start(true);
             },
 
-            swipeMain: function (event) {
-                let pointer = event.detail.pointer;
+            swipe: function (event) {
+                if (event.target != this || !this._pointer.checkCapture()) return;
 
-                if (pointer._Slider_blocked) return;
-
-                let flipProgress = -pointer._positionDelta.x / this._sizeInline - this._flipProgressExcess;
+                let flipProgress = -this._pointer._positionDeltaModified.x / this._sizeInline - this._flipProgressExcess;
                 let frameNextUpdate = false;
 
                 if (!this.looped) {
@@ -141,13 +131,13 @@ export class Slider extends GestureArea {
         _flipDirection: {
             default: 0,
 
-            process(value) {
-                return Math.sign(value);
-            },
-
             updateAfter() {
                 this._elements.root.inert = !!this._value;
                 this._component._animationManager.prepare();
+            },
+
+            updateBefore() {
+                this._valueSimple = Math.sign(this._valueSimple);
             },
         },
 
@@ -156,7 +146,7 @@ export class Slider extends GestureArea {
         looped: false,
 
         autoRefresh: class Field extends super._fieldDescriptors.autoRefresh {
-            _value_updateAfter() {
+            _updateAfter() {
                 let methodName = this._value ? 'observe' : 'unobserve';
                 this._component._resizeObserver[methodName](this._component);
             }
@@ -175,7 +165,7 @@ export class Slider extends GestureArea {
         },
 
         flipProgressThreshold: {
-            default: 0.4,
+            default: 0.5,
             range: [0, 1],
         },
 
@@ -193,13 +183,7 @@ export class Slider extends GestureArea {
             _valueRaw = undefined;
 
 
-            _value_process(value) {
-                this._valueRaw = value;
-
-                return this._component._index_proc(value);
-            }
-
-            _value_updateAfter() {
+            _updateAfter() {
                 if (
                     this._component._frameCurrentIndex == undefined
                     || !(this._component._flipDirection || this._component.implicitFlipping)
@@ -208,9 +192,7 @@ export class Slider extends GestureArea {
                 }
                 else if (!this._component._flipDirection) {
                     this._component._flipDirection =
-                        (
-                            (this._component.looped ? this._valueRaw ?? this._value : this._value) - this._component._frameCurrentIndex
-                        )
+                        ((this._component.looped ? this._valueRaw ?? this._value : this._value) - this._component._frameCurrentIndex)
                         % this._component.children.length
                     ;
                     this._component._frameNextIndex = this._value;
@@ -225,15 +207,18 @@ export class Slider extends GestureArea {
                 this._component._animationManager.start(true);
             }
 
-            _value_updateBefore() {
+            _updateBefore() {
+                this._valueRaw = this._valueSimple;
+                this._valueSimple = this._component._processIndex(this._valueSimple);
+
                 if (
                     this._component._flipDirection
                     && this._component._frameCurrentIndex != undefined
-                    && this._valuePrepared != this._component._frameCurrentIndex
-                    && this._valuePrepared != this._component._frameNextIndex
+                    && this._valueSimple != this._component._frameCurrentIndex
+                    && this._valueSimple != this._component._frameNextIndex
                 ) {
-                    this._valueQueued = this._valuePrepared;
-                    this._valuePrepared = undefined;
+                    this._valueQueued = this._valueSimple;
+                    this._valueSimple = undefined;
                     this._component._animationManager.duration = Math.min(this._component.flipDurationMin, this._component._animationManager._durationDefault);
                 }
                 else {
@@ -271,38 +256,30 @@ export class Slider extends GestureArea {
         return this.__frameCurrentIndex;
     }
     set _frameCurrentIndex(frameCurrentIndex) {
-        this.__frameCurrentIndex = this._index_proc(frameCurrentIndex);
-        this._frame_assign(this._elements.slotCurrent, this._frameCurrentIndex);
-        this._flipProgressRange_define();
+        this.__frameCurrentIndex = this._processIndex(frameCurrentIndex);
+        this._assignFrame(this._elements.slotCurrent, this._frameCurrentIndex);
+        this._defineFlipProgressRange();
     }
 
     get _frameNextIndex() {
         return this.__frameNextIndex;
     }
     set _frameNextIndex(frameNextIndex) {
-        frameNextIndex = this._index_proc(frameNextIndex);
+        frameNextIndex = this._processIndex(frameNextIndex);
         this.__frameNextIndex = frameNextIndex != this._frameCurrentIndex ? frameNextIndex : undefined;
-        this._frame_assign(this._elements.slotNext, this._frameNextIndex);
+        this._assignFrame(this._elements.slotNext, this._frameNextIndex);
     }
 
 
-    _flipProgressRange_define() {
-        let elasticThreshold = Math.min(this.elasticThreshold, 1 - 1e-9);
-        this._flipProgressRange[0] = -this._frameCurrentIndex - elasticThreshold;
-        this._flipProgressRange[1] = (this.children.length - 1) - this._frameCurrentIndex + elasticThreshold;
-    }
-
-    _frame_assign(frame, frameIndex) {
+    _assignFrame(frame, frameIndex) {
         let element = this.children[frameIndex];
         element ? frame.assign(element) : frame.assign();
     }
 
-    _index_proc(index) {
-        if (!this.children.length || index?.constructor != Number) return index;
-
-        let f = this.looped ? Common.toRing : Common.toRange;
-
-        return f(index, 0, this.children.length - 1);
+    _defineFlipProgressRange() {
+        let elasticThreshold = Math.min(this.elasticThreshold, 1 - 1e-9);
+        this._flipProgressRange[0] = -this._frameCurrentIndex - elasticThreshold;
+        this._flipProgressRange[1] = -this._frameCurrentIndex + elasticThreshold + (this.children.length - 1);
     }
 
     _init() {
@@ -319,6 +296,14 @@ export class Slider extends GestureArea {
         this.refreshField('index');
     }
 
+    _processIndex(index) {
+        if (!this.children.length || index?.constructor != Number) return index;
+
+        let f = this.looped ? Common.toRing : Common.toRange;
+
+        return f(index, 0, this.children.length - 1);
+    }
+
     _resizeObserver_callback() {
         this._refreshAuto();
     }
@@ -329,7 +314,7 @@ export class Slider extends GestureArea {
     }
 
     refresh() {
-        this._sizeInline = this.getSizeInline();
+        this._sizeInline = this.getSize('inline');
     }
 
     unbindElements(elements) {

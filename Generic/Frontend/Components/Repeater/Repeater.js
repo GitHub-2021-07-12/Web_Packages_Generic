@@ -10,21 +10,18 @@ export class Repeater extends Component {
     static _eventHandlerDescriptors = {
         model: {
             add: function (event) {
-                if (!this.delegate || !this.target) return;
+                if (!this._condition) return;
 
-                let index = Infinity;
-                let items = [];
+                let itemRelative = this._items.get(event.detail.itemRelative);
 
-                for (let modelItem of event.detail.items) {
-                    index = Math.min(index, modelItem.index);
-                    let item = this._createItem(modelItem);
-                    items.push(item);
+                if (itemRelative && this.interpolationKey) {
+                    this._defineItems();
                 }
-
-                let item = this.target.children[index];
-                item ? item.before(...items) : this.target.append(...items);
-                this._initItems(items);
-                this._applyIndexes();
+                else {
+                    let items = this._createItems(event.detail.items);
+                    itemRelative ? itemRelative.before(...items) : this.target.append(...items);
+                    this._applyIndexes();
+                }
             },
 
             clear: function () {
@@ -32,18 +29,17 @@ export class Repeater extends Component {
             },
 
             delete: function (event) {
-                if (this._modelPropsInterpolated.has('index')) {
+                if (this.interpolationKey) {
                     this._defineItems();
-
-                    return;
                 }
+                else {
+                    for (let modelItem of event.detail.items) {
+                        this._items.get(modelItem).remove();
+                        this._items.delete(modelItem);
+                    }
 
-                for (let modelItem of event.detail.items) {
-                    this._items.get(modelItem).remove();
-                    this._items.delete(modelItem);
+                    this._applyIndexes();
                 }
-
-                this._applyIndexes();
             },
 
             filter: function () {
@@ -53,31 +49,28 @@ export class Repeater extends Component {
             },
 
             order: function () {
-                if (this._modelPropsInterpolated.has('index')) {
+                if (this.interpolationKey) {
                     this._defineItems();
-
-                    return;
                 }
-
-                let items = this.model._items.map((modelItem) => this._items.get(modelItem));
-                this.target.textContent = '';
-                this.target.append(...items);
-                this._applyIndexes();
+                else {
+                    let items = this.model._items.map((modelItem) => this._items.get(modelItem));
+                    this.target.textContent = '';
+                    this.target.append(...items);
+                    this._applyIndexes();
+                }
             },
 
             update: function (event) {
-                if (!this.delegate || !this.target) return;
+                if (!this._condition) return;
 
                 let item = this._items.get(event.detail.item);
-                let propsUpdated = new Set([...Object.keys(event.detail.dataPrev)]);
 
-                if (this._modelPropsInterpolated.intersection(propsUpdated).size) {
-                    let itemPrev = item;
-                    item = this._createItem(event.detail.item);
-                    itemPrev?.replaceWith(item);
+                if (this.interpolationKey) {
+                    item.replaceWith(this._createItem(event.detail.item));
                 }
-
-                item.Repeater_manager.applyData();
+                else {
+                    item.Repeater_itemManager.applyData();
+                }
             },
         },
     };
@@ -87,104 +80,55 @@ export class Repeater extends Component {
             default: '',
 
             updateAfter() {
-                this._component._modelPropsInterpolated.clear();
-
-                if (this._component.interpolationKey) {
-                    let interpolations = this._component._delegateHtml.matchAll(this._component.constructor._interpolationRegExp);
-
-                    for (let interpolation of interpolations) {
-                        let propName = interpolation.groups.value;
-                        let propNameProcessed = propName.replace('data.', '');
-
-                        if (propName == propNameProcessed) continue;
-
-                        this._component._modelPropsInterpolated.add(propNameProcessed);
-                    }
-                }
-
                 this._component._refreshAuto();
             },
         },
 
         model: {
             default: 0,
-            extra: true,
             range: [0, Infinity],
 
-            getInitialValue() {
-                return this._component.querySelector('[Repeater_model]') || undefined;
+            updateAfter() {
+                this._component._refreshAuto();
+                EventManager.applyEventHandlers(this._component._eventHandlers.model, this._value);
             },
 
-            process(value) {
+            updateBefore(value) {
                 switch (value?.constructor) {
                     case Array: {
                         let modelItems = value;
-                        value = new value();
-                        value.add(modelItems);
+                        this._valueExtra = new Model();
+                        this._valueExtra.add(modelItems);
 
                         break;
                     }
-                    case HTMLTemplateElement: {
-                        let modelTemplate = value;
-                        value = new Model();
-
-                        let script = modelTemplate.content.querySelector('script');
-                        let modelItems = Executor.executeExpression(script?.text);
-
-                        if (modelItems) {
-                            value.add(modelItems);
-                        }
+                    case Model: {
+                        this._valueExtra = value;
 
                         break;
                     }
-                    case Model: break;
                     case Number: {
                         let modelItems = [];
                         let modelItemsCount = value;
-                        value = new Model();
+                        this._valueExtra = new Model();
 
                         for (let i = 0; i < modelItemsCount; i++) {
                             modelItems.push(i + 1);
                         }
 
-                        value.add(modelItems);
+                        this._valueExtra.add(modelItems);
 
                         break;
                     }
                     default: {
-                        value = new Model();
+                        this._valueExtra = null;
                     }
                 }
-
-                return value;
-            },
-
-            updateAfter() {
-                this._component._refreshAuto();
-                EventManager.applyEventHandlers(this._component._eventHandlers.model, this._component.model);
             },
         },
 
         target: {
             default: '',
-            extra: true,
-
-            process(value) {
-                if (!(value instanceof Node)) {
-                    let selector = value + '';
-
-                    try {
-                        value = this._component.parentElement.querySelector(selector);
-                    }
-                    catch {
-                        value = null;
-                    }
-
-                    value ||= this._component;
-                }
-
-                return value;
-            },
 
             updateAfter() {
                 if (this._valuePrev instanceof Node) {
@@ -193,11 +137,30 @@ export class Repeater extends Component {
 
                 this._component._refreshAuto();
             },
+
+            updateBefore(value) {
+                if (value instanceof Node) {
+                    this._valueExtra = value;
+                }
+                else {
+                    let rootNode = this._component.getRootNode(this._component);
+                    let selector = value + '';
+
+                    try {
+                        this._valueExtra = rootNode.querySelector(selector);
+                    }
+                    catch {
+                        this._valueExtra = null;
+                    }
+
+                    this._valueExtra ||= this._component;
+                }
+            },
         },
     };
 
 
-    static Manager = class {
+    static ItemManager = class {
         static _eventHandlerDescriptors = {
             elements: {},
             item: {},
@@ -222,6 +185,9 @@ export class Repeater extends Component {
         _modelItem = null;
 
 
+        _init() {}
+
+
         applyData() {}
 
         applyIndex() {}
@@ -232,17 +198,17 @@ export class Repeater extends Component {
             this._eventHandlers = EventManager.createEventHandlers({
                 context: this,
                 eventHandlerDescriptors: this.constructor._eventHandlerDescriptors,
+                normalize: false,
+
                 eventTarget: {
                     elements: this._elements,
                     item: this._item,
                 },
-                normalize: false,
             });
             this._model = model;
             this._modelItem = modelItem;
+            this._init();
         }
-
-        init() {}
 
         updateData() {}
     };
@@ -253,40 +219,39 @@ export class Repeater extends Component {
     }
 
 
+    __ItemManager = this.constructor.ItemManager;
     __delegate = null;
 
 
-    _delegateHtml = '';
     _itemTemplate = document.createElement('template');
     _items = new Map();
-    _modelPropsInterpolated = new Set();
 
 
-    Manager = this.constructor.Manager;
+    get _condition() {
+        return !!(this.delegate && this.model && this.target);
+    }
 
+
+    get ItemManager() {
+        return this.__ItemManager;
+    }
+    set ItemManager(ItemManager) {
+        this.__ItemManager = ItemManager || this.constructor.ItemManager;
+        this._refreshAuto();
+    }
 
     get delegate() {
         return this.__delegate;
     }
     set delegate(delegate) {
-        if (delegate instanceof HTMLTemplateElement) {
-            this.__delegate = delegate.content.firstElementChild;
-
-            let script = delegate.content.querySelector('script');
-            this.Manager = Executor.executeExpression(script?.text, {Repeater: this.constructor}) || this.Manager;
-        }
-        else {
-            this.__delegate = delegate;
-        }
-
-        this._delegateHtml = this.delegate?.outerHTML ?? '';
+        this.__delegate = delegate || null;
         this._refreshAuto();
     }
 
 
     _applyIndexes() {
         for (let item of this._items.values()) {
-            item.Repeater_manager.applyIndex();
+            item.Repeater_itemManager.applyIndex();
         }
     }
 
@@ -296,48 +261,55 @@ export class Repeater extends Component {
     }
 
     _createItem(modelItem) {
+        if (!this._condition) return null;
+
         let item = null;
 
         if (this.interpolationKey) {
-            this._itemTemplate.innerHTML = this.constructor.interpolate(this._delegateHtml, this.interpolationKey, modelItem);
+            this._itemTemplate.innerHTML = this.constructor.interpolate(this.delegate.outerHTML, this.interpolationKey, modelItem);
             item = this._itemTemplate.content.firstElementChild;
         }
         else {
             item = this.delegate.cloneNode(true);
         }
 
-        item.Repeater_manager = new this.Manager(item, this.model, modelItem);
-        item.setAttribute('_Repeater_item', '');
-        this.constructor.setAttribute(item, '_Repeater_excluded', modelItem.excluded ? '' : null);
+        item.Repeater_itemManager = new this.ItemManager(item, this.model, modelItem);
+        item.Repeater_itemManager.applyData();
+        item.Repeater_itemManager.applyIndex();
         this._items.set(modelItem, item);
 
         return item;
     }
 
+    _createItems(modelItems = this.model._items) {
+        if (!this._condition) return null;
+
+        let items = [];
+
+        for (let modelItem of modelItems) {
+            items.push(this._createItem(modelItem));
+        }
+
+        return items;
+    }
+
     _defineItems() {
         this._clear();
 
-        if (!this.delegate || !this.target) return;
+        if (!this._condition) return;
 
-        for (let modelItem of this.model._items) {
-            this._createItem(modelItem);
-        }
-
-        if (!this._items.size) return;
-
-        let items = [...this._items.values()];
-        this.target.append(...items);
-        this._initItems(items);
+        this._createItems();
+        this.target.append(...this._items.values());
     }
 
     _init() {
-        this.delegate = this.querySelector('[Repeater_delegate]');
-    }
+        let templateContent = this.querySelector('template')?.content;
 
-    _initItems(items) {
-        for (let item of items) {
-            item.Repeater_manager.init();
-        }
+        if (!templateContent) return;
+
+        this.ItemManager = Executor.executeExpression(templateContent.querySelector('script[Repeater_ItemManager]')?.text, {Repeater: this.constructor});
+        this.delegate = templateContent.querySelector('[Repeater_item]');
+        this.model = Executor.executeExpression(templateContent.querySelector('script[Repeater_model]')?.text) || this.model;
     }
 
 

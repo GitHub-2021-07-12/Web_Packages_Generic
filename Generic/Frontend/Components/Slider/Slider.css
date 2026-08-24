@@ -1,7 +1,6 @@
 @layer {
     :host {
         --Component_displayInner: grid !important;
-        --GestureArea_gestures: flick press swipe !important;
 
         grid: initial !important;
         height: 256px;

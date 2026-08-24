@@ -23,13 +23,27 @@ export class ObjectManager {
     }
 
     static extendObject(object, prototype) {
-        if (object?.constructor != Object || prototype?.constructor != Object) return object;
+        let objectConstructor = object?.constructor;
 
-        for (let key of Object.keys(object)) {
-            object[key] = this.extendObject(object[key], prototype[key]);
+        if (
+            objectConstructor != prototype?.constructor
+            || objectConstructor != Array && objectConstructor != Object
+        ) return object;
+
+        let objectExtended = null;
+
+        if (objectConstructor == Array) {
+            objectExtended = [...prototype, ...object];
+        }
+        else {
+            objectExtended = {...prototype};
+
+            for (let key of Object.keys(object)) {
+                objectExtended[key] = this.extendObject(object[key], prototype[key]);
+            }
         }
 
-        return {...prototype, ...object};
+        return objectExtended;
     }
 
     static extendProps(object, prototype = null, ...propNames) {
@@ -72,14 +86,15 @@ export class ObjectManager {
     static getPrototypeDepth(object, prototype) {
         let prototypeDepth = 0;
 
-        while (object?.constructor) {
+        while (object != prototype) {
             object = Object.getPrototypeOf(object);
-            prototypeDepth++;
 
-            if (object == prototype) return prototypeDepth;
+            if (object == null) return -1;
+
+            prototypeDepth++;
         }
 
-        return 0;
+        return prototypeDepth;
     }
 
     static init(object) {

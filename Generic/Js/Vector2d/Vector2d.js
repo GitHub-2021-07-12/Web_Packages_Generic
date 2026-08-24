@@ -48,20 +48,12 @@ export class Vector2d {
         return this.x == vector.x && this.y == vector.y;
     }
 
+    isFinite() {
+        return Number.isFinite(this.x) && Number.isFinite(this.y);
+    }
+
     isZero() {
         return !this.x && !this.y;
-    }
-
-    length_set(value) {
-        this.length = value;
-
-        return this;
-    }
-
-    length_toRange(lengthMin, lengthMax) {
-        this.length = Common.toRange(this.length, lengthMin, lengthMax);
-
-        return this;
     }
 
     norm() {
@@ -95,6 +87,12 @@ export class Vector2d {
         return this;
     }
 
+    setLength(value) {
+        this.length = value;
+
+        return this;
+    }
+
     setVector(vector) {
         this.x = vector.x;
         this.y = vector.y;
@@ -119,6 +117,12 @@ export class Vector2d {
     toRange(vectorMin, vectorMax) {
         this.toRangeX(vectorMin.x, vectorMax.x);
         this.toRangeY(vectorMin.y, vectorMax.y);
+
+        return this;
+    }
+
+    toRangeLength(lengthMin, lengthMax) {
+        this.length = Common.toRange(this.length, lengthMin, lengthMax);
 
         return this;
     }

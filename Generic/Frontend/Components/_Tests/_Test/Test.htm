@@ -12,29 +12,18 @@
             body {
                 padding: 10px;
             }
-
-
-            :not(:defined) {
-                display: none;
-            }
         </style>
 
         <script type='module'>
-            import {Component} from '/Packages/Generic/Frontend/Components/Component/Component.js';
-            import {Test} from '/Packages/Generic/Frontend/Components/Test/Test.js';
+            import * as generic from '/Packages/Generic/Generic.js';
 
 
-            Component.init({
-                styleSheetsDescriptors: {
-                    main: '/Packages/Generic/Frontend/Themes/Main/Main.css',
-                },
-            });
-
-            await Test._defined;
+            let Component = generic.frontend.components.Component;
+            await Component._defined;
         </script>
     </head>
 
     <body>
-        <x-test>Test</x-test>
+
     </body>
 </html>

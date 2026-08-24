@@ -120,7 +120,7 @@ export class EventManager {
         for (let k in eventHandlerDescriptors) {
             let eventHandlerDescriptor = eventHandlerDescriptors[k];
 
-            if (ObjectManager.getPrototypeDepth(eventHandlerDescriptor, this._EventHandler)) {
+            if (ObjectManager.getPrototypeDepth(eventHandlerDescriptor, this._EventHandler) > 0) {
                 let EventHandler = eventHandlerDescriptor;
                 eventHandlers[k] = new EventHandler(context, eventTarget);
             }
@@ -161,7 +161,7 @@ export class EventManager {
         for (let k in eventHandlerDescriptors) {
             let eventHandlerDescriptor = eventHandlerDescriptors[k];
 
-            if (ObjectManager.getPrototypeDepth(eventHandlerDescriptor, this._EventHandler)) continue;
+            if (ObjectManager.getPrototypeDepth(eventHandlerDescriptor, this._EventHandler) > 0) continue;
 
             if (eventHandlerDescriptor instanceof Function) {
                 eventHandlerDescriptor = class EventHandler extends this._EventHandler {

@@ -193,6 +193,7 @@ export class Draggable extends GestureArea {
 
 
     reset() {
-        this._position = new Vector2d();
+        this.constructor.setLeft(this.target, null);
+        this.constructor.setTop(this.target, null);
     }
 }

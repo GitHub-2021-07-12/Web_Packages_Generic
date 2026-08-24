@@ -49,7 +49,7 @@ export class Select extends Repeater {
             domSubtree: function (event) {
                 if (event.detail.key != 'popup') return;
 
-                this.delegate ||= this._shadow.querySelector('[Repeater_delegate]');
+                this.delegate ||= this._shadow.querySelector('template').content.firstElementChild;
             },
 
             field: function (event) {

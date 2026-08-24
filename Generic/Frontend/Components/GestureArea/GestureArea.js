@@ -264,13 +264,11 @@ export class GestureArea extends Component {
 
                 if (deltaBottomTop < -magnetism || deltaLeftRight > magnetism || deltaRightLeft < -magnetism || deltaTopBottom > magnetism) continue;
 
-                let magnetVectorXAbs = Math.abs(magnetVector.x);
-                let magnetVectorYAbs = Math.abs(magnetVector.y);
-
                 if (Number.isFinite(this._rectDelta.bottom)) {
                     let deltaBottomBottom = magnetRect.bottom - magnetAreaRect.bottom;
                     let deltaBottomBottomAbs = Math.abs(deltaBottomBottom);
                     let deltaBottomTopAbs = Math.abs(deltaBottomTop);
+                    let magnetVectorYAbs = Math.abs(magnetVector.y);
 
                     if (deltaBottomBottomAbs <= magnetism && deltaBottomBottomAbs <= magnetVectorYAbs) {
                         magnetVector.y = -deltaBottomBottom;
@@ -286,6 +284,7 @@ export class GestureArea extends Component {
                     let deltaLeftLeft = magnetRect.left - magnetAreaRect.left;
                     let deltaLeftLeftAbs = Math.abs(deltaLeftLeft);
                     let deltaLeftRightAbs = Math.abs(deltaLeftRight);
+                    let magnetVectorXAbs = Math.abs(magnetVector.x);
 
                     if (deltaLeftLeftAbs <= magnetism && deltaLeftLeftAbs <= magnetVectorXAbs) {
                         magnetVector.x = -deltaLeftLeft;
@@ -301,6 +300,7 @@ export class GestureArea extends Component {
                     let deltaRightRight = magnetRect.right - magnetAreaRect.right;
                     let deltaRightLeftAbs = Math.abs(deltaRightLeft);
                     let deltaRightRightAbs = Math.abs(deltaRightRight);
+                    let magnetVectorXAbs = Math.abs(magnetVector.x);
 
                     if (deltaRightLeftAbs <= magnetism && deltaRightLeftAbs <= magnetVectorXAbs) {
                         magnetVector.x = -deltaRightLeft;
@@ -316,6 +316,7 @@ export class GestureArea extends Component {
                     let deltaTopTop = magnetRect.top - magnetAreaRect.top;
                     let deltaTopBottomAbs = Math.abs(deltaTopBottom);
                     let deltaTopTopAbs = Math.abs(deltaTopTop);
+                    let magnetVectorYAbs = Math.abs(magnetVector.y);
 
                     if (deltaTopBottomAbs <= magnetism && deltaTopBottomAbs <= magnetVectorYAbs) {
                         magnetVector.y = -deltaTopBottom;

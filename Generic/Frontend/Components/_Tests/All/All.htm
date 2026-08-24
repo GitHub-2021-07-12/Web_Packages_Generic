@@ -391,14 +391,10 @@
         <x-trackBar range='0 4' tabIndex='0'></x-trackBar>
 
         <x-repeater interpolationKey='repeater' model='3' target_='x-scrollArea'>
-            <template Repeater_delegate>
-                <x-checkBox groupSuperior='group' style='color: {{repeater: data.color}}' tabIndex='0'>[{{repeater: index}}: {{repeater: data.key}} - {{repeater: data.value}}]</x-checkBox>
-                <!-- <input style='color: {{repeater: data.color}}' tabIndex='0' type='checkBox' value='[{{repeater: index}}: {{repeater: data.key}} - {{repeater: data.value}}]'> -->
-            </template>
+            <template>
+                <x-checkBox Repeater_item groupSuperior='group' style='color: {{repeater: data.color}}' tabIndex='0'>[{{repeater: index}}: {{repeater: data.key}} - {{repeater: data.value}}]</x-checkBox>
 
-            <template Repeater_model>
-                <script>
-                    // ['aaa', 'bbb', 'ccc']
+                <script Repeater_model>
                     [
                         {
                             color: 'red',

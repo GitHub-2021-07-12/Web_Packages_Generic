@@ -53,16 +53,15 @@
 
 
             let repeaters = document.querySelectorAll('x-repeater');
+            // repeaters[0].autoRefresh = false;
             repeaters[0].ItemManager = class ItemManager extends Repeater.ItemManager {
-                _init() {
-                    this.applyData();
-                    this.applyIndex();
-                }
+                // _init() {
+                //     this.applyData();
+                //     this.applyIndex();
+                // }
 
 
                 applyData() {
-                    console.log(this)
-
                     this._elements.value.textContent = this._modelItem.data.value;
                 }
 
@@ -70,8 +69,8 @@
                     this._elements.index.textContent = this._modelItem.index;
                 }
             };
+            // repeaters[0].resetField('autoRefresh');
             // repeaters[0].model.filterRegExp = /1/;
-            // // repeaters[0].refresh();
             // repeaters[1].ItemManager = repeaters[0].ItemManager;
             // repeaters[1].model = repeaters[0].model;
 
@@ -87,33 +86,29 @@
             </template>
         </x-repeater>
 
-        <x-repeater interpolationKey='repeater2'><template>
-            <div Repeater_item class='delegate2'>
-                <div>{{repeater2: index}}: {{repeater2: data.value}}</div>
-                <span Repeater_element='index'></span>: <span Repeater_element='value'></span>
-            </div>
+        <x-repeater interpolationKey='repeater2'>
+            <template>
+                <div Repeater_item class='delegate2'>
+                    <div>{{repeater2: index}}: {{repeater2: data.value}}</div>
+                    <span Repeater_element='index'></span>: <span Repeater_element='value'></span>
+                </div>
 
-            <script Repeater_ItemManager>
-                class ItemManager extends Repeater.ItemManager {
-                    _init() {
-                        this.applyData();
-                        this.applyIndex();
+                <script Repeater_ItemManager>
+                    class ItemManager extends Repeater.ItemManager {
+                        applyData() {
+                            this._elements.value.textContent = this._modelItem.data.value;
+                        }
+
+                        applyIndex() {
+                            this._elements.index.textContent = this._modelItem.index;
+                        }
                     }
+                </script>
 
-
-                    applyData() {
-                        this._elements.value.textContent = this._modelItem.data.value;
-                    }
-
-                    applyIndex() {
-                        this._elements.index.textContent = this._modelItem.index;
-                    }
-                }
-            </script>
-
-            <script Repeater_model>
-                [1, 2, 3]
-            </script>
-        </template></x-repeater>
+                <script Repeater_model>
+                    [1, 2, 3]
+                </script>
+            </template>
+        </x-repeater>
     </body>
 </html>

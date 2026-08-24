@@ -70,7 +70,6 @@ export class Repeater extends Component {
                 }
                 else {
                     item.Repeater_itemManager.applyData();
-                    item.Repeater_itemManager.applyIndex();
                 }
             },
         },
@@ -220,7 +219,7 @@ export class Repeater extends Component {
     }
 
 
-    __ItemManager = null;
+    __ItemManager = this.constructor.ItemManager;
     __delegate = null;
 
 
@@ -275,6 +274,8 @@ export class Repeater extends Component {
         }
 
         item.Repeater_itemManager = new this.ItemManager(item, this.model, modelItem);
+        item.Repeater_itemManager.applyData();
+        item.Repeater_itemManager.applyIndex();
         this._items.set(modelItem, item);
 
         return item;
@@ -314,12 +315,5 @@ export class Repeater extends Component {
 
     refresh() {
         this._defineItems();
-
-        // if (this.interpolationKey || !this._items.size) {
-        //     this._defineItems();
-        // }
-        // else {
-        //     this._applyIndexes();
-        // }
     }
 }

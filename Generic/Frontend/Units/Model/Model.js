@@ -149,18 +149,18 @@ export class Model extends EventTarget {
 
         if (!item) return;
 
-        let changed = false;
         let dataPrev = {};
+        let updated = false;
 
         for (let k in data) {
             if (item.data[k] === data[k]) continue;
 
-            changed = true;
             dataPrev[k] = item.data[k];
             item.data[k] = data[k];
+            updated = true;
         }
 
-        if (!changed) return;
+        if (!updated) return;
 
         EventManager.dispatchEvent(this, 'update', {item, dataPrev});
     }

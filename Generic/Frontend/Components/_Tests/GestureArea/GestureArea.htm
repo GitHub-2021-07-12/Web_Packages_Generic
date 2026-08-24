@@ -47,14 +47,14 @@
                 /* background: #f002; */
                 height: var(--size);
                 /* height: fit-content; */
-                left: calc(var(--index) * var(--size));
+                /* left: calc(var(--index) * var(--size)); */
                 max-height: 256px;
                 max-width: 256px;
                 /* margin: 5px; */
                 min-height: 64px;
                 min-width: 64px;
                 position: absolute;
-                top: calc(var(--index) * var(--size));
+                /* top: calc(var(--index) * var(--size)); */
                 width: var(--size);
                 /* width: fit-content; */
             }
@@ -189,8 +189,7 @@
 
     <body>
         <x-repeater interpolationKey='repeater' model='1e2'>
-            <template Repeater_delegate>
-                <!-- <x-draggable style='--index: {{repeater: index}};'> -->
+            <template>
                 <!-- <x-draggable -->
                 <!--     style=' -->
                 <!--         left: {{repeater: Math.round(Math.random() * 2e3)}}px; -->
@@ -198,6 +197,8 @@
                 <!--     ' -->
                 <!-- > -->
                 <x-draggable
+                    Repeater_item
+
                     style='
                         left: calc({{repeater: index % 10}} * var(--size));
                         top: calc({{repeater: index / 10 ^ 0}} * var(--size));
@@ -208,12 +209,6 @@
                     </x-resizable>
                 </x-draggable>
             </template>
-
-            <!-- <template Repeater_model> -->
-            <!--     <script> -->
-            <!--         [1, 2, 3] -->
-            <!--     </script> -->
-            <!-- </template> -->
         </x-repeater>
     </body>
 </html>

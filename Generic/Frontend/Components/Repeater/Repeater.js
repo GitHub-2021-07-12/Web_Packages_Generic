@@ -43,8 +43,8 @@ export class Repeater extends Component {
             },
 
             filter: function () {
-                for (let [modelItem, item] of this._items) {
-                    this.constructor.setAttribute(item, '_Repeater_excluded', modelItem.excluded ? '' : null);
+                for (let item of this._items.values()) {
+                    item.Repeater_itemManager.refresh();
                 }
             },
 
@@ -68,9 +68,8 @@ export class Repeater extends Component {
                 if (this.interpolationKey) {
                     item.replaceWith(this._createItem(event.detail.item));
                 }
-                else {
-                    item.Repeater_itemManager.applyData();
-                }
+
+                item.Repeater_itemManager.applyData();
             },
         },
     };
@@ -210,6 +209,10 @@ export class Repeater extends Component {
             this._init();
         }
 
+        refresh() {
+            Repeater.setAttribute(this._item, '_Repeater_excluded', this._modelItem.excluded ? '' : null);
+        }
+
         updateData() {}
     };
 
@@ -276,6 +279,7 @@ export class Repeater extends Component {
         item.Repeater_itemManager = new this.ItemManager(item, this.model, modelItem);
         item.Repeater_itemManager.applyData();
         item.Repeater_itemManager.applyIndex();
+        item.Repeater_itemManager.refresh();
         this._items.set(modelItem, item);
 
         return item;

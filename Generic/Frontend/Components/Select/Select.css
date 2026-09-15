@@ -11,7 +11,7 @@
     slot {
         &::slotted([_Repeater_excluded]) {
             display: none;
-            position: absolute;
+            /* position: absolute; */
         }
     }
 
@@ -24,6 +24,7 @@
 
 
         :host([buttonClear]:not([disabled])) & {
+            :host([index]) &,
             #root:has(#textField[_nonEmpty]) & {
                 display: block !important;
             }

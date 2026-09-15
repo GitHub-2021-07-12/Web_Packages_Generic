@@ -17,9 +17,8 @@ export class Select extends Repeater {
             buttonClear: {
                 pointerdown: function (event) {
                     event.preventDefault();
-                    this._invalid = false;
                     this.index = null;
-                    this._filter();
+                    this._refreshItems();
                 },
             },
 
@@ -36,14 +35,16 @@ export class Select extends Repeater {
 
             textField: {
                 mutation: function () {
-                    this._filter();
+                    this._refreshItems();
                 },
             },
         },
 
         host: {
             blur: function (event) {
+                this._invalid = false;
                 this._open = false;
+                this.refreshField('index');
             },
 
             domSubtree: function (event) {
@@ -118,7 +119,8 @@ export class Select extends Repeater {
 
                     this._component._releaseDomSubtree('popup');
                     this._elements.popup.open = true;
-                    this._component._filter();
+                    this._component.offsetParent;
+                    this._component._refreshItems();
                 }
                 else if (this._valuePrev) {
                     this._elements.popup.open = false;
@@ -166,13 +168,6 @@ export class Select extends Repeater {
     };
 
 
-    static ItemManager = class ItemManager extends super.ItemManager {
-        applyData() {
-            Select.setAttribute(this._item, '_Select_highlighted', this._modelItem.data.highlighted ? '' : null);
-        }
-    };
-
-
     static {
         this.init();
     }
@@ -190,6 +185,7 @@ export class Select extends Repeater {
     }
     set _indexFilteredHighlightedIndex(indexFilteredHighlightedIndex) {
         if (!this.model._items.length) {
+            this.__indexFilteredHighlightedIndex = -1;
             this._indexHighlighted = -1;
             this._indexesFiltered.length = 0;
 
@@ -199,14 +195,20 @@ export class Select extends Repeater {
         let f = this.looped ? Common.toRing : Common.toRange;
         this.__indexFilteredHighlightedIndex = f(indexFilteredHighlightedIndex, 0, (this._indexesFiltered.length || this.model._items.length) - 1);
 
-        this.model.update(this._indexHighlighted, {highlighted: false});
+        let itemHighlighted = this._items.get(this.model._items[this._indexHighlighted]);
+
+        if (itemHighlighted) {
+            this.constructor.setAttribute(itemHighlighted, '_Select_highlighted', null);
+        }
+
         this._indexHighlighted = this._indexesFiltered[this._indexFilteredHighlightedIndex] ?? this._indexFilteredHighlightedIndex;
-        this.model.update(this._indexHighlighted, {highlighted: true});
-        this._elements.scrollArea.scrollToElement(this._items.get(this.model._items[this._indexHighlighted]), {block: 'center', container: 'nearest'});
+        itemHighlighted = this._items.get(this.model._items[this._indexHighlighted]);
+        this.constructor.setAttribute(itemHighlighted, '_Select_highlighted', '');
+        this._elements.scrollArea.scrollToElement(itemHighlighted, {block: 'center', container: 'nearest'});
     }
 
 
-    _filter() {
+    _refreshItems() {
         if (!this._open) return;
 
         if (this.editable) {
@@ -231,6 +233,7 @@ export class Select extends Repeater {
         }
         else {
             this._indexFilteredHighlightedIndex = Math.max(this.index, 0);
+            this._indexesFiltered.length = 0;
         }
 
         this._elements.scrollArea.refresh();

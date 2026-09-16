@@ -78,6 +78,10 @@ export class CheckBox extends Component {
 
     static _eventHandlerDescriptors = {
         host: {
+            click: function () {
+                this.toggle();
+            },
+
             keydown: function (event) {
                 switch (event.code) {
                     case 'Enter':
@@ -88,10 +92,6 @@ export class CheckBox extends Component {
                         break;
                     }
                 }
-            },
-
-            pointerdown: function () {
-                this.toggle();
             },
         },
     };

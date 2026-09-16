@@ -20,9 +20,9 @@
             }
 
             x-checkBox {
-                &[_Repeater_excluded] {
-                    --Component_disabled: true;
-                }
+                /* &[_Repeater_excluded] { */
+                /*     --Component_disabled: true; */
+                /* } */
             }
 
             x-draggable {
@@ -30,11 +30,11 @@
                 --GestureArea_magnetAreas: url('#{x-draggable}');
                 --GestureArea_magnetism: 10;
                 --GestureArea_magnetism: 10px;
-                --GestureArea_shift: 110px;
+                --GestureArea_shift: 10px;
                 /* --GestureArea_swipeFactor: 0.5; */
 
                 anchor-name: --anchor;
-                left: 500px;
+                left: 800px;
                 position: relative;
                 width: fit-content;
 
@@ -156,15 +156,13 @@
                 }
 
 
-                [Repeater_item] {
+                x-checkBox[Repeater_item] {
                     --Component_displayOuter: block;
 
-                    color: red;
 
-
-                    /* &[_Repeater_excluded] { */
-                    /*     --Component_display: none; */
-                    /* } */
+                    &[_Repeater_excluded] {
+                        --Component_disabled: true;
+                    }
                 }
             }
 
@@ -397,6 +395,7 @@
                 <x-checkBox Repeater_item>{{select: data.value}}</x-checkBox>
             </template>
         </x-select>
+        <x-select model='11'></x-select>
         <x-select editable='false' model='11'></x-select>
 
         <x-textField></x-textField>

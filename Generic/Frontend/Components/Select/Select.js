@@ -15,10 +15,13 @@ export class Select extends Repeater {
     static _eventHandlerDescriptors = {
         elements: {
             buttonClear: {
-                pointerdown: function (event) {
-                    event.preventDefault();
+                click: function () {
                     this.index = null;
                     this._refreshItems();
+                },
+
+                pointerdown: function (event) {
+                    event.preventDefault();
                 },
             },
 
@@ -98,8 +101,7 @@ export class Select extends Repeater {
             },
 
             pointerdown: function (event) {
-                if (!this._open) return;
-                if (event.target != this._elements.root) return;
+                if (!this._open || event.target != this._elements.root) return;
 
                 event.preventDefault();
                 this.blur();

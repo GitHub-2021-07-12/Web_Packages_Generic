@@ -11,9 +11,7 @@ export class TextField extends TextInput {
     static _eventHandlerDescriptors = {
         elements: {
             buttonClear: {
-                pointerdown: function (event) {
-                    event.preventDefault();
-
+                click: function () {
                     this.value = '';
                     this.dispatchEvent('clear');
                     this.dispatchEvent('mutation');
@@ -21,13 +19,19 @@ export class TextField extends TextInput {
             },
 
             buttonMask: {
-                pointerdown: function (event) {
-                    event.preventDefault();
-
+                click: function () {
                     this.masked = !this.masked;
                     this._updateSelection();
                     this.dispatchEvent('mask');
                 },
+            },
+        },
+
+        shadow: {
+            pointerdown: function (event) {
+                if (!event.target.classList.contains('_TextField_button')) return;
+
+                event.preventDefault();
             },
         },
     };

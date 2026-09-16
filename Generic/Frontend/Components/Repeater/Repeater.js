@@ -207,6 +207,9 @@ export class Repeater extends Component {
             this._model = model;
             this._modelItem = modelItem;
             this._init();
+            this.applyData();
+            this.applyIndex();
+            this.refresh();
         }
 
         refresh() {
@@ -277,9 +280,6 @@ export class Repeater extends Component {
         }
 
         item.Repeater_itemManager = new this.ItemManager(item, this.model, modelItem);
-        item.Repeater_itemManager.applyData();
-        item.Repeater_itemManager.applyIndex();
-        item.Repeater_itemManager.refresh();
         this._items.set(modelItem, item);
 
         return item;

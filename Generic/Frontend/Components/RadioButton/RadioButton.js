@@ -60,6 +60,10 @@ export class RadioButton extends Component {
 
     static _eventHandlerDescriptors = {
         host: {
+            click: function () {
+                this.checked = true;
+            },
+
             keydown: function (event) {
                 switch (event.code) {
                     case 'Enter':
@@ -70,10 +74,6 @@ export class RadioButton extends Component {
                         break;
                     }
                 }
-            },
-
-            pointerdown: function () {
-                this.checked = true;
             },
         },
     };

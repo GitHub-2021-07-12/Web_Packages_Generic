@@ -8,6 +8,10 @@ export class Switch extends Component {
 
     static _eventHandlerDescriptors = {
         host: {
+            click: function () {
+                this.toggle();
+            },
+
             keydown: function (event) {
                 switch (event.code) {
                     case 'Enter':
@@ -17,10 +21,6 @@ export class Switch extends Component {
                         break;
                     }
                 }
-            },
-
-            pointerdown: function () {
-                this.toggle();
             },
         },
     };

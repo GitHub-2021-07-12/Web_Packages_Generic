@@ -15,7 +15,8 @@
         --colorGreenTransparent: hsl(var(--hueGreen) 100% 34% / 0.1);
         --colorGreenTransparentBright: hsl(var(--hueGreen) 100% 34% / 0.2);
         --colorLight: hsl(0 0% 100%);
-        --colorLightBright: hsl(0 0% 94%);
+        --colorLightActive: hsl(0 0% 90%);
+        --colorLightBright: hsl(0 0% 96%);
         --colorLightDim: hsl(0 0% 98%);
         --colorRed: hsl(var(--hueRed) 100% 50%);
         --colorRedTransparent: hsl(var(--hueRed) 100% 50% / 0.1);
@@ -76,6 +77,9 @@
         &:hover::part(button) {
             background: var(--colorLightBright);
         }
+        &:active::part(button) {
+            background: var(--colorLightActive);
+        }
         &[disabled]::part(button) {
             border-color: var(--colorGreenDim);
         }
@@ -94,6 +98,9 @@
         }
         &:hover::part(icon) {
             background: var(--colorLightBright);
+        }
+        &:active::part(icon) {
+            background: var(--colorLightActive);
         }
 
         &::part(iconChecked) {
@@ -143,6 +150,9 @@
         }
         &:hover::part(button) {
             background: var(--colorLightBright);
+        }
+        &:active::part(button) {
+            background: var(--colorLightActive);
         }
         &[disabled]::part(button) {
             border-color: var(--colorGreenDim);
@@ -362,6 +372,9 @@
         &:hover::part(puck) {
             background: var(--colorLightBright);
         }
+        &:active::part(puck) {
+            background: var(--colorLightActive);
+        }
         &[disabled]::part(puck) {
             background: var(--colorLightDim);
         }
@@ -465,12 +478,21 @@
             border-radius: var(--roundingFull);
             box-sizing: border-box;
         }
-        &::part(puck):hover {
-            background: var(--colorLightBright);
-        }
         &[disabled]::part(puck) {
             background: var(--colorLightDim);
             border-color: var(--colorGray);
+        }
+        &[mode]:hover::part(puck) {
+            background: var(--colorLightBright);
+        }
+        &[mode]:active::part(puck) {
+            background: var(--colorLightActive);
+        }
+        &:not([mode])::part(puck):hover {
+            background: var(--colorLightBright);
+        }
+        &:not([mode])::part(puck):active {
+            background: var(--colorLightActive);
         }
 
         &::part(track) {

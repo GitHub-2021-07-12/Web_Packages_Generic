@@ -424,7 +424,8 @@ export class GestureArea extends Component {
                     return;
                 }
 
-                this._eventHandlers.host.pointermove.disabled = false;
+                this._active = true;
+                this._eventHandlers.host.pointermove.disabled = !this._active;
                 this._initPress(this._pointer, event);
             },
 
@@ -447,7 +448,6 @@ export class GestureArea extends Component {
 
                 if (!pointer) return;
 
-                this._eventHandlers.host.pointermove.disabled = !this._pointers.size;
                 pointer.updateTimestamp();
                 this._updateMagnetAreasActive(true);
 
@@ -458,6 +458,8 @@ export class GestureArea extends Component {
 
                 this._deletePointer(pointer);
                 this._cancelPress(pointer);
+                this._active = !!this._pointers.size;
+                this._eventHandlers.host.pointermove.disabled = !this._active;
             },
         },
 
@@ -469,6 +471,9 @@ export class GestureArea extends Component {
     };
 
     static _fieldDescriptors = {
+        _active: false,
+
+
         deferredMagnetism: false,
         exclusiveCapture: false,
         invertedX: false,

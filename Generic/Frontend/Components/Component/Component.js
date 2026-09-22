@@ -28,11 +28,11 @@ export class Component extends HTMLElement {
     static _styleSheet = null;
     static _styleSheetDescriptors = {};
     static _styleSheets = {};
-    static _styleSheetsGlobal = {};
+    static _styleSheetsExternal = {};
     static _tag = '';
     static _tagPrefix = 'x';
     static _url = import.meta.url;
-    static _useGlobalStyleSheets = false;
+    static _useStyleSheetsExternal = false;
 
     static _Field = class {
         static _ItemConstructor = String;
@@ -721,17 +721,22 @@ export class Component extends HTMLElement {
         this._styleSheets = await this.createStyleSheets(this._styleSheetDescriptors);
     }
 
-    static async _createStyleSheetsGlobal() {
-        if (!ObjectManager.checkOwnProp(this, '_useGlobalStyleSheets')) return;
+    static async _createStyleSheetsExternal() {
+        if (!ObjectManager.checkOwnProp(this, '_useStyleSheetsExternal')) return;
 
-        let links = document.querySelectorAll('link[rel="styleSheet"]');
         let styleSheetDescriptors = {};
+        let urls = new Set([...document.querySelectorAll(`link[${this.name}_styleSheet]`)].map((link) => link.href));
 
-        for (let link of links) {
-            styleSheetDescriptors[link.href] = link.href;
+        for (let styleSheet of document.styleSheets) {
+            if (!urls.has(styleSheet.href)) continue;
+
+            styleSheetDescriptors[styleSheet.href] = {
+                text: [...styleSheet.cssRules].map((cssRule) => cssRule.cssText).join(' '),
+                url: styleSheet.href,
+            };
         }
 
-        this._styleSheetsGlobal = await this.createStyleSheets(styleSheetDescriptors);
+        this._styleSheetsExternal = await this.createStyleSheets(styleSheetDescriptors);
     }
 
     static _extractDomSubtrees() {
@@ -840,27 +845,35 @@ export class Component extends HTMLElement {
     }
 
     static async createStyleSheets(styleSheetDescriptors) {
-        let styleSheetTextsPromises = [];
+        let styleSheetTextsPromises = {};
         let styleSheets = {};
 
         for (let k in styleSheetDescriptors) {
             let styleSheetDescriptor = styleSheetDescriptors[k];
 
-            if (!(styleSheetDescriptor instanceof Array)) {
-                styleSheetDescriptor = [styleSheetDescriptor, true];
+            if (styleSheetDescriptor?.constructor != Object) {
+                styleSheetDescriptor = {
+                    disabled: false,
+                    text: '',
+                    url: styleSheetDescriptor,
+                };
             }
 
-            let styleSheet = new CSSStyleSheet({
-                baseURL: styleSheetDescriptor[0],
-                disabled: !styleSheetDescriptor[1],
-            });
-            let styleSheetTextPromise = this._httpClient.fetchText(styleSheetDescriptor[0]).then((text) => styleSheet.replace(text));
-            styleSheetTextsPromises.push(styleSheetTextPromise);
+            if (!styleSheetDescriptor.text && !styleSheetDescriptor.url) continue;
 
+            let styleSheet = new CSSStyleSheet({
+                baseURL: styleSheetDescriptor.url,
+                disabled: styleSheetDescriptor.disabled,
+            });
+            styleSheetTextsPromises[k] = styleSheetDescriptor.text || this._httpClient.fetchText(styleSheetDescriptor.url);
             styleSheets[k] = styleSheet;
         }
 
-        await Promise.all(styleSheetTextsPromises);
+        await Promise.all(Object.values(styleSheetTextsPromises));
+
+        for (let k in styleSheets) {
+            styleSheets[k].replace(await styleSheetTextsPromises[k]);
+        }
 
         return styleSheets;
     }
@@ -1004,7 +1017,7 @@ export class Component extends HTMLElement {
         styleSheetDescriptors = undefined,
         tagPrefix = undefined,
         url = undefined,
-        useGlobalStyleSheets = undefined,
+        useStyleSheetsExternal = undefined,
     } = {}) {
         if (ObjectManager.isInited(this, false)) return;
 
@@ -1023,7 +1036,7 @@ export class Component extends HTMLElement {
                 _styleSheetDescriptors: styleSheetDescriptors,
                 _tagPrefix: tagPrefix,
                 _url: url,
-                _useGlobalStyleSheets: useGlobalStyleSheets,
+                _useStyleSheetsExternal: useStyleSheetsExternal,
             },
         );
 
@@ -1042,7 +1055,7 @@ export class Component extends HTMLElement {
         await Promise.all([
             this._awaitComponents(),
             this._createStyleSheets(),
-            this._createStyleSheetsGlobal(),
+            this._createStyleSheetsExternal(),
             !abstract && this._createDom(),
         ]);
 
@@ -1121,7 +1134,7 @@ export class Component extends HTMLElement {
 
 
     static {
-        this.init({useGlobalStyleSheets: true});
+        this.init({useStyleSheetsExternal: true});
     }
 
 
@@ -1138,8 +1151,8 @@ export class Component extends HTMLElement {
     _applyStyleSheets() {
         this._shadow.adoptedStyleSheets.push(this.constructor._styleSheet);
 
-        for (let styleSheetGlobal of Object.values(this.constructor._styleSheetsGlobal)) {
-            this._shadow.adoptedStyleSheets.push(styleSheetGlobal);
+        for (let styleSheetExternal of Object.values(this.constructor._styleSheetsExternal)) {
+            this._shadow.adoptedStyleSheets.push(styleSheetExternal);
         }
 
         for (let styleSheet of Object.values(this.constructor._styleSheets)) {

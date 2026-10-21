@@ -1,0 +1,43 @@
+<svg xmlns='http://www.w3.org/2000/svg'>
+    <style>
+        svg[id]:not(:target) {
+            display: none;
+        }
+
+
+        .fill {
+            fill: #00f;
+            stroke: none;
+        }
+
+        .stroke {
+            fill: none;
+            stroke: #000;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 1.06;
+        }
+    </style>
+
+
+    <defs class='symbol16'>
+        <g class='fill'></g>
+        <g class='stroke'></g>
+    </defs>
+
+    <defs class='symbol24'>
+        <g class='fill'></g>
+        <g class='stroke'></g>
+    </defs>
+
+
+    <svg class='icon16' viewBox='0 0 16 16'>
+        <g class='fill'></g>
+        <g class='stroke'></g>
+    </svg>
+
+    <svg class='icon24' viewBox='0 0 24 24'>
+        <g class='fill'></g>
+        <g class='stroke'></g>
+    </svg>
+</svg>

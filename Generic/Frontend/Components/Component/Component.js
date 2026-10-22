@@ -270,7 +270,7 @@ export class Component extends HTMLElement {
                 CSS.registerProperty(cssPropDescriptor);
             }
             catch (error) {
-                throw new Error(this._cssPropName, {cause: error});
+                console.warn(new Error(this._cssPropName, {cause: error}));
             }
         }
 
@@ -1061,7 +1061,13 @@ export class Component extends HTMLElement {
 
         if (!abstract) {
             this._tag = `${this._tagPrefix}-${this.name}`.toLowerCase();
-            customElements.define(this._tag, this);
+
+            try {
+                customElements.define(this._tag, this);
+            }
+            catch (error) {
+                console.warn(error);
+            }
         }
 
         this._defined.fulfill();
@@ -1148,7 +1154,7 @@ export class Component extends HTMLElement {
     _shadow = this.attachShadow(this.constructor._shadowOpts);
 
 
-    _applyStyleSheets() {
+    _adoptStyleSheets() {
         this._shadow.adoptedStyleSheets.push(this.constructor._styleSheet);
 
         for (let styleSheetExternal of Object.values(this.constructor._styleSheetsExternal)) {
@@ -1163,7 +1169,7 @@ export class Component extends HTMLElement {
     _build() {
         if (ObjectManager.isInited(this)) return;
 
-        this._applyStyleSheets();
+        this._adoptStyleSheets();
         this._createFieldObserver();
         this._shadow.append(this._fieldObserver, this.constructor._dom.cloneNode(true));
         this._elements = this.constructor.getElements(this._shadow);

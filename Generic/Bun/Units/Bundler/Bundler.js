@@ -1,7 +1,5 @@
 import * as PathManager from 'path';
 
-// import {ObjectManager} from '/Files/Web/Packages/Generic/Js/ObjectManager/ObjectManager.js';
-
 
 export class Bundler {
     static _svgIconSizes = [16, 24];
@@ -15,18 +13,22 @@ export class Bundler {
                 async ({path}) => {
                     let file = Bun.file(path);
                     let contents = (await file.text()).replace(/\r/g, '');
-                    let fileType = file.type.replace(/;.*/, '');
 
-                    switch (fileType) {
-                        case 'text/css': {
-                            contents = this.vacuumCss(contents);
+                    if (this.minimizationBlank) {
+                        let fileType = file.type.replace(/;.*/, '');
 
-                            break;
-                        }
-                        case 'text/html': {
-                            contents = this.vacuumXml(contents);
+                        switch (fileType) {
+                            case 'text/css': {
+                                contents = this.vacuumCss(contents);
+                                // contents = await this.bundleCss({inputString: contents});
 
-                            break;
+                                break;
+                            }
+                            case 'text/html': {
+                                contents = this.vacuumXml(contents);
+
+                                break;
+                            }
                         }
                     }
 
@@ -37,7 +39,7 @@ export class Bundler {
 
         componentBundler: {
             onLoad: [
-                {filter: /\bComponents\b.*\.js$/},
+                {filter: /\/Packages\/Generic\/Frontend\/Components\/.*\/.*\.js$/},
 
                 async function ({path}) {
                     let contents = await Bun.file(path).text();
@@ -65,23 +67,11 @@ export class Bundler {
 
         pathResolver: {
             onResolve: [
-                {filter: /.*/},
+                {filter: /.*\.(?:css|html|js)/},
 
                 function ({path}) {
                     path = path.replace(process.stdin.path, '');
-
-                    // console.log(path)
-
-                    // if (this.appDirAliasRegExp?.test(path)) {
-                    //     path = path.replace(this.appDirAliasRegExp, this.appDir);
-                    // }
-                    // else if (this.rootDirAliasRegExp?.test(path)) {
-                    //     // path = path.replace(this.rootDirAliasRegExp, this.rootDir);
-                    // }
-
                     path = this.resolvePath(path);
-
-                    // console.log('->', path)
 
                     return {path};
                 },
@@ -116,9 +106,6 @@ export class Bundler {
     static minimizationSyntax = false;
     static rootDir = '/Files/Web/';
     static rootDirAliasRegExp = /.*?\/\$\//;
-    // static rootDirAliasRegExp = /.*?\/(?:\$|(?=Packages\/))/;
-    // static svgBundleTemplatePath = '/Files/Web/Packages/Generic/Bun/Units/Bundler/BundleTemplate.svg';
-    // static svgBundleTemplatePath = '/$/Packages/Generic/Bun/Units/Bundler/BundleTemplate.svg';
     static svgBundleTemplatePath = '/Packages/Generic/Bun/Units/Bundler/BundleTemplate.svg';
     static svgNumberPrecision = 5;
 
@@ -150,18 +137,28 @@ export class Bundler {
     }
 
 
-    static async bundleCss(inputPath, outputPath) {
+    // static async bundleCss({inputPath = '.css', inputString = '', outputPath = ''}) {
+    static async bundleCss(inputPath, outputPath = '') {
         inputPath = this.resolvePath(inputPath);
         outputPath = this.resolvePath(outputPath);
 
-        await Bun.build({
+        let {outputs: [output]} = await Bun.build({
             entrypoints: [inputPath],
             external: ['*'],
             minify: this.minimizationBlank,
             naming: `[name]${this.bundleNamePostfix}.[ext]`,
             outdir: outputPath,
+            plugins: [this._buildPlugins.pathResolver],
             target: 'bun',
+
+            // metafile: true,
+
+            // files: {
+            //     [inputPath]: inputString || await Bun.file(inputPath).text(),
+            // },
         });
+
+        // return await output.text();
     }
 
     static async bundleHtml(inputPath, outputPath) {
@@ -185,7 +182,7 @@ export class Bundler {
         inputPath = this.resolvePath(inputPath);
         outputPath = this.resolvePath(outputPath);
 
-        let {outputs} = await Bun.build({
+        let {outputs: [output]} = await Bun.build({
             drop: ['console', 'debugger'],
             entrypoints: [inputPath],
             external: ['*'],
@@ -203,14 +200,19 @@ export class Bundler {
             },
         });
 
-        let contents = await outputs[0].text();
-        contents = this.vacuum(contents);
+        let contents = await output.text();
+
+        if (this.minimizationBlank) {
+            contents = this.vacuum(contents);
+        }
+
         await Bun.write(`${outputPath}/${this._createBundleName(inputPath)}`, contents);
     }
 
     static async bundleSvg(inputPath, outputPath) {
-        // let contents = await Bun.file(this.svgBundleTemplatePath).text();
         let contents = await Bun.file(this.resolvePath(this.svgBundleTemplatePath)).text();
+        let spaceNeedful = `\n${' '.repeat(28)}`;
+        let spaceNeedlesRegExp = /(?<=\n)\s{12}/g;
         using webView = new Bun.WebView();
         await webView.navigate(`file:///${Bundler.resolvePath(inputPath)}`);
 
@@ -241,7 +243,7 @@ export class Bundler {
                     `);
                     elementsSymbolHtml.push(`
                         <symbol id='symbol${svgIconIdPart1}'>
-                            ${svgIconRecord.paths.map((svgIconPath) => `<path d='${svgIconPath}'/>`)}
+                            ${svgIconRecord.paths.map((svgIconPath) => `<path d='${svgIconPath}'/>`).join(spaceNeedful)}
                         </symbol>
                     `);
                 }
@@ -251,7 +253,7 @@ export class Bundler {
                         `defs.symbol${svgIconSize} > .${svgIconType}`,
                         {
                             element(element) {
-                                element.append(elementsSymbolHtml.join(' '), {html: true});
+                                element.append(elementsSymbolHtml.join('').replace(spaceNeedlesRegExp, ''), {html: true});
                             },
                         },
                     )
@@ -259,7 +261,7 @@ export class Bundler {
                         `svg.icon${svgIconSize} > .${svgIconType}`,
                         {
                             element(element) {
-                                element.append(elementsSvgHtml.join(' '), {html: true});
+                                element.append(elementsSvgHtml.join('').replace(spaceNeedlesRegExp, ''), {html: true});
                             },
                         },
                     )
@@ -268,7 +270,10 @@ export class Bundler {
             }
         }
 
-        contents = this.vacuumXml(contents);
+        if (this.minimizationBlank) {
+            contents = this.vacuumXml(contents);
+        }
+
         await Bun.write(`${outputPath}/${this._createBundleName(inputPath)}`, contents);
     }
 
@@ -277,10 +282,12 @@ export class Bundler {
     }
 
     static resolvePath(path) {
+        if (!path) return path;
+
         if (PathManager.isAbsolute(path)) {
             path = path
-                .replace(this.appDirAliasRegExp, this.appDir)
-                .replace(this.rootDirAliasRegExp, this.rootDir)
+                .replace(this.appDirAliasRegExp, `${this.appDir}/`)
+                .replace(this.rootDirAliasRegExp, `${this.rootDir}/`)
             ;
             path = PathManager.join(this.rootDir, PathManager.relative(this.rootDir, path).replace(/^(?:\.+.)*/g, ''));
         }
@@ -293,15 +300,24 @@ export class Bundler {
     }
 
     static vacuumCss(string) {
-        string = string.replace(/\/\*[\S\s]*?\*\//g, '');
+        // string = string.replace(/\/\*[\S\s]*?\*\//g, '').replace(/(?<!\s)(:)\s*|\s*([,;{}])\s*/g, '$1$2');
+        string = string
+            .replace(/\/\*[\S\s]*?\*\//g, '')
+            .replace(/(?<=[(,:;{}])\s*|\s*(?=[(),;{}])/g, '')
+        ;
         string = this.vacuum(string);
 
         return string;
     }
 
     static vacuumXml(string) {
-        string = string.replace(/<!--[\S\s]*?-->/g, '');
-        // string = string.replace(/<!--[\S\s]*?-->/g, '').replace(/(?<!\w)\s+|\s+(?!\w)/g, '');
+        string = string
+            .replace(/<!--[\S\s]*?-->/g, '')
+            // .replace(/\s*(\/[<>]|[,;<>{}])\s*/g, '$1')
+            // .replace(/(?<=[(:;>{}])\s*|\s*(?=\/>|[();<>{}])/g, '')
+            .replace(/(?<=>)\s*|\s*(?=\/>|[<>])/g, '')
+        ;
+        string = this.vacuumCss(string);
         string = this.vacuum(string);
 
         return string;
@@ -312,9 +328,3 @@ export class Bundler {
         this.init();
     }
 }
-
-
-Bundler.bundleCss(`/Packages/Generic/Frontend/Themes/Main/Main.css`, './Bundle');
-Bundler.bundleHtml('/Packages/Generic/Frontend/Components/_Tests/All/All.htm', './Bundle');
-Bundler.bundleJs('/Packages/Generic/Frontend/Components/Switch/Switch.js', './Bundle');
-Bundler.bundleSvg('./icons.svg', './Bundle');

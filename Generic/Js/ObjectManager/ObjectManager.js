@@ -1,4 +1,7 @@
 export class ObjectManager {
+    static propSeparator = '.';
+
+
     static assignProps(object, props) {
         for (let k in props) {
             let propValue = props[k];
@@ -52,6 +55,22 @@ export class ObjectManager {
         for (let propName of propNames) {
             object[propName] = this.extendObject(object[propName], prototype[propName]);
         }
+    }
+
+    static getProp(object, path) {
+        let aim = object;
+
+        if (!(path instanceof Array)) {
+            path = path.split(this.propSeparator);
+        }
+
+        for (let propName of path) {
+            if (!(aim instanceof Object)) return undefined;
+
+            aim = aim[propName];
+        }
+
+        return aim;
     }
 
     static getPropDescriptor(object, prop) {
@@ -128,16 +147,21 @@ export class ObjectManager {
         return Class;
     }
 
-    static queryProp(object, path, separator = '.') {
-        let aim = object;
-        let propNames = path.split(separator);
-
-        for (let propName of propNames) {
-            if (!(aim instanceof Object)) return undefined;
-
-            aim = aim[propName];
+    static setProp(object, path, value) {
+        if (!(path instanceof Array)) {
+            path = path.split(this.propSeparator);
         }
 
-        return aim;
+        for (let i = 0, iMax = path.length - 1; i < iMax; i++) {
+            let propName = path[i];
+
+            if (!(object[propName] instanceof Object)) {
+                object[propName] = {};
+            }
+
+            object = object[propName];
+        }
+
+        object[path.at(-1)] = value;
     }
 }

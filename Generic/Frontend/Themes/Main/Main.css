@@ -104,11 +104,11 @@
         }
 
         &::part(iconChecked) {
-            mask-image: url('/Packages/Generic/Frontend/Themes/Main/Main.svg#icon16Stroke2_check');
+            mask-image: url('/Packages/Generic/Frontend/Themes/Main/Main.svg#check_size16_stroke2');
         }
 
         &::part(iconIndeterminate) {
-            mask-image: url('/Packages/Generic/Frontend/Themes/Main/Main.svg#icon16Stroke2_minus');
+            mask-image: url('/Packages/Generic/Frontend/Themes/Main/Main.svg#minus_size16_stroke2');
         }
     }
 
@@ -262,7 +262,7 @@
         &::part(buttonClear) {
             background: var(--colorGray);
             margin-inline-end: var(--gapSmall);
-            mask: url('/Packages/Generic/Frontend/Themes/Main/Main.svg#icon24Stroke_cross') center no-repeat;
+            mask: url('/Packages/Generic/Frontend/Themes/Main/Main.svg#cross_size24_stroke1') center no-repeat;
         }
         &::part(buttonClear):hover {
             background: var(--colorGreen);
@@ -282,7 +282,7 @@
         &::part(icon) {
             background: var(--colorGreen);
             margin-inline-end: var(--gapSmall);
-            mask: url('/Packages/Generic/Frontend/Themes/Main/Main.svg#icon24Stroke_angleRight') center no-repeat;
+            mask: url('/Packages/Generic/Frontend/Themes/Main/Main.svg#angleRight_size24_stroke1') center no-repeat;
             transition: var(--transition);
             transition-property: transform;
         }
@@ -433,16 +433,16 @@
         }
 
         &::part(buttonClear) {
-            mask-image: url('/Packages/Generic/Frontend/Themes/Main/Main.svg#icon24Stroke_cross');
+            mask-image: url('/Packages/Generic/Frontend/Themes/Main/Main.svg#cross_size24_stroke1');
         }
 
         &::part(buttonMask) {
-            mask-image: url('/Packages/Generic/Frontend/Themes/Main/Main.svg#icon24Stroke_eye');
+            mask-image: url('/Packages/Generic/Frontend/Themes/Main/Main.svg#eye_size24_stroke1');
         }
         &[masked]::part(buttonMask) {
             mask-image:
-                url('/Packages/Generic/Frontend/Themes/Main/Main.svg#icon24Stroke_eye'),
-                url('/Packages/Generic/Frontend/Themes/Main/Main.svg#icon24Stroke_diagonalMinor')
+                url('/Packages/Generic/Frontend/Themes/Main/Main.svg#eye_size24_stroke1'),
+                url('/Packages/Generic/Frontend/Themes/Main/Main.svg#diagonalMinor_size24_stroke1')
             ;
         }
 

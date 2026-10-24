@@ -6,7 +6,8 @@
         <meta charset='utf-8' content='user-scalable=no, width=720' name='viewport'>
         <title>All</title>
 
-        <link Component_styleSheet href='/Packages/Generic/Frontend/Themes/Main/Main.css' rel='styleSheet'>
+        <!-- <link Component_styleSheet href='/Packages/Generic/Frontend/Themes/Main/Main.css' rel='styleSheet'> -->
+        <link Component_styleSheet href='/Packages/Generic/Frontend/Themes/Main/Main.bundle.css' rel='styleSheet'>
 
         <style>
             * {
@@ -253,7 +254,8 @@
         </style>
 
         <script type='module'>
-            import * as generic from '/Packages/Generic/Generic.js';
+            // import * as generic from '/Packages/Generic/Generic.js';
+            import * as generic from '/Packages/Generic/Generic.bundle.js';
 
 
             window.frontend = generic.frontend;

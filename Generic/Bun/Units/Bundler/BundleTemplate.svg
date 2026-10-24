@@ -15,29 +15,38 @@
             stroke: #000;
             stroke-linecap: round;
             stroke-linejoin: round;
+        }
+
+        .stroke1 {
             stroke-width: 1.06;
+        }
+
+        .stroke2 {
+            stroke-width: 2;
         }
     </style>
 
 
-    <defs class='symbol16'>
+    <defs class='size16'>
         <g class='fill'></g>
         <g class='stroke'></g>
     </defs>
 
-    <defs class='symbol24'>
+    <defs class='size24'>
         <g class='fill'></g>
         <g class='stroke'></g>
     </defs>
 
 
-    <svg class='icon16' viewBox='0 0 16 16'>
+    <svg class='size16' viewBox='0 0 16 16'>
         <g class='fill'></g>
-        <g class='stroke'></g>
+        <g class='stroke stroke1'></g>
+        <g class='stroke stroke2'></g>
     </svg>
 
-    <svg class='icon24' viewBox='0 0 24 24'>
+    <svg class='size24' viewBox='0 0 24 24'>
         <g class='fill'></g>
-        <g class='stroke'></g>
+        <g class='stroke stroke1'></g>
+        <g class='stroke stroke2'></g>
     </svg>
 </svg>

@@ -651,7 +651,6 @@ export class Component extends HTMLElement {
         }
 
         if (html) {
-            html = html.trim().replace(/\s{2,}/g, ' ');
             html = this.interpolate(html, this._interpolationKey, this._interpolationArgs);
             root = this.createDom(html);
         }

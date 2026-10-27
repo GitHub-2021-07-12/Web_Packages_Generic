@@ -10,8 +10,6 @@ export class Bundler {
                 {filter: /.*/},
 
                 async function ({path}) {
-                    // console.log('onLoad', path)
-
                     let contents = await Bun.file(path).text();
                     contents = contents.replaceAll('\r', '');
 
